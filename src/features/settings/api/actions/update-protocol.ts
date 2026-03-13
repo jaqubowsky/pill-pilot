@@ -1,0 +1,103 @@
+"use server";
+
+import { eq } from "drizzle-orm";
+import { redirect } from "next/navigation";
+import { z } from "zod";
+import { parsedProtocolSchema } from "@/features/onboarding/schemas/parsed-protocol-schema";
+import { db } from "@/shared/db/client";
+import { protocolSupplements } from "@/shared/db/schema";
+import { authActionClient } from "@/shared/lib/safe-action";
+import { protocolRepository } from "@/shared/repositories/protocol-repository";
+import { protocolSupplementRepository } from "@/shared/repositories/protocol-supplement-repository";
+import { supplementRepository } from "@/shared/repositories/supplement-repository";
+import { supplementScheduleRepository } from "@/shared/repositories/supplement-schedule-repository";
+
+const updateProtocolSchema = z.object({
+	protocolId: z.string(),
+	parsedData: z.string(),
+	startDate: z.string(),
+});
+
+export const updateProtocol = authActionClient
+	.inputSchema(updateProtocolSchema)
+	.action(async ({ parsedInput, ctx }) => {
+		const { userId } = ctx;
+		const { protocolId, parsedData, startDate } = parsedInput;
+
+		await protocolRepository.findByIdAndUserId(protocolId, userId);
+
+		const parsed = parsedProtocolSchema.parse(JSON.parse(parsedData));
+
+		await db.delete(protocolSupplements).where(eq(protocolSupplements.protocolId, protocolId));
+
+		const supplementIdMap: Record<string, string> = {};
+
+		for (const item of parsed.supplements) {
+			if (item.existingSupplementId) {
+				supplementIdMap[item.name] = item.existingSupplementId;
+			} else {
+				const created = await supplementRepository.create({
+					userId,
+					name: item.name,
+					brandName: item.brandName ?? null,
+					category: item.category,
+				});
+				supplementIdMap[item.name] = created.id;
+			}
+		}
+
+		const psIdMap: Record<string, string> = {};
+
+		let sortOrder = 0;
+		for (const item of parsed.supplements) {
+			const supplementId = supplementIdMap[item.name];
+
+			const hasCycling = item.cycleDaysOn !== null && item.cycleDaysOff !== null;
+			const cyclingFields = hasCycling
+				? {
+						cycleDaysOn: item.cycleDaysOn,
+						cycleDaysOff: item.cycleDaysOff,
+					}
+				: {};
+
+			const protocolSupplement = await protocolSupplementRepository.create({
+				protocolId,
+				supplementId,
+				notes: item.notes ?? null,
+				isCritical: item.isCritical,
+				sortOrder: sortOrder++,
+				...cyclingFields,
+			});
+
+			psIdMap[item.name] = protocolSupplement.id;
+
+			for (const schedule of item.schedules) {
+				await supplementScheduleRepository.create({
+					protocolSupplementId: protocolSupplement.id,
+					timeBlockId: schedule.timeBlockId,
+					dosageAmount: String(schedule.dosageAmount),
+					dosageUnit: schedule.dosageUnit,
+				});
+			}
+		}
+
+		for (const item of parsed.supplements) {
+			if (item.prerequisiteName && item.delayDays) {
+				const prerequisiteId = psIdMap[item.prerequisiteName];
+				if (prerequisiteId) {
+					await protocolSupplementRepository.update(psIdMap[item.name], {
+						prerequisiteId,
+						delayDays: item.delayDays,
+					});
+				}
+			}
+		}
+
+		await protocolRepository.update(protocolId, {
+			name: parsed.protocolName,
+			parsedData,
+			startDate,
+		});
+
+		redirect("/settings");
+	});

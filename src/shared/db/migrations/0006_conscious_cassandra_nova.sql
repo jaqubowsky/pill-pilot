@@ -1,0 +1,1 @@
+ALTER TABLE "protocol_supplements" DROP COLUMN "cycle_start_date";

@@ -1,0 +1,85 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.4.7/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"files": {
+		"ignoreUnknown": false,
+		"includes": ["src/**", "*.ts", "*.tsx", "*.json"]
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"lineWidth": 100
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"correctness": {
+				"noUnusedImports": "warn",
+				"useExhaustiveDependencies": "warn"
+			},
+			"style": {
+				"noNonNullAssertion": "off",
+				"useTemplate": "warn"
+			},
+			"suspicious": {
+				"noExplicitAny": "off"
+			},
+			"a11y": {
+				"useButtonType": "off",
+				"noSvgWithoutTitle": "off",
+				"noLabelWithoutControl": "off",
+				"useSemanticElements": "warn",
+				"noStaticElementInteractions": "warn",
+				"useKeyWithClickEvents": "warn"
+			}
+		}
+	},
+	"css": {
+		"linter": {
+			"enabled": false
+		},
+		"formatter": {
+			"enabled": false
+		},
+		"parser": {
+			"cssModules": true,
+			"tailwindDirectives": true
+		}
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "double",
+			"trailingCommas": "all",
+			"semicolons": "always"
+		}
+	},
+	"json": {
+		"formatter": {
+			"indentStyle": "tab"
+		}
+	},
+	"assist": {
+		"enabled": true,
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
+		}
+	},
+	"overrides": [
+		{
+			"includes": ["**/*.css"],
+			"linter": {
+				"enabled": false
+			},
+			"formatter": {
+				"enabled": false
+			}
+		}
+	]
+}

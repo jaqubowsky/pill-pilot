@@ -1,0 +1,1 @@
+ALTER TABLE "protocols" ADD COLUMN "start_date" date;

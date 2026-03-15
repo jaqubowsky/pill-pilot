@@ -174,6 +174,8 @@ export const protocolSupplements = pgTable("protocol_supplements", {
 	cycleDaysOff: integer("cycle_days_off"),
 	startDayOffset: integer("start_day_offset").notNull().default(0),
 	durationDays: integer("duration_days"),
+	dosageIntervalMinutes: integer("dosage_interval_minutes"),
+	waitAfterTakingMinutes: integer("wait_after_taking_minutes"),
 	sortOrder: integer("sort_order").notNull().default(0),
 	active: boolean("active").notNull().default(true),
 	createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -204,6 +206,9 @@ export const dailyLogs = pgTable(
 			.references(() => supplementSchedules.id, { onDelete: "cascade" }),
 		date: date("date").notNull(),
 		takenAt: timestamp("taken_at").notNull().defaultNow(),
+		timerNotifiedAt: timestamp("timer_notified_at"),
+		timerAdjustmentMinutes: integer("timer_adjustment_minutes"),
+		cooldownSkippedAt: timestamp("cooldown_skipped_at"),
 	},
 	(table) => ({
 		uniqueScheduleDate: unique().on(table.scheduleId, table.date),

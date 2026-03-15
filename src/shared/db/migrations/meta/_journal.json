@@ -92,6 +92,20 @@
 			"when": 1773811200000,
 			"tag": "0012_notification_last_sent",
 			"breakpoints": true
+		},
+		{
+			"idx": 13,
+			"version": "7",
+			"when": 1773897600000,
+			"tag": "0013_timed_supplements",
+			"breakpoints": true
+		},
+		{
+			"idx": 14,
+			"version": "7",
+			"when": 1773984000000,
+			"tag": "0014_cooldown_skipped",
+			"breakpoints": true
 		}
 	]
 }

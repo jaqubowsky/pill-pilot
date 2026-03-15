@@ -71,6 +71,8 @@ export const updateProtocol = authActionClient
 				sortOrder: sortOrder++,
 				startDayOffset: item.startDayOffset ?? 0,
 				durationDays: item.durationDays ?? null,
+				dosageIntervalMinutes: item.dosageIntervalMinutes ?? null,
+				waitAfterTakingMinutes: item.waitAfterTakingMinutes ?? null,
 				...cyclingFields,
 			});
 

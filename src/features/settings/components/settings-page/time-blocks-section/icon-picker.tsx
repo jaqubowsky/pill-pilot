@@ -69,7 +69,7 @@ export function IconPicker({ value, onValueChange }: IconPickerProps) {
 					{SelectedIcon && (
 						<span className="flex items-center gap-sm">
 							<SelectedIcon className="size-5 stroke-[1.5] text-content-muted" />
-							{value}
+							{t(`icons.${value}`)}
 						</span>
 					)}
 				</SelectValue>
@@ -81,7 +81,7 @@ export function IconPicker({ value, onValueChange }: IconPickerProps) {
 						<SelectItem key={iconName} value={iconName}>
 							<span className="flex items-center gap-sm">
 								<Icon className="size-5 stroke-[1.5] text-content-muted" />
-								{iconName}
+								{t(`icons.${iconName}`)}
 							</span>
 						</SelectItem>
 					);

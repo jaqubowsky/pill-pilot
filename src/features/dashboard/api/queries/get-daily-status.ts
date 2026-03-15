@@ -44,6 +44,11 @@ export type ScheduleEntry = {
 	isExpired: boolean;
 	notStartedDays: number | null;
 	protocolId: string;
+	protocolSupplementId: string;
+	dosageIntervalMinutes: number | null;
+	waitAfterTakingMinutes: number | null;
+	cooldown: { remainingMs: number } | null;
+	waitTimer: { remainingMs: number } | null;
 };
 
 export type TimeBlockStatus = {
@@ -91,6 +96,8 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 			protocolSupplementId: protocolSupplements.id,
 			protocolStartDate: protocols.startDate,
 			protocolId: protocols.id,
+			dosageIntervalMinutes: protocolSupplements.dosageIntervalMinutes,
+			waitAfterTakingMinutes: protocolSupplements.waitAfterTakingMinutes,
 		})
 		.from(supplementSchedules)
 		.innerJoin(
@@ -130,7 +137,25 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 		);
 	}
 
-	const ctx = { logMap, dailyDosageMap, date };
+	const siblingTakenAtMap = new Map<
+		string,
+		{ takenAt: Date; adjustmentMinutes: number; cooldownSkipped: boolean }
+	>();
+	for (const row of activeSchedules) {
+		if (!row.dosageIntervalMinutes) continue;
+		const log = logMap.get(row.scheduleId);
+		if (!log) continue;
+		const existing = siblingTakenAtMap.get(row.protocolSupplementId);
+		if (!existing || log.takenAt > existing.takenAt) {
+			siblingTakenAtMap.set(row.protocolSupplementId, {
+				takenAt: log.takenAt,
+				adjustmentMinutes: log.timerAdjustmentMinutes ?? 0,
+				cooldownSkipped: log.cooldownSkippedAt !== null,
+			});
+		}
+	}
+
+	const ctx = { logMap, dailyDosageMap, date, siblingTakenAtMap };
 
 	const grouped = activeSchedules
 		.map((row) => ({

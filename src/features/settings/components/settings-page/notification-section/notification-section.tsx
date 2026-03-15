@@ -2,8 +2,8 @@
 
 import { Bell } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Button } from "@/shared/components/ui/button";
 import { ToggleRow } from "@/shared/components/toggle-row";
+import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Switch } from "@/shared/components/ui/switch";
 import { useNotificationSection } from "./use-notification-section";

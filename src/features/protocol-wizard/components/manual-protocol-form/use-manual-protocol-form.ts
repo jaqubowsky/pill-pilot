@@ -35,6 +35,8 @@ function buildDefaultSupplement(timeBlockId: string): EditedSupplement {
 		cycleDaysOff: null,
 		startDayOffset: 0,
 		durationDays: null,
+		dosageIntervalMinutes: null,
+		waitAfterTakingMinutes: null,
 		confidence: 1,
 		uncertaintyReason: null,
 		schedules: [
@@ -61,6 +63,8 @@ function toProtocolJson(protocolName: string, supplements: IdentifiedSupplement[
 			cycleDaysOff: s.cycleDaysOff,
 			startDayOffset: s.startDayOffset,
 			durationDays: s.durationDays,
+			dosageIntervalMinutes: s.dosageIntervalMinutes ?? null,
+			waitAfterTakingMinutes: s.waitAfterTakingMinutes ?? null,
 			confidence: s.confidence,
 			uncertaintyReason: s.uncertaintyReason,
 			schedules: s.schedules,

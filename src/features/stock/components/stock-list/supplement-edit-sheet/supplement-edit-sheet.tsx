@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import type { StockListItem } from "@/features/stock/api/queries/get-stock-list";
 import { SupplementForm } from "@/features/supplements";
+import { BottomSheet } from "@/shared/components/bottom-sheet";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -13,7 +14,6 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
-import { BottomSheet } from "@/shared/components/bottom-sheet";
 import { Button } from "@/shared/components/ui/button";
 import { useSupplementEditSheet } from "./use-supplement-edit-sheet";
 

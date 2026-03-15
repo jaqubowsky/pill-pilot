@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import type { DailyStatus } from "@/features/dashboard/api/queries/get-daily-status";
 import { TimeBlock } from "@/features/dashboard/components/time-block";
 import { ViewSwitcher } from "@/features/dashboard/components/view-switcher";
+import { ActiveTimersBanner } from "./active-timers-banner";
 import { DashboardEmptyState } from "./dashboard-empty-state";
 import { DateNavigator } from "./date-navigator";
 import { ProgressRing } from "./progress-ring";
@@ -73,6 +74,9 @@ export function DailyView({ status, date, activeBlockIndex, hasProcessing, hasDr
 						/>
 					))}
 				</div>
+			)}
+			{!isEmpty && (
+				<ActiveTimersBanner entries={status.timeBlocks.flatMap((b) => b.entries)} date={date} />
 			)}
 		</div>
 	);

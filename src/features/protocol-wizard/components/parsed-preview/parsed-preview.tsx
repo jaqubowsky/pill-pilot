@@ -56,6 +56,7 @@ export function ParsedPreview({
 		startDate,
 		setStartDate,
 		unverifiedCount,
+		firstUnverifiedId,
 		isApproving,
 		blockMap,
 		orderedBlocks,
@@ -132,13 +133,23 @@ export function ParsedPreview({
 
 				<div className="flex flex-col gap-md">
 					{mode === PreviewMode.create && unverifiedCount > 0 && (
-						<div className="rounded-xl bg-warning-bg border border-warning/20 p-md">
+						<button
+							type="button"
+							onClick={() => {
+								if (!firstUnverifiedId) return;
+								document
+									.querySelector(`[data-supplement-id="${firstUnverifiedId}"]`)
+									?.scrollIntoView({ behavior: "smooth", block: "center" });
+							}}
+							className="w-full rounded-xl bg-warning-bg border border-warning/20 p-md text-left active:scale-[0.99] transition-transform"
+						>
 							<p className="text-sm text-[#8B6914]">
 								{unverifiedCount === 1
 									? t("protocolWizard.requiresVerification", { count: unverifiedCount })
 									: t("protocolWizard.requiresVerificationMany", { count: unverifiedCount })}
+								<span className="ml-xs">&darr;</span>
 							</p>
-						</div>
+						</button>
 					)}
 
 					<Button

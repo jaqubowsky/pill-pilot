@@ -19,6 +19,8 @@ const schema = z.object({
 	cycleDaysOff: z.number().positive().optional(),
 	startDayOffset: z.number().min(0).optional(),
 	durationDays: z.number().positive().optional(),
+	dosageIntervalMinutes: z.number().positive().optional(),
+	waitAfterTakingMinutes: z.number().positive().optional(),
 	dosageAmount: z.number().positive(),
 	dosageUnit: z.enum(DOSAGE_UNITS),
 	timeBlockId: z.string().min(1),
@@ -45,6 +47,8 @@ export const updateSchedule = authActionClient
 			cycleDaysOff: parsedInput.cycleDaysOff ?? null,
 			startDayOffset: parsedInput.startDayOffset ?? 0,
 			durationDays: parsedInput.durationDays ?? null,
+			dosageIntervalMinutes: parsedInput.dosageIntervalMinutes ?? null,
+			waitAfterTakingMinutes: parsedInput.waitAfterTakingMinutes ?? null,
 		});
 
 		await supplementScheduleRepository.update(schedule.id, {

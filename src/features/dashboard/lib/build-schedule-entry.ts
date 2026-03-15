@@ -24,14 +24,20 @@ type ScheduleRow = {
 	protocolStartDate: string | null;
 	protocolId: string;
 	blockId: string;
+	dosageIntervalMinutes: number | null;
+	waitAfterTakingMinutes: number | null;
 };
 
-type Log = { id: string; takenAt: Date };
+type Log = { id: string; takenAt: Date; timerAdjustmentMinutes: number | null };
 
 type Context = {
 	logMap: Map<string, Log>;
 	dailyDosageMap: Map<string, number>;
 	date: string;
+	siblingTakenAtMap: Map<
+		string,
+		{ takenAt: Date; adjustmentMinutes: number; cooldownSkipped: boolean }
+	>;
 };
 
 export function buildScheduleEntry(
@@ -70,6 +76,9 @@ export function buildScheduleEntry(
 		ctx.dailyDosageMap.get(row.supplementId) ?? 0,
 	);
 
+	const cooldown = computeCooldown(row, log, ctx);
+	const waitTimer = computeWaitTimer(row, log);
+
 	return {
 		entry: {
 			scheduleId: row.scheduleId,
@@ -91,6 +100,7 @@ export function buildScheduleEntry(
 			logId: log?.id ?? null,
 			takenAt: log?.takenAt ?? null,
 			protocolId: row.protocolId,
+			protocolSupplementId: row.protocolSupplementId,
 			cycling: cycleStatus.isCycling
 				? { isOnPhase: cycleStatus.isOnPhase, daysRemaining: cycleStatus.daysRemaining }
 				: null,
@@ -102,9 +112,44 @@ export function buildScheduleEntry(
 				: null,
 			isExpired: depStatus.isExpired,
 			notStartedDays,
+			dosageIntervalMinutes: row.dosageIntervalMinutes,
+			waitAfterTakingMinutes: row.waitAfterTakingMinutes,
+			cooldown,
+			waitTimer,
 		},
 		hasLog: !!log,
 	};
+}
+
+function computeCooldown(
+	row: ScheduleRow,
+	log: Log | undefined,
+	ctx: Context,
+): { remainingMs: number } | null {
+	if (!row.dosageIntervalMinutes || log) return null;
+
+	const sibling = ctx.siblingTakenAtMap.get(row.protocolSupplementId);
+	if (!sibling || sibling.cooldownSkipped) return null;
+
+	const intervalMs = row.dosageIntervalMinutes * 60 * 1000;
+	const adjustmentMs = sibling.adjustmentMinutes * 60 * 1000;
+	const expiresAt = sibling.takenAt.getTime() + intervalMs + adjustmentMs;
+	const remainingMs = expiresAt - Date.now();
+
+	if (remainingMs <= 0) return null;
+	return { remainingMs };
+}
+
+function computeWaitTimer(row: ScheduleRow, log: Log | undefined): { remainingMs: number } | null {
+	if (!row.waitAfterTakingMinutes || !log) return null;
+
+	const waitMs = row.waitAfterTakingMinutes * 60 * 1000;
+	const adjustmentMs = (log.timerAdjustmentMinutes ?? 0) * 60 * 1000;
+	const expiresAt = log.takenAt.getTime() + waitMs + adjustmentMs;
+	const remainingMs = expiresAt - Date.now();
+
+	if (remainingMs <= 0) return null;
+	return { remainingMs };
 }
 
 function buildStockStatus(

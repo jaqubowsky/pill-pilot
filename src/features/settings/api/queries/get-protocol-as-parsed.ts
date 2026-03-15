@@ -38,6 +38,8 @@ export async function getProtocolAsParsed(
 			cycleDaysOff: protocolSupplements.cycleDaysOff,
 			startDayOffset: protocolSupplements.startDayOffset,
 			durationDays: protocolSupplements.durationDays,
+			dosageIntervalMinutes: protocolSupplements.dosageIntervalMinutes,
+			waitAfterTakingMinutes: protocolSupplements.waitAfterTakingMinutes,
 			sortOrder: protocolSupplements.sortOrder,
 			dosageAmount: supplementSchedules.dosageAmount,
 			dosageUnit: supplementSchedules.dosageUnit,
@@ -63,6 +65,8 @@ export async function getProtocolAsParsed(
 		cycleDaysOff: number | null;
 		startDayOffset: number;
 		durationDays: number | null;
+		dosageIntervalMinutes: number | null;
+		waitAfterTakingMinutes: number | null;
 		confidence: number;
 		uncertaintyReason: string | null;
 		schedules: { dosageAmount: number; dosageUnit: DosageUnit; timeBlockId: string }[];
@@ -83,6 +87,8 @@ export async function getProtocolAsParsed(
 				cycleDaysOff: row.cycleDaysOff,
 				startDayOffset: row.startDayOffset,
 				durationDays: row.durationDays,
+				dosageIntervalMinutes: row.dosageIntervalMinutes,
+				waitAfterTakingMinutes: row.waitAfterTakingMinutes,
 				confidence: 1.0,
 				uncertaintyReason: null,
 				schedules: [],

@@ -1,4 +1,6 @@
 import { and, eq, gte, inArray, lte } from "drizzle-orm";
+import { getCycleStatus } from "@/features/dashboard/lib/cycling";
+import { getDependencyStatus } from "@/features/dashboard/lib/dependency";
 import { db } from "@/shared/db/client";
 import {
 	dailyLogs,
@@ -9,8 +11,6 @@ import {
 	supplements,
 	timeBlocks,
 } from "@/shared/db/schema";
-import { getCycleStatus } from "@/features/dashboard/lib/cycling";
-import { getDependencyStatus } from "@/features/dashboard/lib/dependency";
 
 export type WeeklyDayTimeBlock = {
 	blockId: string;

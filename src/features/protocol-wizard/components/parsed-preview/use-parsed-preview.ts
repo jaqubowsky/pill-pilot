@@ -7,7 +7,6 @@ import { useAction } from "next-safe-action/hooks";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { createProtocol } from "@/features/protocol-wizard/api/actions/create-protocol";
-import { toDateString } from "@/shared/lib/date";
 import { deleteDraftProtocol } from "@/features/protocol-wizard/api/actions/delete-draft-protocol";
 import { saveDraftProtocol } from "@/features/protocol-wizard/api/actions/save-draft-protocol";
 import {
@@ -17,14 +16,17 @@ import {
 } from "@/features/protocol-wizard/schemas/parsed-protocol-schema";
 import type { TimeBlockSummary } from "@/features/protocol-wizard/types";
 import { updateProtocol } from "@/features/settings/api/actions/update-protocol";
+import { toDateString } from "@/shared/lib/date";
 import type { EditedSupplement } from "./parsed-preview.schema";
 
 export type IdentifiedSupplement = EditedSupplement & { _id: string; _removed?: boolean };
 
+let idCounter = 0;
+
 function convertFromParsed(supplements: ParsedSupplement[]): IdentifiedSupplement[] {
-	return supplements.map((s) => ({
+	return supplements.map((s, i) => ({
 		...s,
-		_id: crypto.randomUUID(),
+		_id: `ps_${i}_${++idCounter}`,
 	}));
 }
 
@@ -64,9 +66,7 @@ export function useParsedPreview({
 	const [initialSupplements] = useState(() => convertFromParsed(initialParsed.supplements));
 	const [supplements, setSupplements] = useState<IdentifiedSupplement[]>(initialSupplements);
 	const [protocolName] = useState(initialParsed.protocolName);
-	const [startDate, setStartDate] = useState(
-		() => initialStartDate ?? toDateString(new Date()),
-	);
+	const [startDate, setStartDate] = useState(() => initialStartDate ?? toDateString(new Date()));
 	const [discardOpen, setDiscardOpen] = useState(false);
 
 	const { execute: approveCreate, isPending: isCreating } = useAction(createProtocol, {
@@ -88,9 +88,9 @@ export function useParsedPreview({
 		onError: ({ error }) => toast.error(error.serverError),
 	});
 
-	const unverifiedCount = supplements.filter(
-		(s) => !s._removed && s.confidence < CONFIDENCE_THRESHOLD,
-	).length;
+	const unverified = supplements.filter((s) => !s._removed && s.confidence < CONFIDENCE_THRESHOLD);
+	const unverifiedCount = unverified.length;
+	const firstUnverifiedId = unverified[0]?._id ?? null;
 
 	function persistDraft(supps: IdentifiedSupplement[]) {
 		if (mode === PreviewMode.edit) return;
@@ -269,6 +269,7 @@ export function useParsedPreview({
 		startDate,
 		setStartDate,
 		unverifiedCount,
+		firstUnverifiedId,
 		isApproving,
 		discardOpen,
 		setDiscardOpen,

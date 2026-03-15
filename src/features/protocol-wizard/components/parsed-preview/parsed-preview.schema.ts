@@ -18,6 +18,8 @@ export const editedSupplementSchema = z.object({
 	cycleDaysOff: z.number().nullable(),
 	startDayOffset: z.number().min(0),
 	durationDays: z.number().positive().nullable(),
+	dosageIntervalMinutes: z.number().positive().nullable(),
+	waitAfterTakingMinutes: z.number().positive().nullable(),
 	confidence: z.number().min(0).max(1),
 	uncertaintyReason: z.string().nullable(),
 	schedules: z.array(editedScheduleSchema),

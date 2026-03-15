@@ -18,10 +18,7 @@ type TimeBlocksSectionProps = {
 	notificationSettings: NotificationSettingData[];
 };
 
-export function TimeBlocksSection({
-	timeBlocks,
-	notificationSettings,
-}: TimeBlocksSectionProps) {
+export function TimeBlocksSection({ timeBlocks, notificationSettings }: TimeBlocksSectionProps) {
 	const t = useTranslations();
 	const { addSheetOpen, setAddSheetOpen, handleAddBlock } = useTimeBlocksSection();
 

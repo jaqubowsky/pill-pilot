@@ -82,7 +82,6 @@ export function PreviewBlock({
 								id={`${timeBlock.id}:${supplement._id}`}
 								supplement={supplement}
 								scheduleIndex={scheduleIndex}
-								existingSupplements={existingSupplements}
 								timeBlockId={timeBlock.id}
 								allTimeBlocks={allTimeBlocks}
 								onEdit={() => setSheetState({ supplement, scheduleIndex })}

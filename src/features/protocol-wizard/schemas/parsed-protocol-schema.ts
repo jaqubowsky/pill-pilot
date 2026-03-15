@@ -11,6 +11,8 @@ export const rawExtractionItemSchema = z.object({
 	rawCategory: z.string(),
 	rawCycling: z.string().nullable(),
 	rawDependency: z.string().nullable(),
+	rawInterval: z.string().nullable(),
+	rawWaitAfter: z.string().nullable(),
 	isMedication: z.boolean(),
 });
 
@@ -67,6 +69,22 @@ export const parsedSupplementSchema = z.object({
 		.default(null)
 		.describe(
 			"How many days to take this supplement. null = indefinitely/permanently ('Stale'). E.g. 14 for '14 dni', 90 for '3 msc'. Derived from 'Okres' column.",
+		),
+	dosageIntervalMinutes: z
+		.number()
+		.nullable()
+		.optional()
+		.default(null)
+		.describe(
+			"Minimum minutes between doses. ONLY for hard medical requirements (antibiotics, strict dosing). E.g. 'co 6 godzin' → 360, 'co 8h' → 480. Do NOT derive from frequency like '3x dziennie'. null if no explicit interval.",
+		),
+	waitAfterTakingMinutes: z
+		.number()
+		.nullable()
+		.optional()
+		.default(null)
+		.describe(
+			"Minutes to wait after taking before eating. E.g. '30 min przed jedzeniem' → 30, 'na czczo 45 min' → 45. null if no wait requirement.",
 		),
 	confidence: z.number().describe("Confidence score between 0.0 and 1.0"),
 	uncertaintyReason: z

@@ -1,10 +1,21 @@
 "use client";
 
-import { AlertTriangle, CheckCircle, Lock, MessageSquareText, Pencil, Repeat } from "lucide-react";
+import {
+	AlertTriangle,
+	CheckCircle,
+	Hourglass,
+	Lock,
+	Pencil,
+	Repeat,
+	ShieldAlert,
+	Timer,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { ScheduleEntry } from "@/features/dashboard/api/queries/get-daily-status";
-import { CriticalBadge } from "@/shared/components/critical-badge";
+import { IconBadge } from "@/shared/components/icon-badge";
+import { StatusIcon } from "@/shared/components/status-icon";
+import { SupplementInfo } from "@/shared/components/supplement-info";
 import { Button } from "@/shared/components/ui/button";
 import {
 	Dialog,
@@ -14,10 +25,11 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/shared/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover";
 import type { SupplementCategory } from "@/shared/db/schema";
 import { formatQuantity } from "@/shared/lib/format";
+import { formatMinutes } from "@/shared/lib/format-minutes";
 import { cn } from "@/shared/lib/utils";
+import { formatRemainingTime } from "../../lib/format-remaining-time";
 import { ScheduleEditSheet } from "./schedule-edit-sheet";
 import { SupplementCheckbox } from "./supplement-checkbox";
 import { useSupplementRow } from "./use-supplement-row";
@@ -53,6 +65,7 @@ export function SupplementRow({
 		stockStatus,
 	} = entry;
 	const t = useTranslations("dashboard");
+	const ts = useTranslations("schedule");
 	const {
 		checked,
 		pending,
@@ -70,11 +83,14 @@ export function SupplementRow({
 	const isOutOfStock = stockStatus !== null && stockStatus.currentStock === 0;
 	const isLowStock =
 		stockStatus !== null && stockStatus.currentStock > 0 && stockStatus.daysRemaining < 7;
+	const isCooldownActive = entry.cooldown !== null && entry.cooldown.remainingMs > 0;
+	const hasWaitTimer = entry.waitTimer !== null && entry.waitTimer.remainingMs > 0;
 	const isDisabled =
 		isExpired ||
 		isNotStarted ||
 		isLocked ||
 		isOutOfStock ||
+		isCooldownActive ||
 		(cycling !== null && !cycling.isOnPhase);
 
 	return (
@@ -94,93 +110,99 @@ export function SupplementRow({
 					onClick={handleClick}
 					label={supplementName}
 				/>
-				<div className="flex flex-1 flex-col gap-xs min-w-0">
-					<div className="flex items-center gap-sm min-w-0">
-						{isExpired && (
-							<Popover>
-								<PopoverTrigger className="text-content-faint">
-									<CheckCircle className="size-3.5" />
-								</PopoverTrigger>
-								<PopoverContent className="text-xs w-64">{t("expired")}</PopoverContent>
-							</Popover>
-						)}
-						{!isExpired && (isNotStarted || isLocked) && (
-							<Popover>
-								<PopoverTrigger className="text-content-faint">
-									<Lock className="size-3.5" />
-								</PopoverTrigger>
-								<PopoverContent className="text-xs w-64">
-									{isNotStarted
-										? t("notStarted", { count: notStartedDays })
-										: t("dependencyLocked", {
-												count: dependency!.daysRemaining,
-											})}
-								</PopoverContent>
-							</Popover>
-						)}
-						{isOutOfStock && (
-							<Popover>
-								<PopoverTrigger className="text-destructive">
-									<AlertTriangle className="size-3.5" />
-								</PopoverTrigger>
-								<PopoverContent className="text-xs w-64">{t("outOfStock")}</PopoverContent>
-							</Popover>
-						)}
-						{isLowStock && (
-							<Popover>
-								<PopoverTrigger className="text-amber-500">
-									<AlertTriangle className="size-3.5" />
-								</PopoverTrigger>
-								<PopoverContent className="text-xs w-64">
-									{t("lowStock", {
+				<SupplementInfo
+					name={supplementName}
+					dosageAmount={dosageAmount}
+					dosageUnit={dosageUnit}
+					notes={notes}
+					nameClassName={cn(
+						checked && "text-content-faint line-through",
+						isDisabled && "text-content-faint",
+					)}
+					badges={
+						<>
+							{isExpired && <IconBadge icon={CheckCircle} label={t("expired")} />}
+							{!isExpired && (isNotStarted || isLocked) && (
+								<IconBadge
+									icon={Lock}
+									label={
+										isNotStarted
+											? t("notStarted", { count: notStartedDays })
+											: t("dependencyLocked", { count: dependency!.daysRemaining })
+									}
+								/>
+							)}
+							{isOutOfStock && (
+								<IconBadge icon={AlertTriangle} variant="danger" label={t("outOfStock")} />
+							)}
+							{isLowStock && (
+								<IconBadge
+									icon={AlertTriangle}
+									variant="amber"
+									label={t("lowStock", {
 										count: stockStatus!.currentStock,
 										unit: t(`units.${stockStatus!.stockUnit}`),
 									})}
-								</PopoverContent>
-							</Popover>
-						)}
-						<span
-							className={cn(
-								"text-sm font-medium text-content transition-colors truncate",
-								checked && "text-content-faint line-through",
-								isDisabled && "text-content-faint",
+								/>
 							)}
-						>
-							{supplementName}
-						</span>
-						{isCritical && <CriticalBadge />}
-					</div>
-					<span className="text-xs text-content-faint truncate">
-						{formatQuantity(dosageAmount)} {t(`units.${dosageUnit}`)}
-						{notes && notes.length <= 35 && <> &middot; {notes}</>}
-					</span>
-					{notes && notes.length > 35 && (
-						<Popover>
-							<PopoverTrigger className="flex items-center gap-xs text-left overflow-hidden">
-								<MessageSquareText className="size-3 stroke-[1.5] text-content-faint shrink-0" />
-								<span className="text-xs text-content-faint truncate">{notes}</span>
-							</PopoverTrigger>
-							<PopoverContent side="bottom" className="w-64 p-sm">
-								<p className="text-xs text-content-muted">{notes}</p>
-							</PopoverContent>
-						</Popover>
-					)}
-					{cycling && !cycling.isOnPhase && (
-						<span className="text-xs text-content-faint">
-							{t("daysUntilResume", { count: cycling.daysRemaining })}
-						</span>
-					)}
-					{cycling && cycling.isOnPhase && (
-						<span className="flex items-center gap-xs text-xs text-content-faint">
-							<Repeat className="size-3" />
-							{t("daysUntilPause", { count: cycling.daysRemaining })}
-						</span>
-					)}
-				</div>
+							{isCritical && (
+								<IconBadge icon={ShieldAlert} variant="danger" label={t("critical")} />
+							)}
+							{cycling && !cycling.isOnPhase && (
+								<IconBadge
+									icon={Repeat}
+									label={t("daysUntilResume", { count: cycling.daysRemaining })}
+								/>
+							)}
+							{cycling && cycling.isOnPhase && (
+								<IconBadge
+									icon={Repeat}
+									label={t("daysUntilPause", { count: cycling.daysRemaining })}
+								/>
+							)}
+							{isCooldownActive && (
+								<IconBadge
+									icon={Timer}
+									variant="brand"
+									label={t("cooldownRemaining", {
+										time: formatRemainingTime(entry.cooldown!.remainingMs),
+									})}
+								/>
+							)}
+							{hasWaitTimer && (
+								<IconBadge
+									icon={Hourglass}
+									variant="amber"
+									label={t("waitRemaining", {
+										time: formatRemainingTime(entry.waitTimer!.remainingMs),
+									})}
+								/>
+							)}
+							{!isCooldownActive && !hasWaitTimer && entry.dosageIntervalMinutes && (
+								<IconBadge
+									icon={Timer}
+									variant="brand"
+									label={ts("dosageIntervalBadge", {
+										time: formatMinutes(entry.dosageIntervalMinutes),
+									})}
+								/>
+							)}
+							{!hasWaitTimer && entry.waitAfterTakingMinutes && (
+								<IconBadge
+									icon={Hourglass}
+									variant="amber"
+									label={ts("waitAfterTakingBadge", {
+										time: formatMinutes(entry.waitAfterTakingMinutes),
+									})}
+								/>
+							)}
+						</>
+					}
+				/>
 				<button
 					type="button"
 					onClick={() => setEditOpen(true)}
-					className="p-xs shrink-0 text-content-faint active:text-content-muted"
+					className="p-sm shrink-0 rounded-lg text-content-faint hover:bg-surface-sunken hover:text-content-muted active:text-content-muted transition-colors"
 				>
 					<Pencil className="size-3.5" />
 				</button>
@@ -200,6 +222,8 @@ export function SupplementRow({
 					cycleDaysOff: entry.cycleDaysOff ?? undefined,
 					startDayOffset: entry.startDayOffset,
 					durationDays: entry.durationDays ?? undefined,
+					dosageIntervalMinutes: entry.dosageIntervalMinutes ?? undefined,
+					waitAfterTakingMinutes: entry.waitAfterTakingMinutes ?? undefined,
 					dosageAmount: Number(entry.dosageAmount),
 					dosageUnit: entry.dosageUnit,
 					timeBlockId: entry.timeBlockId,

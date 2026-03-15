@@ -1,6 +1,6 @@
-import { ViewTransition } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { ViewTransition } from "react";
 import { auth } from "@/shared/lib/auth";
 import { BottomNav } from "./bottom-nav";
 

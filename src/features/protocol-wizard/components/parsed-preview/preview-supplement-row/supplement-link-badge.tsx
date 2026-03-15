@@ -1,4 +1,8 @@
+"use client";
+
+import { Link2, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { IconBadge } from "@/shared/components/icon-badge";
 
 interface SupplementLinkBadgeProps {
 	existingSupplementId: string | null;
@@ -8,16 +12,8 @@ export function SupplementLinkBadge({ existingSupplementId }: SupplementLinkBadg
 	const t = useTranslations("protocolWizard");
 
 	if (existingSupplementId) {
-		return (
-			<span className="rounded-lg px-sm py-xs text-xs font-semibold uppercase tracking-wide bg-success-bg text-brand-700">
-				{t("badgeLinked")}
-			</span>
-		);
+		return <IconBadge icon={Link2} variant="success" label={t("badgeLinked")} />;
 	}
 
-	return (
-		<span className="rounded-lg px-sm py-xs text-xs font-semibold uppercase tracking-wide bg-info-bg text-[#2D6070]">
-			{t("badgeNew")}
-		</span>
-	);
+	return <IconBadge icon={Plus} variant="info" label={t("badgeNew")} />;
 }

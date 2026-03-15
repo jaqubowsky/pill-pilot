@@ -1,6 +1,7 @@
 import type { UserContent } from "ai";
 import { generateText, Output } from "ai";
 import ExcelJS from "exceljs";
+import mammoth from "mammoth";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import type { NextRequest } from "next/server";
@@ -53,6 +54,13 @@ function isExcel(file: File) {
 
 function isImage(file: File) {
 	return IMAGE_TYPES.includes(file.type);
+}
+
+function isDocx(file: File) {
+	return (
+		file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+		file.name.endsWith(".docx")
+	);
 }
 
 function isText(file: File) {
@@ -198,6 +206,8 @@ function buildExtractionPrompt(): string {
 - rawCategory: type as written or inferred (e.g. "witamina", "minerał", "antybiotyk", "probiotyk")
 - rawCycling: cycling pattern as written (e.g. "30 dni brania, 30 dni przerwy"). null if none.
 - rawDependency: dependency/sequencing info as written (e.g. "zacząć 2 tyg przed lekami", "po zakończeniu antybiotyku"). null if none.
+- rawInterval: dosing interval as written (e.g. "co 6 godzin", "co 8h", "3x dziennie"). null if none.
+- rawWaitAfter: post-take wait as written (e.g. "30 min przed jedzeniem", "na czczo 45 min", "pół godziny przed posiłkiem"). null if none.
 - isMedication: true for prescription drugs (antibiotics, thyroid meds, etc.), false for supplements.
 - protocolName: derive a short name for the protocol from the document title or content.
 </instructions>
@@ -284,6 +294,28 @@ If rawCycling mentions cycling ("30 dni brania, 30 dni przerwy", "1 miesiąc bra
 - Set cycleDaysOn and cycleDaysOff. Convert months → 30 days.
 If no cycling pattern → both null.
 </cycling>
+
+<dosage_interval>
+dosageIntervalMinutes: minimum minutes between doses. ONLY for hard medical requirements.
+Derived from rawInterval:
+- "co 6 godzin" → 360
+- "co 8h" → 480
+- "co 12 godzin" → 720
+ONLY set for medications with explicit interval instructions (antibiotics, strict dosing schedules).
+DO NOT derive from frequency like "3x dziennie" or "2x dziennie" — those are just scheduling, not medical interval requirements.
+If no explicit interval requirement → null.
+</dosage_interval>
+
+<wait_after_taking>
+waitAfterTakingMinutes: minutes to wait after taking before eating/other supplements.
+Derived from rawWaitAfter:
+- "30 min przed jedzeniem" → 30
+- "na czczo 45 min" → 45
+- "pół godziny przed posiłkiem" → 30
+- "15 minut przed jedzeniem" → 15
+If no wait requirement → null.
+Typical for supplements taken on empty stomach (glutamine, thyroid meds).
+</wait_after_taking>
 
 <start_day_offset>
 startDayOffset: day number (from protocol start) when this supplement becomes active.
@@ -404,7 +436,7 @@ export async function POST(request: NextRequest) {
 		return Response.json({ error: "file_too_large" }, { status: 400 });
 	}
 
-	if (!isPdf(file) && !isExcel(file) && !isImage(file) && !isText(file)) {
+	if (!isPdf(file) && !isExcel(file) && !isDocx(file) && !isImage(file) && !isText(file)) {
 		return Response.json({ error: "unsupported_file_type" }, { status: 400 });
 	}
 
@@ -433,6 +465,14 @@ export async function POST(request: NextRequest) {
 			textContent = await extractTextFromExcel(buffer);
 		} catch (err) {
 			console.error("[protocol/parse] Excel extraction failed:", err);
+			return Response.json({ error: "unreadable_file" }, { status: 422 });
+		}
+	} else if (isDocx(file)) {
+		try {
+			const result = await mammoth.extractRawText({ buffer });
+			textContent = result.value;
+		} catch (err) {
+			console.error("[protocol/parse] DOCX extraction failed:", err);
 			return Response.json({ error: "unreadable_file" }, { status: 422 });
 		}
 	} else if (isText(file)) {

@@ -11,6 +11,8 @@ export const previewSupplementSheetSchema = z.object({
 	cycleDaysOff: z.number().positive().optional(),
 	startDayOffset: z.number().min(0).optional(),
 	durationDays: z.number().positive().optional(),
+	dosageIntervalMinutes: z.number().positive().optional(),
+	waitAfterTakingMinutes: z.number().positive().optional(),
 	dosageAmount: z.number().positive(),
 	dosageUnit: z.enum(DOSAGE_UNITS),
 	timeBlockId: z.string().min(1),

@@ -1,6 +1,7 @@
 "use client";
 
-import { Camera } from "lucide-react";
+import { Camera, PenLine } from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type { ExistingSupplementSummary, TimeBlockSummary } from "@/features/protocol-wizard/types";
 import { BackButton } from "@/shared/components/back-button";
@@ -76,6 +77,24 @@ export function UploadStep({ supplements, timeBlocks }: UploadStepProps) {
 					className="hidden"
 					onChange={handleCameraChange}
 				/>
+
+				<div className="flex items-center gap-md">
+					<div className="h-px flex-1 bg-edge-subtle" />
+					<span className="text-xs text-content-faint uppercase tracking-wide">
+						{t("protocolWizard.or")}
+					</span>
+					<div className="h-px flex-1 bg-edge-subtle" />
+				</div>
+
+				<Link
+					href="/protocol/new/manual"
+					className="w-full flex items-center justify-center gap-sm rounded-xl border border-edge bg-surface-raised p-md shadow-sm h-14 active:scale-[0.98] transition-all duration-150"
+				>
+					<PenLine className="size-5 text-brand-500 stroke-[1.5]" />
+					<span className="text-sm font-medium text-content">
+						{t("protocolWizard.addManually")}
+					</span>
+				</Link>
 			</div>
 
 			{errorKey && (

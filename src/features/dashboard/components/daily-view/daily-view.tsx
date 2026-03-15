@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type { DailyStatus } from "@/features/dashboard/api/queries/get-daily-status";
 import { TimeBlock } from "@/features/dashboard/components/time-block";
+import { ViewSwitcher } from "@/features/dashboard/components/view-switcher";
 import { DashboardEmptyState } from "./dashboard-empty-state";
 import { DateNavigator } from "./date-navigator";
 import { ProgressRing } from "./progress-ring";
@@ -26,6 +27,8 @@ export function DailyView({ status, date, activeBlockIndex, hasProcessing, hasDr
 
 	return (
 		<div className="flex flex-col gap-lg px-md pt-2xl pb-3xl">
+			<ViewSwitcher />
+
 			{hasProcessing && !isEmpty && (
 				<Link
 					href="/settings"

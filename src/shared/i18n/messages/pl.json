@@ -1,4 +1,11 @@
 {
+	"seo": {
+		"title": "PillPilot — Twój dzienny pilot suplementów",
+		"titleTemplate": "%s | PillPilot",
+		"description": "Śledź suplementy i leki, zarządzaj zapasami i protokołami zdrowotnymi. Aplikacja stworzona z myślą o codziennej rutynie.",
+		"shortDescription": "Śledź suplementy i leki, zarządzaj zapasami i protokołami zdrowotnymi.",
+		"keywords": "suplementy, leki, dawkowanie, protokół zdrowotny, tracker suplementów"
+	},
 	"nav": {
 		"today": "Dziś",
 		"stock": "Zapas",
@@ -63,8 +70,25 @@
 		"notStarted": "Rozpoczęcie za {count} dni",
 		"outOfStock": "Brak zapasu",
 		"lowStock": "Niski zapas: {count} {unit}",
+		"lowStockBadge": "Niski stan",
 		"processingBanner": "Trwa analiza protokołu...",
 		"processingBannerLink": "Sprawdź w ustawieniach",
+		"viewSwitcher": {
+			"day": "Dzień",
+			"week": "Tydzień",
+			"month": "Miesiąc"
+		},
+		"weeklyView": {
+			"prevWeek": "Poprzedni tydzień",
+			"nextWeek": "Następny tydzień",
+			"weekSummary": "{completed} z {total} wykonanych",
+			"noSchedules": "Brak"
+		},
+		"monthlyView": {
+			"prevMonth": "Poprzedni miesiąc",
+			"nextMonth": "Następny miesiąc",
+			"perfectDays": "Dni ze 100% wykonaniem"
+		},
 		"units": {
 			"capsule": "kaps.",
 			"tablet": "tabl.",
@@ -84,11 +108,17 @@
 		"emptyDescription": "Prześlij protokół lub dodaj suplementy ręcznie.",
 		"noTracking": "Bez śledzenia",
 		"pieces": "szt.",
+		"days": "dni",
 		"howManyBought": "Ile kupiłeś?",
 		"howManyLeft": "Ile masz teraz?",
 		"addManually": "Dodaj ręcznie",
 		"restockTitle": "Uzupełnij",
-		"adjustTitle": "Korekta"
+		"adjustTitle": "Korekta",
+		"buySoon": {
+			"title": "Kup wkrótce",
+			"critical": "Pilne",
+			"low": "Niski stan"
+		}
 	},
 	"settings": {
 		"title": "Ustawienia",
@@ -122,7 +152,11 @@
 		"processingPhraseCount": "9",
 		"statusFailed": "Błąd",
 		"failedDescription": "Analiza nie powiodła się.",
-		"retry": "Spróbuj ponownie"
+		"retry": "Spróbuj ponownie",
+		"notificationsLabel": "Powiadomienia",
+		"notifications": {
+			"enable": "Włącz powiadomienia"
+		}
 	},
 	"protocolWizard": {
 		"welcome": "Witaj w PillPilot",
@@ -138,7 +172,7 @@
 		"stepOf": "{current} z {total}",
 		"requiresVerification": "{count} pozycja wymaga weryfikacji",
 		"requiresVerificationMany": "{count} pozycji wymaga weryfikacji",
-		"dropzoneLabel": "Upuść plik tutaj",
+		"dropzoneLabel": "Wybierz plik",
 		"supportedFormats": "PDF, Excel, TXT lub zdjęcie",
 		"or": "lub",
 		"approveProtocol": "Zatwierdź protokół",
@@ -152,7 +186,39 @@
 		"createNew": "Utwórz nowy",
 		"addSupplement": "Dodaj suplement",
 		"editSupplement": "Edytuj suplement",
+		"configureExistingSupplement": "Uzupełnij dawkowanie",
 		"deleteSupplement": "Usuń suplement",
+		"addManually": "Dodaj ręcznie",
+		"manual": {
+			"title": "Dodaj protokół ręcznie",
+			"description": "Wprowadź suplementy i harmonogram dawkowania ręcznie.",
+			"protocolName": "Nazwa protokołu",
+			"protocolNamePlaceholder": "np. Protokół H. pylori",
+			"protocolNameRequired": "Nazwa protokołu jest wymagana",
+			"supplementsSection": "Suplementy",
+			"supplementNumber": "Suplement #{number}",
+			"linkToExisting": "Powiąż z istniejącym suplementem",
+			"createNew": "Utwórz nowy",
+			"nameRequired": "Nazwa suplementu jest wymagana",
+			"notes": "Notatki",
+			"notesPlaceholder": "np. 30 min przed jedzeniem",
+			"schedules": "Harmonogram dawkowania",
+			"dosage": "Dawka",
+			"dosageRequired": "Dawka jest wymagana",
+			"timeBlock": "Pora dnia",
+			"selectTimeBlock": "Wybierz porę",
+			"addSchedule": "Dodaj porę",
+			"addSupplement": "Dodaj suplement",
+			"addNewSupplement": "Dodaj nowy",
+			"addFromExisting": "Dodaj z istniejących",
+			"or": "lub",
+			"pickExisting": "Wybierz suplement",
+			"addAtLeastOneSupplement": "Dodaj co najmniej jeden suplement",
+			"noSupplementsYet": "Brak suplementów. Dodaj pierwszy.",
+			"saveAndPreview": "Zapisz i przejdź do podglądu",
+			"saving": "Zapisywanie...",
+			"draftSaved": "Szkic zapisany"
+		},
 		"discardDraft": "Odrzuć",
 		"discardConfirmTitle": "Odrzucić protokół?",
 		"discardConfirmDescription": "Sparsowany protokół zostanie usunięty. Możesz przesłać plik ponownie.",
@@ -171,6 +237,7 @@
 		"brand": "Marka (opcjonalnie)",
 		"category": "Kategoria",
 		"critical": "Krytyczny",
+		"criticalHint": "Ważny suplement, którego nie powinno się pomijać. Będzie wyróżniony w widoku dziennym.",
 		"packageSize": "Rozmiar opakowania (opcjonalnie)",
 		"packagePrice": "Cena opakowania (opcjonalnie)",
 		"stockUnit": "Jednostka zapasu",
@@ -199,13 +266,16 @@
 		"active": "Aktywny",
 		"editTitle": "Edytuj dawkę",
 		"cycling": "Cykliczne",
+		"cyclingHint": "Suplement brany w cyklach, np. 30 dni brania / 30 dni przerwy.",
 		"cycleDaysOn": "Dni brania",
 		"cycleDaysOff": "Dni przerwy",
 		"cyclingLabel": "{on}/{off} dni",
 		"delayedStart": "Opóźniony start",
+		"delayedStartHint": "Rozpocznij branie tego suplementu dopiero po określonej liczbie dni od startu protokołu.",
 		"startDayOffset": "Dzień rozpoczęcia (od startu protokołu)",
 		"startDayOffsetBadge": "Od dnia {count}",
 		"limitedDuration": "Ograniczony czas",
+		"limitedDurationHint": "Suplement brany tylko przez określoną liczbę dni, a nie przez cały czas trwania protokołu.",
 		"durationDays": "Ile dni brać",
 		"durationBadge": "Przez {count} dni",
 		"dayRangeBadge": "Dzień {from}–{to}",

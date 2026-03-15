@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, CheckCircle, Lock, Repeat } from "lucide-react";
+import { AlertTriangle, CheckCircle, Lock, MessageSquareText, Repeat } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { StockStatus } from "@/features/dashboard/api/queries/get-daily-status";
 import { CriticalBadge } from "@/shared/components/critical-badge";
@@ -94,8 +94,8 @@ export function SupplementRow({
 					onClick={handleClick}
 					label={supplementName}
 				/>
-				<div className="flex flex-1 flex-col gap-xs">
-					<div className="flex items-center gap-sm">
+				<div className="flex flex-1 flex-col gap-xs min-w-0">
+					<div className="flex items-center gap-sm min-w-0">
 						{isExpired && (
 							<Popover>
 								<PopoverTrigger className="text-content-faint">
@@ -141,7 +141,7 @@ export function SupplementRow({
 						)}
 						<span
 							className={cn(
-								"text-sm font-medium text-content transition-colors",
+								"text-sm font-medium text-content transition-colors truncate",
 								checked && "text-content-faint line-through",
 								isDisabled && "text-content-faint",
 							)}
@@ -150,10 +150,21 @@ export function SupplementRow({
 						</span>
 						{isCritical && <CriticalBadge />}
 					</div>
-					<span className="text-xs text-content-faint">
+					<span className="text-xs text-content-faint truncate">
 						{formatQuantity(dosageAmount)} {t(`units.${dosageUnit}`)}
-						{notes && <> &middot; {notes}</>}
+						{notes && notes.length <= 35 && <> &middot; {notes}</>}
 					</span>
+					{notes && notes.length > 35 && (
+						<Popover>
+							<PopoverTrigger className="flex items-center gap-xs text-left overflow-hidden">
+								<MessageSquareText className="size-3 stroke-[1.5] text-content-faint shrink-0" />
+								<span className="text-xs text-content-faint truncate">{notes}</span>
+							</PopoverTrigger>
+							<PopoverContent side="bottom" className="w-64 p-sm">
+								<p className="text-xs text-content-muted">{notes}</p>
+							</PopoverContent>
+						</Popover>
+					)}
 					{cycling && !cycling.isOnPhase && (
 						<span className="text-xs text-content-faint">
 							{t("daysUntilResume", { count: cycling.daysRemaining })}

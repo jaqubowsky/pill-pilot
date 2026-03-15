@@ -134,7 +134,7 @@ export function PreviewSupplementRow({
 				{supplement.notes &&
 					(supplement.notes.length > NOTE_TRUNCATE_LENGTH ? (
 						<Popover>
-							<PopoverTrigger className="flex items-center gap-xs text-left">
+							<PopoverTrigger className="flex items-center gap-xs text-left min-w-0 max-w-full">
 								<MessageSquareText className="size-3 stroke-[1.5] text-content-faint shrink-0" />
 								<p className="text-xs text-content-faint truncate">{supplement.notes}</p>
 							</PopoverTrigger>

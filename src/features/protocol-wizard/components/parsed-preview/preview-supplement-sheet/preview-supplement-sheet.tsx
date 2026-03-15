@@ -18,6 +18,7 @@ type PreviewSupplementSheetProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	onSave: (supplement: EditedSupplement) => void;
+	title?: string;
 };
 
 const FORM_ID = "preview-supplement-form";
@@ -30,6 +31,7 @@ export function PreviewSupplementSheet({
 	open,
 	onOpenChange,
 	onSave,
+	title: titleOverride,
 }: PreviewSupplementSheetProps) {
 	const t = useTranslations();
 
@@ -41,20 +43,16 @@ export function PreviewSupplementSheet({
 		onClose: () => onOpenChange(false),
 	});
 
+	const title =
+		titleOverride ?? (isNew ? t("protocolWizard.addSupplement") : t("protocolWizard.editSupplement"));
+
 	return (
 		<BottomSheet
 			open={open}
 			onOpenChange={onOpenChange}
-			title={isNew ? t("protocolWizard.addSupplement") : t("protocolWizard.editSupplement")}
+			title={title}
 			scrollable
-		>
-			<FormProvider {...methods}>
-				<form id={FORM_ID} onSubmit={handleSubmit}>
-					<PreviewSupplementSheetFields timeBlocks={timeBlocks} />
-				</form>
-			</FormProvider>
-
-			<div className="flex flex-col gap-sm mt-lg">
+			footer={
 				<Button
 					type="submit"
 					form={FORM_ID}
@@ -63,7 +61,13 @@ export function PreviewSupplementSheet({
 				>
 					{t("common.saveChanges")}
 				</Button>
-			</div>
+			}
+		>
+			<FormProvider {...methods}>
+				<form id={FORM_ID} onSubmit={handleSubmit}>
+					<PreviewSupplementSheetFields timeBlocks={timeBlocks} />
+				</form>
+			</FormProvider>
 		</BottomSheet>
 	);
 }

@@ -3,12 +3,10 @@ import { ActionError } from "@/shared/lib/safe-action";
 import { protocolRepository } from "@/shared/repositories/protocol-repository";
 
 export async function getProtocolForPreview(protocolId: string, userId: string) {
-	const protocol = await protocolRepository
-		.findByIdAndUserId(protocolId, userId)
-		.catch((err) => {
-			if (err instanceof ActionError) return null;
-			throw err;
-		});
+	const protocol = await protocolRepository.findByIdAndUserId(protocolId, userId).catch((err) => {
+		if (err instanceof ActionError) return null;
+		throw err;
+	});
 
 	if (!protocol) return null;
 

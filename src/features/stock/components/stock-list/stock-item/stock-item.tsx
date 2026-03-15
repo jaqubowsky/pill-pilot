@@ -5,6 +5,7 @@ import type { StockListItem } from "@/features/stock/api/queries/get-stock-list"
 import { Button } from "@/shared/components/ui/button";
 import { AdjustDialog } from "../adjust-dialog";
 import { RestockDialog } from "../restock-dialog";
+import { StockProgressBar } from "../stock-progress-bar";
 import { SupplementEditSheet } from "../supplement-edit-sheet";
 import { StockQuantity } from "./stock-quantity";
 import { useStockItem } from "./use-stock-item";
@@ -28,11 +29,20 @@ export function StockItem({ item }: StockItemProps) {
 						<p className="text-sm text-content-muted truncate">{item.brandName}</p>
 					)}
 					{item.currentStock !== null && (
-						<StockQuantity
-							currentStock={item.currentStock}
-							packageSize={item.packageSize}
-							stockUnit={item.stockUnit}
-						/>
+						<>
+							<StockQuantity
+								currentStock={item.currentStock}
+								packageSize={item.packageSize}
+								stockUnit={item.stockUnit}
+							/>
+							{item.dailyUsage > 0 && (
+								<StockProgressBar
+									currentStock={Number(item.currentStock)}
+									dailyUsage={item.dailyUsage}
+									packageSize={item.packageSize}
+								/>
+							)}
+						</>
 					)}
 				</div>
 

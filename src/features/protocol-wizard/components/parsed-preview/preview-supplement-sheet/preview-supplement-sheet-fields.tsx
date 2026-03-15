@@ -74,12 +74,14 @@ export function PreviewSupplementSheetFields({ timeBlocks }: PreviewSupplementSh
 
 			<ToggleRow
 				label={t("supplement.critical")}
+				hint={t("supplement.criticalHint")}
 				checked={isCritical}
 				onCheckedChange={(v) => setValue("isCritical", v)}
 			/>
 
 			<ToggleRow
 				label={t("schedule.cycling")}
+				hint={t("schedule.cyclingHint")}
 				checked={isCycling}
 				onCheckedChange={(v) => {
 					if (v) {
@@ -113,6 +115,7 @@ export function PreviewSupplementSheetFields({ timeBlocks }: PreviewSupplementSh
 
 			<ToggleRow
 				label={t("schedule.delayedStart")}
+				hint={t("schedule.delayedStartHint")}
 				checked={hasOffset}
 				onCheckedChange={(v) => {
 					if (v) {
@@ -134,6 +137,7 @@ export function PreviewSupplementSheetFields({ timeBlocks }: PreviewSupplementSh
 
 			<ToggleRow
 				label={t("schedule.limitedDuration")}
+				hint={t("schedule.limitedDurationHint")}
 				checked={hasDuration}
 				onCheckedChange={(v) => {
 					if (v) {

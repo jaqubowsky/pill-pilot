@@ -17,6 +17,7 @@ type BottomSheetProps = {
 	description?: string;
 	scrollable?: boolean;
 	children: React.ReactNode;
+	footer?: React.ReactNode;
 };
 
 export function BottomSheet({
@@ -26,19 +27,21 @@ export function BottomSheet({
 	description,
 	scrollable,
 	children,
+	footer,
 }: BottomSheetProps) {
 	return (
 		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetContent
 				side="bottom"
 				showCloseButton={false}
+				initialFocus={false}
 				className={cn(
 					"rounded-t-2xl bg-surface-raised p-lg",
-					scrollable && "max-h-[90vh] overflow-y-auto",
+					scrollable && "max-h-[90vh] flex flex-col overflow-hidden",
 				)}
 			>
-				<div className="mx-auto mb-md h-1 w-10 rounded-full bg-edge-subtle" />
-				<SheetHeader className="p-0 mb-lg">
+				<div className="mx-auto mb-md h-1 w-10 rounded-full bg-edge-subtle shrink-0" />
+				<SheetHeader className="p-0 mb-lg shrink-0">
 					<SheetTitle className="text-lg font-semibold text-content">{title}</SheetTitle>
 					{description && (
 						<SheetDescription className="text-sm text-content-muted">
@@ -46,7 +49,12 @@ export function BottomSheet({
 						</SheetDescription>
 					)}
 				</SheetHeader>
-				{children}
+				{scrollable ? (
+					<div className="overflow-y-auto min-h-0 min-w-0 flex-1">{children}</div>
+				) : (
+					children
+				)}
+				{footer && <div className="shrink-0 pt-md">{footer}</div>}
 			</SheetContent>
 		</Sheet>
 	);

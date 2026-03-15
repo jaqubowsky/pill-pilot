@@ -137,6 +137,7 @@ export const supplements = pgTable("supplements", {
 	category: supplementCategoryEnum("category").notNull().default("supplement"),
 	stockUnit: dosageUnitEnum("stock_unit").notNull().default("capsule"),
 	currentStock: decimal("current_stock", { precision: 10, scale: 2 }),
+	stockWarningThreshold: integer("stock_warning_threshold"),
 	packageSize: integer("package_size"),
 	packagePrice: decimal("package_price", { precision: 10, scale: 2 }),
 	active: boolean("active").notNull().default(true),
@@ -208,3 +209,29 @@ export const dailyLogs = pgTable(
 		uniqueScheduleDate: unique().on(table.scheduleId, table.date),
 	}),
 );
+
+export const pushSubscriptions = pgTable("push_subscriptions", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => createId()),
+	userId: text("user_id")
+		.notNull()
+		.references(() => users.id, { onDelete: "cascade" }),
+	subscriptionJson: text("subscription_json").notNull(),
+	createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const notificationSettings = pgTable("notification_settings", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => createId()),
+	userId: text("user_id")
+		.notNull()
+		.references(() => users.id, { onDelete: "cascade" }),
+	timeBlockId: text("time_block_id")
+		.notNull()
+		.references(() => timeBlocks.id, { onDelete: "cascade" }),
+	enabled: boolean("enabled").notNull().default(true),
+	notifyAt: text("notify_at").notNull(),
+	createdAt: timestamp("created_at").notNull().defaultNow(),
+});

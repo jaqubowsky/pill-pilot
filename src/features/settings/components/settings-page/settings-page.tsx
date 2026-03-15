@@ -4,13 +4,21 @@ import { useTranslations } from "next-intl";
 import type { ProtocolWithSchedules } from "@/features/settings/api/queries/get-user-protocols";
 import type { UserTimeBlock } from "@/features/settings/api/queries/get-user-time-blocks";
 import { AccountSection } from "./account-section";
+import { NotificationSection } from "./notification-section";
 import { ProtocolSection } from "./protocol-section";
 import { TimeBlocksSection } from "./time-blocks-section";
+
+type NotificationSettingData = {
+	timeBlockId: string;
+	enabled: boolean;
+	notifyAt: string;
+};
 
 type SettingsPageProps = {
 	protocols: ProtocolWithSchedules[];
 	timeBlocks: UserTimeBlock[];
 	userEmail: string;
+	notificationSettings: NotificationSettingData[];
 };
 
 function SectionHeader({ label }: { label: string }) {
@@ -21,7 +29,12 @@ function SectionHeader({ label }: { label: string }) {
 	);
 }
 
-export function SettingsPage({ protocols, timeBlocks, userEmail }: SettingsPageProps) {
+export function SettingsPage({
+	protocols,
+	timeBlocks,
+	userEmail,
+	notificationSettings,
+}: SettingsPageProps) {
 	const t = useTranslations("settings");
 
 	return (
@@ -36,6 +49,18 @@ export function SettingsPage({ protocols, timeBlocks, userEmail }: SettingsPageP
 			<div>
 				<SectionHeader label={t("timeBlocks")} />
 				<TimeBlocksSection timeBlocks={timeBlocks} />
+			</div>
+
+			<div>
+				<SectionHeader label={t("notificationsLabel")} />
+				<NotificationSection
+					timeBlocks={timeBlocks.map((tb) => ({
+						id: tb.id,
+						name: tb.name,
+						startTime: tb.startTime,
+					}))}
+					initialSettings={notificationSettings}
+				/>
 			</div>
 
 			<div>

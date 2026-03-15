@@ -24,7 +24,7 @@ export function getCycleStatus(
 		return {
 			isCycling: true,
 			isOnPhase: true,
-			daysRemaining: cycleDaysOn + Math.abs(daysSinceStart),
+			daysRemaining: cycleDaysOn,
 		};
 	}
 

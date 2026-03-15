@@ -219,13 +219,17 @@ Rows may have [PHASE: ...] prefixes from cell background colors. Include phase i
 Return ONLY the structured JSON. No prose.`;
 }
 
-function buildEnrichmentPrompt(userContext: string): string {
+function buildEnrichmentPrompt(userContext: string, userInstructions: string | null): string {
+	const userInstructionsSection = userInstructions
+		? `\n<user_instructions>\n${userInstructions}\n</user_instructions>\n`
+		: "";
+
 	return `You are a medical protocol enrichment system. You receive raw extracted supplement data and must match, structure, and score each item against the user's inventory and time blocks.
 
 <user_context>
 ${userContext}
 </user_context>
-
+${userInstructionsSection}
 <instructions>
 Process each raw extraction item into a structured supplement entry. Follow every rule precisely.
 
@@ -427,6 +431,8 @@ export async function POST(request: NextRequest) {
 	const file = formData.get("file") as File | null;
 	const supplementsJson = formData.get("supplements") as string | null;
 	const timeBlocksJson = formData.get("timeBlocks") as string | null;
+	const userInstructionsRaw = formData.get("userInstructions") as string | null;
+	const activeProtocolsJson = formData.get("activeProtocols") as string | null;
 
 	if (!file) {
 		return Response.json({ error: "no_file" }, { status: 400 });
@@ -445,14 +451,29 @@ export async function POST(request: NextRequest) {
 		name: z.string().max(200),
 	});
 
+	const activeProtocolSchema = z.object({
+		name: z.string().max(200),
+		supplements: z.array(z.string().max(200)).max(100),
+	});
+
 	let supplements: z.infer<typeof contextItemSchema>[] = [];
 	let timeBlocks: z.infer<typeof contextItemSchema>[] = [];
+	let userInstructions: string | null = null;
+	let activeProtocols: z.infer<typeof activeProtocolSchema>[] = [];
 
 	try {
 		const rawSupplements = supplementsJson ? JSON.parse(supplementsJson) : [];
 		const rawTimeBlocks = timeBlocksJson ? JSON.parse(timeBlocksJson) : [];
 		supplements = z.array(contextItemSchema).max(200).parse(rawSupplements);
 		timeBlocks = z.array(contextItemSchema).max(50).parse(rawTimeBlocks);
+
+		if (userInstructionsRaw) {
+			userInstructions = z.string().max(1000).parse(userInstructionsRaw);
+		}
+		if (activeProtocolsJson) {
+			const rawActiveProtocols = JSON.parse(activeProtocolsJson);
+			activeProtocols = z.array(activeProtocolSchema).max(20).parse(rawActiveProtocols);
+		}
 	} catch {
 		return Response.json({ error: "invalid_context" }, { status: 400 });
 	}
@@ -489,7 +510,10 @@ export async function POST(request: NextRequest) {
 	}
 
 	const extractionContent = buildExtractionContent(file, buffer, textContent, compressedImage);
-	const userContext = JSON.stringify({ supplements, timeBlocks }, null, 2);
+	const userContextObj = userInstructions
+		? { supplements, timeBlocks, activeProtocols }
+		: { supplements, timeBlocks };
+	const userContext = JSON.stringify(userContextObj, null, 2);
 
 	const protocol = await protocolRepository.create({
 		userId,
@@ -525,7 +549,7 @@ export async function POST(request: NextRequest) {
 			const { output } = await generateText({
 				model: anthropic("claude-sonnet-4-5"),
 				output: Output.object({ schema: parsedProtocolSchema }),
-				system: buildEnrichmentPrompt(userContext),
+				system: buildEnrichmentPrompt(userContext, userInstructions),
 				messages: [{ role: "user", content: enrichmentContent }],
 			});
 

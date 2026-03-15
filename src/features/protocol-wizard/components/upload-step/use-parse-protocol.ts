@@ -4,16 +4,27 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
-import type { ExistingSupplementSummary, TimeBlockSummary } from "@/features/protocol-wizard/types";
+import type {
+	ActiveProtocolSummary,
+	ExistingSupplementSummary,
+	TimeBlockSummary,
+} from "@/features/protocol-wizard/types";
 
 type ParseStatus = "idle" | "uploading" | "error";
 
-type UserContext = {
+type UseParseProtocolParams = {
 	supplements: ExistingSupplementSummary[];
 	timeBlocks: TimeBlockSummary[];
+	activeProtocols: ActiveProtocolSummary[];
+	userInstructions: string;
 };
 
-export function useParseProtocol(context: UserContext) {
+export function useParseProtocol({
+	supplements,
+	timeBlocks,
+	activeProtocols,
+	userInstructions,
+}: UseParseProtocolParams) {
 	const [status, setStatus] = useState<ParseStatus>("idle");
 	const [errorKey, setErrorKey] = useState<string | null>(null);
 	const router = useRouter();
@@ -25,8 +36,14 @@ export function useParseProtocol(context: UserContext) {
 
 		const formData = new FormData();
 		formData.append("file", file);
-		formData.append("supplements", JSON.stringify(context.supplements));
-		formData.append("timeBlocks", JSON.stringify(context.timeBlocks));
+		formData.append("supplements", JSON.stringify(supplements));
+		formData.append("timeBlocks", JSON.stringify(timeBlocks));
+
+		const trimmed = userInstructions.trim();
+		if (trimmed) {
+			formData.append("userInstructions", trimmed);
+			formData.append("activeProtocols", JSON.stringify(activeProtocols));
+		}
 
 		try {
 			const res = await fetch("/api/protocol/parse", {

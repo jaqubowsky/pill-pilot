@@ -1,9 +1,13 @@
 "use client";
 
-import { Camera, FileText, Loader2, PenLine } from "lucide-react";
+import { Camera, ChevronDown, ChevronUp, FileText, Loader2, PenLine } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import type { ExistingSupplementSummary, TimeBlockSummary } from "@/features/protocol-wizard/types";
+import type {
+	ActiveProtocolSummary,
+	ExistingSupplementSummary,
+	TimeBlockSummary,
+} from "@/features/protocol-wizard/types";
 import { BackButton } from "@/shared/components/back-button";
 import { Button } from "@/shared/components/ui/button";
 import { FileDropzone } from "./file-dropzone";
@@ -12,19 +16,24 @@ import { useUploadStep } from "./use-upload-step";
 type UploadStepProps = {
 	supplements: ExistingSupplementSummary[];
 	timeBlocks: TimeBlockSummary[];
+	activeProtocols: ActiveProtocolSummary[];
 };
 
-export function UploadStep({ supplements, timeBlocks }: UploadStepProps) {
+export function UploadStep({ supplements, timeBlocks, activeProtocols }: UploadStepProps) {
 	const t = useTranslations();
 	const {
 		cameraInputRef,
 		isParsing,
 		fileName,
 		errorKey,
+		userInstructions,
+		setUserInstructions,
+		isInstructionsOpen,
+		toggleInstructions,
 		parseFile,
 		handleCameraChange,
 		openCamera,
-	} = useUploadStep({ supplements, timeBlocks });
+	} = useUploadStep({ supplements, timeBlocks, activeProtocols });
 
 	return (
 		<div className="px-md pt-2xl pb-3xl flex flex-col gap-xl min-h-[calc(100dvh-4rem)]">
@@ -37,6 +46,30 @@ export function UploadStep({ supplements, timeBlocks }: UploadStepProps) {
 			</div>
 
 			<div className="flex flex-col gap-md">
+				<button
+					type="button"
+					onClick={toggleInstructions}
+					className="flex items-center gap-xs text-sm text-content-muted self-start"
+				>
+					{isInstructionsOpen ? (
+						<ChevronUp className="size-4" />
+					) : (
+						<ChevronDown className="size-4" />
+					)}
+					{t("protocolWizard.userInstructionsToggle")}
+				</button>
+
+				{isInstructionsOpen && (
+					<textarea
+						value={userInstructions}
+						onChange={(e) => setUserInstructions(e.target.value)}
+						maxLength={1000}
+						rows={3}
+						placeholder={t("protocolWizard.userInstructionsPlaceholder")}
+						className="w-full rounded-xl border border-edge bg-surface-raised p-md text-sm text-content placeholder:text-content-faint resize-none focus:outline-none focus:ring-2 focus:ring-brand-300"
+					/>
+				)}
+
 				{isParsing ? (
 					<div className="flex flex-col items-center gap-md rounded-xl border-2 border-dashed border-brand-300 bg-brand-50/50 p-xl">
 						<Loader2 className="size-10 text-brand-500 animate-spin" />

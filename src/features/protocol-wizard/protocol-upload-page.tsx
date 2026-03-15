@@ -1,12 +1,33 @@
+import { eq } from "drizzle-orm";
+import { db } from "@/shared/db/client";
+import { protocolSupplements, supplements as supplementsTable } from "@/shared/db/schema";
+import { protocolRepository } from "@/shared/repositories/protocol-repository";
 import { supplementRepository } from "@/shared/repositories/supplement-repository";
 import { timeBlockRepository } from "@/shared/repositories/time-block-repository";
 import { UploadStep } from "./components/upload-step";
+import type { ActiveProtocolSummary } from "./types";
 
 export async function ProtocolUploadPage({ userId }: { userId: string }) {
-	const [timeBlocks, supplements] = await Promise.all([
+	const [timeBlocks, supplements, activeProtocols] = await Promise.all([
 		timeBlockRepository.findByUserId(userId),
 		supplementRepository.findByUserId(userId),
+		protocolRepository.findActiveByUserId(userId),
 	]);
+
+	const activeProtocolSummaries: ActiveProtocolSummary[] = await Promise.all(
+		activeProtocols.map(async (protocol) => {
+			const rows = await db
+				.select({ name: supplementsTable.name })
+				.from(protocolSupplements)
+				.innerJoin(supplementsTable, eq(protocolSupplements.supplementId, supplementsTable.id))
+				.where(eq(protocolSupplements.protocolId, protocol.id));
+
+			return {
+				name: protocol.name,
+				supplements: rows.map((r) => r.name),
+			};
+		}),
+	);
 
 	return (
 		<UploadStep
@@ -20,6 +41,7 @@ export async function ProtocolUploadPage({ userId }: { userId: string }) {
 				name: tb.name,
 				startTime: tb.startTime,
 			}))}
+			activeProtocols={activeProtocolSummaries}
 		/>
 	);
 }

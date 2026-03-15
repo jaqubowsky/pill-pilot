@@ -10,4 +10,9 @@ type ExistingSupplementSummary = {
 	brandName: string | null;
 };
 
-export type { ExistingSupplementSummary, TimeBlockSummary };
+type ActiveProtocolSummary = {
+	name: string;
+	supplements: string[];
+};
+
+export type { ActiveProtocolSummary, ExistingSupplementSummary, TimeBlockSummary };

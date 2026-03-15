@@ -15,7 +15,7 @@ function urlBase64ToUint8Array(base64String: string) {
 
 export function usePushSubscription() {
 	const [isSubscribed, setIsSubscribed] = useState(false);
-	const [isSupported, setIsSupported] = useState(false);
+	const [isSupported, setIsSupported] = useState(true);
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {

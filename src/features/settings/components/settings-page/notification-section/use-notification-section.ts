@@ -2,6 +2,8 @@
 
 import { useAction } from "next-safe-action/hooks";
 import { useCallback, useOptimistic, useTransition } from "react";
+import { toast } from "sonner";
+import { sendTestNotification } from "@/features/notifications/api/actions/send-test-notification";
 import { updateNotificationSettings } from "@/features/notifications/api/actions/update-notification-settings";
 import { usePushSubscription } from "@/features/notifications/hooks/use-push-subscription";
 
@@ -48,6 +50,10 @@ export function useNotificationSection(
 	const [isPending, startTransition] = useTransition();
 
 	const { execute } = useAction(updateNotificationSettings);
+	const { execute: executeTest, isPending: isTestPending } = useAction(sendTestNotification, {
+		onSuccess: () => toast.success("Powiadomienie testowe wysłane"),
+		onError: () => toast.error("Nie udało się wysłać powiadomienia"),
+	});
 
 	const handleTogglePush = useCallback(async () => {
 		if (isSubscribed) {
@@ -111,14 +117,20 @@ export function useNotificationSection(
 		[optimisticSettings, setOptimisticSettings, execute],
 	);
 
+	const handleTestNotification = useCallback(() => {
+		executeTest({});
+	}, [executeTest]);
+
 	return {
 		isSubscribed,
 		isSupported,
 		pushLoading,
 		isPending,
+		isTestPending,
 		blockSettings: optimisticSettings,
 		handleTogglePush,
 		handleToggleBlock,
 		handleTimeChange,
+		handleTestNotification,
 	};
 }

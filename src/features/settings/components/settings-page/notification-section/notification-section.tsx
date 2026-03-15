@@ -1,6 +1,8 @@
 "use client";
 
+import { Bell } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { Button } from "@/shared/components/ui/button";
 import { ToggleRow } from "@/shared/components/toggle-row";
 import { Input } from "@/shared/components/ui/input";
 import { Switch } from "@/shared/components/ui/switch";
@@ -18,10 +20,12 @@ export function NotificationSection({ timeBlocks, initialSettings }: Notificatio
 		isSubscribed,
 		isSupported,
 		pushLoading,
+		isTestPending,
 		blockSettings,
 		handleTogglePush,
 		handleToggleBlock,
 		handleTimeChange,
+		handleTestNotification,
 	} = useNotificationSection(timeBlocks, initialSettings);
 
 	if (!isSupported) {
@@ -38,29 +42,41 @@ export function NotificationSection({ timeBlocks, initialSettings }: Notificatio
 			/>
 
 			{isSubscribed && (
-				<div className="flex flex-col gap-xs">
-					{blockSettings.map((setting) => (
-						<div
-							key={setting.timeBlockId}
-							className="flex items-center justify-between gap-sm min-h-11"
-						>
-							<div className="flex items-center gap-sm flex-1 min-w-0">
-								<Switch
-									checked={setting.enabled}
-									onCheckedChange={(checked) => handleToggleBlock(setting.timeBlockId, checked)}
+				<>
+					<div className="flex flex-col gap-xs">
+						{blockSettings.map((setting) => (
+							<div
+								key={setting.timeBlockId}
+								className="flex items-center justify-between gap-sm min-h-11"
+							>
+								<div className="flex items-center gap-sm flex-1 min-w-0">
+									<Switch
+										checked={setting.enabled}
+										onCheckedChange={(checked) => handleToggleBlock(setting.timeBlockId, checked)}
+									/>
+									<span className="text-sm text-content-muted truncate">{setting.name}</span>
+								</div>
+								<Input
+									type="time"
+									value={setting.notifyAt}
+									onChange={(e) => handleTimeChange(setting.timeBlockId, e.target.value)}
+									disabled={!setting.enabled}
+									className="w-24 text-center"
 								/>
-								<span className="text-sm text-content-muted truncate">{setting.name}</span>
 							</div>
-							<Input
-								type="time"
-								value={setting.notifyAt}
-								onChange={(e) => handleTimeChange(setting.timeBlockId, e.target.value)}
-								disabled={!setting.enabled}
-								className="w-24 text-center"
-							/>
-						</div>
-					))}
-				</div>
+						))}
+					</div>
+					<Button
+						variant="outline"
+						size="sm"
+						disabled={isTestPending}
+						onClick={handleTestNotification}
+						className="w-full"
+					>
+						<Bell className="size-4" />
+						{t("test")}
+					</Button>
+				</>
 			)}
 		</div>
 	);

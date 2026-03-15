@@ -155,7 +155,8 @@
 		"retry": "Spróbuj ponownie",
 		"notificationsLabel": "Powiadomienia",
 		"notifications": {
-			"enable": "Włącz powiadomienia"
+			"enable": "Włącz powiadomienia",
+			"test": "Wyślij testowe powiadomienie"
 		}
 	},
 	"protocolWizard": {

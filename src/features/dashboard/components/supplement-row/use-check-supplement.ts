@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { markTaken } from "@/features/dashboard/api/actions/mark-taken";
 import { markUntaken } from "@/features/dashboard/api/actions/mark-untaken";
@@ -8,6 +8,10 @@ import { markUntaken } from "@/features/dashboard/api/actions/mark-untaken";
 export function useCheckSupplement(initialChecked: boolean, onComplete?: () => void) {
 	const [checked, setChecked] = useState(initialChecked);
 	const [isPending, startTransition] = useTransition();
+
+	useEffect(() => {
+		setChecked(initialChecked);
+	}, [initialChecked]);
 
 	function check(scheduleId: string, date: string, skipTimer?: boolean) {
 		setChecked(true);

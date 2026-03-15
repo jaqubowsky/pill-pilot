@@ -46,7 +46,6 @@ const ICON_MAP: Record<string, LucideIcon> = {
 };
 
 const TIME_BLOCK_ICONS = Object.keys(ICON_MAP);
-type TimeBlockIcon = keyof typeof ICON_MAP;
 
 type IconPickerProps = {
 	value: string;

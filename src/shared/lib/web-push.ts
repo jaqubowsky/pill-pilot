@@ -20,4 +20,3 @@ export function sendPushNotification(
 	const subscription = JSON.parse(subscriptionJson) as webPush.PushSubscription;
 	return webPush.sendNotification(subscription, JSON.stringify(payload));
 }
-

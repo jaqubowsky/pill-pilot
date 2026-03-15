@@ -54,6 +54,7 @@ export type TimeBlockStatus = {
 	sortOrder: string;
 	entries: ScheduleEntry[];
 	completedCount: number;
+	actionableCount: number;
 };
 
 export type DailyStatus = {

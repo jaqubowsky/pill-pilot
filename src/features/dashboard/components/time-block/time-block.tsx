@@ -40,7 +40,7 @@ export function TimeBlock({
 					name={block.blockName}
 					startTime={block.startTime}
 					completed={block.completedCount}
-					total={block.entries.length}
+					total={block.actionableCount}
 					isOpen={isOpen}
 				/>
 			</Button>

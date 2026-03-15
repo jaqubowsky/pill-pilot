@@ -8,6 +8,13 @@ type BlockInfo = {
 	blockSortOrder: string;
 };
 
+function isActionable(entry: ScheduleEntry): boolean {
+	if (entry.isExpired) return false;
+	if (entry.dependency && !entry.dependency.isUnlocked) return false;
+	if (entry.cycling && !entry.cycling.isOnPhase) return false;
+	return true;
+}
+
 export function groupByTimeBlock(
 	entries: { block: BlockInfo; entry: ScheduleEntry; hasLog: boolean }[],
 ): TimeBlockStatus[] {
@@ -23,13 +30,17 @@ export function groupByTimeBlock(
 				sortOrder: info.blockSortOrder,
 				entries: [],
 				completedCount: 0,
+				actionableCount: 0,
 			});
 		}
 
 		const block = blockMap.get(info.blockId)!;
 		block.entries.push(entry);
-		if (hasLog) {
-			block.completedCount += 1;
+		if (isActionable(entry)) {
+			block.actionableCount += 1;
+			if (hasLog) {
+				block.completedCount += 1;
+			}
 		}
 	}
 

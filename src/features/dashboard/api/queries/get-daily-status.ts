@@ -147,8 +147,15 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 	const sortedBlocks = groupByTimeBlock(grouped);
 	const protocolColors = assignProtocolColors(activeSchedules.map((s) => s.protocolId));
 
-	const visibleCount = grouped.length;
-	const visibleCompleted = grouped.filter((row) => row.hasLog).length;
+	const actionable = grouped.filter((row) => {
+		const e = row.entry;
+		if (e.isExpired) return false;
+		if (e.dependency && !e.dependency.isUnlocked) return false;
+		if (e.cycling && !e.cycling.isOnPhase) return false;
+		return true;
+	});
+	const visibleCount = actionable.length;
+	const visibleCompleted = actionable.filter((row) => row.hasLog).length;
 
 	return {
 		timeBlocks: sortedBlocks,

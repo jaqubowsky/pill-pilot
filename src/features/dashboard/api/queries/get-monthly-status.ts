@@ -9,6 +9,8 @@ import {
 	supplements,
 	timeBlocks,
 } from "@/shared/db/schema";
+import { getCycleStatus } from "@/features/dashboard/lib/cycling";
+import { getDependencyStatus } from "@/features/dashboard/lib/dependency";
 
 export type MonthlyDay = {
 	date: string;
@@ -38,6 +40,11 @@ export async function getMonthlyStatus(userId: string, yearMonth: string): Promi
 	const activeSchedules = await db
 		.select({
 			scheduleId: supplementSchedules.id,
+			cycleDaysOn: protocolSupplements.cycleDaysOn,
+			cycleDaysOff: protocolSupplements.cycleDaysOff,
+			startDayOffset: protocolSupplements.startDayOffset,
+			durationDays: protocolSupplements.durationDays,
+			protocolStartDate: protocols.startDate,
 		})
 		.from(supplementSchedules)
 		.innerJoin(
@@ -57,9 +64,7 @@ export async function getMonthlyStatus(userId: string, yearMonth: string): Promi
 			),
 		);
 
-	const totalSchedules = activeSchedules.length;
-
-	if (totalSchedules === 0) {
+	if (activeSchedules.length === 0) {
 		return {
 			days: dates.map((date) => ({
 				date,
@@ -85,15 +90,23 @@ export async function getMonthlyStatus(userId: string, yearMonth: string): Promi
 			),
 		);
 
-	const logsByDate = new Map<string, number>();
+	const logsByDate = new Map<string, Set<string>>();
 	for (const log of logs) {
-		logsByDate.set(log.date, (logsByDate.get(log.date) ?? 0) + 1);
+		if (!logsByDate.has(log.date)) {
+			logsByDate.set(log.date, new Set());
+		}
+		logsByDate.get(log.date)!.add(log.scheduleId);
 	}
 
 	const days: MonthlyDay[] = dates.map((date) => {
-		const completedCount = logsByDate.get(date) ?? 0;
+		const completedSet = logsByDate.get(date) ?? new Set<string>();
+
+		const actionable = activeSchedules.filter((s) => isActionable(s, date));
+		const totalSchedules = actionable.length;
+		const completedCount = actionable.filter((s) => completedSet.has(s.scheduleId)).length;
 		const completionPercent =
 			totalSchedules > 0 ? Math.round((completedCount / totalSchedules) * 100) : 0;
+
 		return {
 			date,
 			totalSchedules,
@@ -103,4 +116,35 @@ export async function getMonthlyStatus(userId: string, yearMonth: string): Promi
 	});
 
 	return { days };
+}
+
+function isActionable(
+	schedule: {
+		cycleDaysOn: number | null;
+		cycleDaysOff: number | null;
+		startDayOffset: number;
+		durationDays: number | null;
+		protocolStartDate: string | null;
+	},
+	date: string,
+): boolean {
+	const dep = getDependencyStatus(
+		schedule.startDayOffset,
+		schedule.durationDays,
+		schedule.protocolStartDate,
+		date,
+	);
+	if (dep.isExpired) return false;
+	if (dep.isDependent && !dep.isUnlocked) return false;
+
+	const cycle = getCycleStatus(
+		schedule.protocolStartDate,
+		schedule.cycleDaysOn,
+		schedule.cycleDaysOff,
+		date,
+		schedule.startDayOffset,
+	);
+	if (cycle.isCycling && !cycle.isOnPhase) return false;
+
+	return true;
 }

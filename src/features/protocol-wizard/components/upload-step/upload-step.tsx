@@ -113,16 +113,6 @@ export function UploadStep({ supplements, timeBlocks }: UploadStepProps) {
 					{t(errorKey as Parameters<typeof t>[0], undefined) ?? t("errors.generic")}
 				</p>
 			)}
-
-			<div className="flex flex-col items-center gap-xs mt-auto">
-				<span className="text-sm text-content-muted">
-					{t("protocolWizard.stepOf", { current: 1, total: 2 })}
-				</span>
-				<div className="flex gap-xs">
-					<span className="size-2 rounded-full bg-brand-500" />
-					<span className="size-2 rounded-full bg-brand-200" />
-				</div>
-			</div>
 		</div>
 	);
 }

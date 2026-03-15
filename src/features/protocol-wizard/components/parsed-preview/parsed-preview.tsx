@@ -165,16 +165,6 @@ export function ParsedPreview({
 						</Button>
 					)}
 				</div>
-
-				<div className="flex flex-col items-center gap-xs mt-auto">
-					<span className="text-sm text-content-muted">
-						{t("protocolWizard.stepOf", { current: 2, total: 2 })}
-					</span>
-					<div className="flex gap-xs">
-						<span className="size-2 rounded-full bg-brand-200" />
-						<span className="size-2 rounded-full bg-brand-500" />
-					</div>
-				</div>
 			</div>
 
 			<AlertDialog open={discardOpen} onOpenChange={setDiscardOpen}>

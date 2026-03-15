@@ -1,6 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useEffect } from "react";
 import {
 	assignProtocolColors,
 	PROTOCOL_BORDER_COLORS,
@@ -16,8 +18,21 @@ type ProtocolSectionProps = {
 
 export function ProtocolSection({ protocols }: ProtocolSectionProps) {
 	const t = useTranslations();
+	const router = useRouter();
 	const { handleAddProtocol } = useProtocolSection();
 	const colorMap = assignProtocolColors(protocols.map((p) => p.id));
+
+	const hasProcessing = protocols.some((p) => p.status === "processing");
+
+	useEffect(() => {
+		if (!hasProcessing) return;
+
+		const interval = setInterval(() => {
+			router.refresh();
+		}, 5000);
+
+		return () => clearInterval(interval);
+	}, [hasProcessing, router]);
 
 	return (
 		<div className="flex flex-col gap-md">

@@ -39,11 +39,11 @@ export function TimeBlock({ block, date, defaultOpen, protocolColors, onCheckCha
 
 			<div
 				className={cn(
-					"grid transition-all duration-250 ease-out",
+					"grid transition-[grid-template-rows] duration-250 ease-out",
 					isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
 				)}
 			>
-				<div className="overflow-hidden">
+				<div className="overflow-hidden min-h-0">
 					<div className="flex flex-col gap-sm px-md pb-md pt-sm">
 						{block.entries.map((entry) => (
 							<SupplementRow
@@ -58,13 +58,19 @@ export function TimeBlock({ block, date, defaultOpen, protocolColors, onCheckCha
 								initialChecked={!!entry.logId}
 								cycling={entry.cycling}
 								dependency={entry.dependency}
+								isExpired={entry.isExpired}
 								notStartedDays={entry.notStartedDays}
 								stockStatus={entry.stockStatus}
 								protocolBorderColor={PROTOCOL_BORDER_COLORS[protocolColors[entry.protocolId] ?? 0]}
 								onCheckChange={onCheckChange}
 							/>
 						))}
-						<CheckAllButton scheduleIds={allScheduleIds} uncheckedIds={uncheckedIds} date={date} />
+						<CheckAllButton
+							scheduleIds={allScheduleIds}
+							uncheckedIds={uncheckedIds}
+							date={date}
+							onCheckChange={onCheckChange}
+						/>
 					</div>
 				</div>
 			</div>

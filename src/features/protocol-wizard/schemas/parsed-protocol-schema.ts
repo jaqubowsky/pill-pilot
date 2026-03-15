@@ -1,0 +1,91 @@
+import { z } from "zod";
+import { DOSAGE_UNITS, SUPPLEMENT_CATEGORIES } from "@/shared/db/schema";
+
+export const CONFIDENCE_THRESHOLD = 0.9;
+
+export const rawExtractionItemSchema = z.object({
+	name: z.string(),
+	rawDosage: z.string(),
+	rawTiming: z.string(),
+	rawNotes: z.string().nullable(),
+	rawCategory: z.string(),
+	rawCycling: z.string().nullable(),
+	rawDependency: z.string().nullable(),
+	isMedication: z.boolean(),
+});
+
+export const rawExtractionSchema = z.object({
+	protocolName: z.string(),
+	items: z.array(rawExtractionItemSchema),
+});
+
+export type RawExtraction = z.infer<typeof rawExtractionSchema>;
+
+export const parsedScheduleSchema = z.object({
+	dosageAmount: z.number().describe("Dosage amount, must be positive"),
+	dosageUnit: z.enum(DOSAGE_UNITS),
+	timeBlockId: z.string(),
+});
+
+export const parsedSupplementSchema = z.object({
+	name: z.string(),
+	existingSupplementId: z.string().nullable(),
+	brandName: z.string().nullable(),
+	category: z.enum(SUPPLEMENT_CATEGORIES),
+	isCritical: z.boolean(),
+	notes: z
+		.string()
+		.nullable()
+		.optional()
+		.default(null)
+		.describe(
+			"Notes about this supplement in Polish (e.g. '30 min przed jedzeniem', 'z posiłkiem')",
+		),
+	cycleDaysOn: z
+		.number()
+		.nullable()
+		.optional()
+		.default(null)
+		.describe("Number of days to take the supplement (cycling pattern)"),
+	cycleDaysOff: z
+		.number()
+		.nullable()
+		.optional()
+		.default(null)
+		.describe("Number of days to pause the supplement (cycling pattern)"),
+	startDayOffset: z
+		.number()
+		.optional()
+		.default(0)
+		.describe(
+			"Day offset from protocol start date when this supplement becomes active. 0 = starts immediately. E.g. 14 for supplements that start 2 weeks after protocol begins.",
+		),
+	durationDays: z
+		.number()
+		.nullable()
+		.optional()
+		.default(null)
+		.describe(
+			"How many days to take this supplement. null = indefinitely/permanently ('Stale'). E.g. 14 for '14 dni', 90 for '3 msc'. Derived from 'Okres' column.",
+		),
+	confidence: z.number().describe("Confidence score between 0.0 and 1.0"),
+	uncertaintyReason: z
+		.string()
+		.nullable()
+		.optional()
+		.default(null)
+		.describe(
+			"When confidence < 0.9, explain in Polish why (e.g. 'Dawka nieczytelna', 'Nazwa niejednoznaczna')",
+		),
+	schedules: z.array(parsedScheduleSchema),
+	_removed: z.boolean().optional(),
+});
+
+export const parsedProtocolSchema = z.object({
+	protocolName: z.string(),
+	supplements: z.array(parsedSupplementSchema),
+});
+
+export type ParsedProtocol = z.infer<typeof parsedProtocolSchema>;
+export type ParsedSupplement = z.infer<typeof parsedSupplementSchema>;
+export type ParsedSchedule = z.infer<typeof parsedScheduleSchema>;

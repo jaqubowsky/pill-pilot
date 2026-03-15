@@ -3,7 +3,7 @@
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { parsedProtocolSchema } from "@/features/onboarding/schemas/parsed-protocol-schema";
+import { parsedProtocolSchema } from "@/features/protocol-wizard/schemas/parsed-protocol-schema";
 import { db } from "@/shared/db/client";
 import { protocolSupplements } from "@/shared/db/schema";
 import { ActionError, ActionErrorCode, authActionClient } from "@/shared/lib/safe-action";
@@ -51,8 +51,6 @@ export const updateProtocol = authActionClient
 			}
 		}
 
-		const psIdMap: Record<string, string> = {};
-
 		let sortOrder = 0;
 		for (const item of parsed.supplements) {
 			const supplementId = supplementIdMap[item.name];
@@ -71,10 +69,10 @@ export const updateProtocol = authActionClient
 				notes: item.notes ?? null,
 				isCritical: item.isCritical,
 				sortOrder: sortOrder++,
+				startDayOffset: item.startDayOffset ?? 0,
+				durationDays: item.durationDays ?? null,
 				...cyclingFields,
 			});
-
-			psIdMap[item.name] = protocolSupplement.id;
 
 			for (const schedule of item.schedules) {
 				if (!validTimeBlockIds.has(schedule.timeBlockId)) {
@@ -86,18 +84,6 @@ export const updateProtocol = authActionClient
 					dosageAmount: String(schedule.dosageAmount),
 					dosageUnit: schedule.dosageUnit,
 				});
-			}
-		}
-
-		for (const item of parsed.supplements) {
-			if (item.prerequisiteName && item.delayDays) {
-				const prerequisiteId = psIdMap[item.prerequisiteName];
-				if (prerequisiteId) {
-					await protocolSupplementRepository.update(psIdMap[item.name], {
-						prerequisiteId,
-						delayDays: item.delayDays,
-					});
-				}
 			}
 		}
 

@@ -11,7 +11,7 @@ export function useLogin() {
 		setIsLoading(true);
 		await authClient.signIn.social({
 			provider: "google",
-			callbackURL: "/onboarding",
+			callbackURL: "/dashboard",
 		});
 	}
 

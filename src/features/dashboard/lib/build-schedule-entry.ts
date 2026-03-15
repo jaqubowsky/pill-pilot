@@ -16,8 +16,8 @@ type ScheduleRow = {
 	stockUnit: DosageUnit;
 	cycleDaysOn: number | null;
 	cycleDaysOff: number | null;
-	prerequisiteId: string | null;
-	delayDays: number | null;
+	startDayOffset: number;
+	durationDays: number | null;
 	protocolSupplementId: string;
 	protocolStartDate: string | null;
 	protocolId: string;
@@ -27,7 +27,6 @@ type Log = { id: string; takenAt: Date };
 
 type Context = {
 	logMap: Map<string, Log>;
-	psIdToName: Map<string, string>;
 	dailyDosageMap: Map<string, number>;
 	date: string;
 };
@@ -46,11 +45,10 @@ export function buildScheduleEntry(
 	);
 
 	const depStatus = getDependencyStatus(
-		row.prerequisiteId,
-		row.delayDays,
+		row.startDayOffset,
+		row.durationDays,
 		row.protocolStartDate,
 		ctx.date,
-		ctx.psIdToName.get(row.prerequisiteId ?? "") ?? "",
 	);
 
 	let notStartedDays: number | null = null;
@@ -89,9 +87,9 @@ export function buildScheduleEntry(
 				? {
 						isUnlocked: depStatus.isUnlocked,
 						daysRemaining: depStatus.daysRemaining,
-						prerequisiteName: depStatus.prerequisiteName,
 					}
 				: null,
+			isExpired: depStatus.isExpired,
 			notStartedDays,
 		},
 		hasLog: !!log,

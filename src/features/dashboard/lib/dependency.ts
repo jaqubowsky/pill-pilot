@@ -1,28 +1,40 @@
 type DependencyStatus =
-	| { isDependent: false }
-	| { isDependent: true; isUnlocked: boolean; daysRemaining: number; prerequisiteName: string };
+	| { isDependent: false; isExpired: false }
+	| { isDependent: true; isUnlocked: boolean; daysRemaining: number; isExpired: false }
+	| { isDependent: false; isExpired: true };
 
 export function getDependencyStatus(
-	prerequisiteId: string | null,
-	delayDays: number | null,
+	startDayOffset: number,
+	durationDays: number | null,
 	protocolStartDate: string | null,
 	currentDate: string,
-	prerequisiteName: string,
 ): DependencyStatus {
-	if (prerequisiteId === null || delayDays === null || protocolStartDate === null) {
-		return { isDependent: false };
+	if (protocolStartDate === null) {
+		return { isDependent: false, isExpired: false };
 	}
 
 	const start = new Date(protocolStartDate);
 	const current = new Date(currentDate);
 	const diffMs = current.getTime() - start.getTime();
 	const daysElapsed = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-	const remaining = Math.max(0, delayDays - daysElapsed);
+
+	if (durationDays !== null) {
+		const endDay = startDayOffset + durationDays;
+		if (daysElapsed >= endDay) {
+			return { isDependent: false, isExpired: true };
+		}
+	}
+
+	if (startDayOffset === 0) {
+		return { isDependent: false, isExpired: false };
+	}
+
+	const remaining = Math.max(0, startDayOffset - daysElapsed);
 
 	return {
 		isDependent: true,
-		isUnlocked: daysElapsed >= delayDays,
+		isUnlocked: daysElapsed >= startDayOffset,
 		daysRemaining: remaining,
-		prerequisiteName,
+		isExpired: false,
 	};
 }

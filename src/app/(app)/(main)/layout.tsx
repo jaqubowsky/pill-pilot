@@ -14,7 +14,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
 
 	return (
 		<>
-			{children}
+			<div className="pb-16">{children}</div>
 			<BottomNav />
 		</>
 	);

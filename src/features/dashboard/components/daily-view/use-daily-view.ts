@@ -11,19 +11,6 @@ function toLocalDateString(date: Date): string {
 	return `${y}-${m}-${d}`;
 }
 
-function getActiveBlockIndex(timeBlocks: { startTime: string }[]): number {
-	const now = new Date();
-	const currentMinutes = now.getHours() * 60 + now.getMinutes();
-	let activeIndex = 0;
-	for (let i = 0; i < timeBlocks.length; i++) {
-		const [h, m] = timeBlocks[i].startTime.split(":").map(Number);
-		if (h * 60 + m <= currentMinutes) {
-			activeIndex = i;
-		}
-	}
-	return activeIndex;
-}
-
 type Params = {
 	date: string;
 	status: DailyStatus;
@@ -62,12 +49,6 @@ export function useDailyView({ date, status }: Params) {
 		router.refresh();
 	}, [router]);
 
-	const activeBlockIndex = getActiveBlockIndex(status.timeBlocks);
-
-	function isBlockDefaultOpen(index: number): boolean {
-		return activeBlockIndex === index;
-	}
-
 	const isEmpty = status.timeBlocks.length === 0;
 
 	return {
@@ -75,7 +56,6 @@ export function useDailyView({ date, status }: Params) {
 		isEmpty,
 		goToPrevDay,
 		goToNextDay,
-		isBlockDefaultOpen,
 		refresh,
 	};
 }

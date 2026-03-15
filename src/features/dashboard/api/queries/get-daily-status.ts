@@ -33,7 +33,8 @@ export type ScheduleEntry = {
 	logId: string | null;
 	takenAt: Date | null;
 	cycling: { isOnPhase: boolean; daysRemaining: number } | null;
-	dependency: { isUnlocked: boolean; daysRemaining: number; prerequisiteName: string } | null;
+	dependency: { isUnlocked: boolean; daysRemaining: number } | null;
+	isExpired: boolean;
 	notStartedDays: number | null;
 	protocolId: string;
 };
@@ -43,7 +44,7 @@ export type TimeBlockStatus = {
 	blockName: string;
 	blockIcon: string;
 	startTime: string;
-	sortOrder: number;
+	sortOrder: string;
 	entries: ScheduleEntry[];
 	completedCount: number;
 };
@@ -72,11 +73,11 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 			blockName: timeBlocks.name,
 			blockIcon: timeBlocks.icon,
 			startTime: timeBlocks.startTime,
-			blockSortOrder: timeBlocks.sortOrder,
+			blockSortOrder: timeBlocks.startTime,
 			cycleDaysOn: protocolSupplements.cycleDaysOn,
 			cycleDaysOff: protocolSupplements.cycleDaysOff,
-			prerequisiteId: protocolSupplements.prerequisiteId,
-			delayDays: protocolSupplements.delayDays,
+			startDayOffset: protocolSupplements.startDayOffset,
+			durationDays: protocolSupplements.durationDays,
 			protocolSupplementId: protocolSupplements.id,
 			protocolStartDate: protocols.startDate,
 			protocolId: protocols.id,
@@ -111,10 +112,6 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 
 	const logMap = new Map(logs.map((l) => [l.scheduleId, l]));
 
-	const psIdToName = new Map(
-		activeSchedules.map((s) => [s.protocolSupplementId, s.supplementName]),
-	);
-
 	const dailyDosageMap = new Map<string, number>();
 	for (const row of activeSchedules) {
 		dailyDosageMap.set(
@@ -123,26 +120,31 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 		);
 	}
 
-	const ctx = { logMap, psIdToName, dailyDosageMap, date };
+	const ctx = { logMap, dailyDosageMap, date };
 
-	const grouped = activeSchedules.map((row) => ({
-		block: {
-			blockId: row.blockId,
-			blockName: row.blockName,
-			blockIcon: row.blockIcon,
-			startTime: row.startTime,
-			blockSortOrder: row.blockSortOrder,
-		},
-		...buildScheduleEntry(row, ctx),
-	}));
+	const grouped = activeSchedules
+		.map((row) => ({
+			block: {
+				blockId: row.blockId,
+				blockName: row.blockName,
+				blockIcon: row.blockIcon,
+				startTime: row.startTime,
+				blockSortOrder: row.blockSortOrder,
+			},
+			...buildScheduleEntry(row, ctx),
+		}))
+		.filter((row) => row.entry.notStartedDays === null || row.hasLog);
 
 	const sortedBlocks = groupByTimeBlock(grouped);
 	const protocolColors = assignProtocolColors(activeSchedules.map((s) => s.protocolId));
 
+	const visibleCount = grouped.length;
+	const visibleCompleted = grouped.filter((row) => row.hasLog).length;
+
 	return {
 		timeBlocks: sortedBlocks,
-		totalSchedules: activeSchedules.length,
-		completedCount: logs.length,
+		totalSchedules: visibleCount,
+		completedCount: visibleCompleted,
 		protocolColors,
 	};
 }

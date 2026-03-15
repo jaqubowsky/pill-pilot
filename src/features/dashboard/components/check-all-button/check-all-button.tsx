@@ -17,13 +17,15 @@ type Props = {
 	scheduleIds: string[];
 	uncheckedIds: string[];
 	date: string;
+	onCheckChange?: () => void;
 };
 
-export function CheckAllButton({ scheduleIds, uncheckedIds, date }: Props) {
+export function CheckAllButton({ scheduleIds, uncheckedIds, date, onCheckChange }: Props) {
 	const t = useTranslations("dashboard");
 	const { confirmOpen, isPending, openConfirm, closeConfirm, handleConfirm } = useCheckAll({
 		scheduleIds,
 		date,
+		onCheckChange,
 	});
 
 	if (uncheckedIds.length === 0) return null;

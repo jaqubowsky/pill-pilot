@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Lock, Repeat } from "lucide-react";
+import { AlertTriangle, CheckCircle, Lock, Repeat } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { StockStatus } from "@/features/dashboard/api/queries/get-daily-status";
 import { CriticalBadge } from "@/shared/components/critical-badge";
@@ -29,7 +29,8 @@ type Props = {
 	isCritical: boolean;
 	initialChecked: boolean;
 	cycling: { isOnPhase: boolean; daysRemaining: number } | null;
-	dependency: { isUnlocked: boolean; daysRemaining: number; prerequisiteName: string } | null;
+	dependency: { isUnlocked: boolean; daysRemaining: number } | null;
+	isExpired: boolean;
 	notStartedDays: number | null;
 	stockStatus: StockStatus | null;
 	protocolBorderColor: string;
@@ -47,6 +48,7 @@ export function SupplementRow({
 	initialChecked,
 	cycling,
 	dependency,
+	isExpired,
 	notStartedDays,
 	stockStatus,
 	protocolBorderColor,
@@ -69,7 +71,11 @@ export function SupplementRow({
 	const isLowStock =
 		stockStatus !== null && stockStatus.currentStock > 0 && stockStatus.daysRemaining < 7;
 	const isDisabled =
-		isNotStarted || isLocked || isOutOfStock || (cycling !== null && !cycling.isOnPhase);
+		isExpired ||
+		isNotStarted ||
+		isLocked ||
+		isOutOfStock ||
+		(cycling !== null && !cycling.isOnPhase);
 
 	return (
 		<>
@@ -90,7 +96,15 @@ export function SupplementRow({
 				/>
 				<div className="flex flex-1 flex-col gap-xs">
 					<div className="flex items-center gap-sm">
-						{(isNotStarted || isLocked) && (
+						{isExpired && (
+							<Popover>
+								<PopoverTrigger className="text-content-faint">
+									<CheckCircle className="size-3.5" />
+								</PopoverTrigger>
+								<PopoverContent className="text-xs w-64">{t("expired")}</PopoverContent>
+							</Popover>
+						)}
+						{!isExpired && (isNotStarted || isLocked) && (
 							<Popover>
 								<PopoverTrigger className="text-content-faint">
 									<Lock className="size-3.5" />
@@ -100,7 +114,6 @@ export function SupplementRow({
 										? t("notStarted", { count: notStartedDays })
 										: t("dependencyLocked", {
 												count: dependency!.daysRemaining,
-												name: dependency!.prerequisiteName,
 											})}
 								</PopoverContent>
 							</Popover>

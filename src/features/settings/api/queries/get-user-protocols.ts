@@ -45,6 +45,8 @@ export async function getUserProtocols(userId: string): Promise<ProtocolWithSche
 			and(
 				eq(protocols.userId, userId),
 				inArray(protocols.status, [
+					ProtocolStatus.processing,
+					ProtocolStatus.failed,
 					ProtocolStatus.draft,
 					ProtocolStatus.active,
 					ProtocolStatus.archived,
@@ -52,12 +54,22 @@ export async function getUserProtocols(userId: string): Promise<ProtocolWithSche
 			),
 		)
 		.orderBy(
-			sql`CASE WHEN ${protocols.status} = 'draft' THEN 0 WHEN ${protocols.status} = 'active' THEN 1 ELSE 2 END`,
+			sql`CASE WHEN ${protocols.status} = 'processing' THEN 0 WHEN ${protocols.status} = 'failed' THEN 1 WHEN ${protocols.status} = 'draft' THEN 2 WHEN ${protocols.status} = 'active' THEN 3 ELSE 4 END`,
 		);
 
 	const result: ProtocolWithSchedules[] = [];
 
 	for (const protocol of userProtocols) {
+		if (protocol.status === "processing" || protocol.status === "failed") {
+			result.push({
+				id: protocol.id,
+				name: protocol.name,
+				status: protocol.status,
+				schedules: [],
+			});
+			continue;
+		}
+
 		const scheduleRows = await db
 			.select({
 				id: supplementSchedules.id,
@@ -88,7 +100,7 @@ export async function getUserProtocols(userId: string): Promise<ProtocolWithSche
 			.innerJoin(supplements, eq(protocolSupplements.supplementId, supplements.id))
 			.innerJoin(timeBlocks, eq(supplementSchedules.timeBlockId, timeBlocks.id))
 			.where(eq(protocolSupplements.protocolId, protocol.id))
-			.orderBy(asc(timeBlocks.sortOrder), asc(protocolSupplements.sortOrder));
+			.orderBy(asc(timeBlocks.startTime), asc(protocolSupplements.sortOrder));
 
 		result.push({
 			id: protocol.id,

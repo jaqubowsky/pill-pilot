@@ -9,13 +9,14 @@ type NewProtocol = typeof protocols.$inferInsert;
 interface IProtocolRepository {
 	findByUserId(userId: string): Promise<Protocol[]>;
 	findActiveByUserId(userId: string): Promise<Protocol[]>;
-	findDraftByUserId(userId: string): Promise<Protocol | undefined>;
 	findById(id: string): Promise<Protocol | undefined>;
 	findByIdAndUserId(id: string, userId: string): Promise<Protocol>;
 	create(data: NewProtocol): Promise<Protocol>;
 	update(id: string, data: Partial<NewProtocol>): Promise<Protocol>;
 	updateStatus(id: string, status: ProtocolStatus): Promise<Protocol>;
 	delete(id: string): Promise<void>;
+	hasProcessingByUserId(userId: string): Promise<boolean>;
+	hasDraftByUserId(userId: string): Promise<boolean>;
 }
 
 class ProtocolRepository implements IProtocolRepository {
@@ -28,14 +29,6 @@ class ProtocolRepository implements IProtocolRepository {
 			.select()
 			.from(protocols)
 			.where(and(eq(protocols.userId, userId), eq(protocols.status, "active")));
-	}
-
-	async findDraftByUserId(userId: string): Promise<Protocol | undefined> {
-		const rows = await db
-			.select()
-			.from(protocols)
-			.where(and(eq(protocols.userId, userId), eq(protocols.status, "draft")));
-		return rows[0];
 	}
 
 	async findById(id: string): Promise<Protocol | undefined> {
@@ -72,6 +65,24 @@ class ProtocolRepository implements IProtocolRepository {
 
 	async delete(id: string): Promise<void> {
 		await db.delete(protocols).where(eq(protocols.id, id));
+	}
+
+	async hasDraftByUserId(userId: string): Promise<boolean> {
+		const rows = await db
+			.select({ id: protocols.id })
+			.from(protocols)
+			.where(and(eq(protocols.userId, userId), eq(protocols.status, "draft")))
+			.limit(1);
+		return rows.length > 0;
+	}
+
+	async hasProcessingByUserId(userId: string): Promise<boolean> {
+		const rows = await db
+			.select({ id: protocols.id })
+			.from(protocols)
+			.where(and(eq(protocols.userId, userId), eq(protocols.status, "processing")))
+			.limit(1);
+		return rows.length > 0;
 	}
 }
 

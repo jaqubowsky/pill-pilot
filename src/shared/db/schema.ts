@@ -1,6 +1,5 @@
 import { createId } from "@paralleldrive/cuid2";
 import {
-	type AnyPgColumn,
 	boolean,
 	date,
 	decimal,
@@ -17,11 +16,6 @@ function enumToMap<T extends readonly [string, ...string[]]>(values: T) {
 	return Object.fromEntries(values.map((v) => [v, v])) as { [K in T[number]]: K };
 }
 
-export const onboardingStepEnum = pgEnum("onboarding_step", ["upload", "preview", "complete"]);
-export const ONBOARDING_STEPS = onboardingStepEnum.enumValues;
-export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
-export const OnboardingStep = enumToMap(ONBOARDING_STEPS);
-
 export const supplementCategoryEnum = pgEnum("supplement_category", [
 	"medication",
 	"supplement",
@@ -36,7 +30,13 @@ export const SUPPLEMENT_CATEGORIES = supplementCategoryEnum.enumValues;
 export type SupplementCategory = (typeof SUPPLEMENT_CATEGORIES)[number];
 export const SupplementCategory = enumToMap(SUPPLEMENT_CATEGORIES);
 
-export const protocolStatusEnum = pgEnum("protocol_status", ["draft", "active", "archived"]);
+export const protocolStatusEnum = pgEnum("protocol_status", [
+	"draft",
+	"active",
+	"archived",
+	"processing",
+	"failed",
+]);
 export const PROTOCOL_STATUSES = protocolStatusEnum.enumValues;
 export type ProtocolStatus = (typeof PROTOCOL_STATUSES)[number];
 export const ProtocolStatus = enumToMap(PROTOCOL_STATUSES);
@@ -65,7 +65,6 @@ export const users = pgTable("users", {
 	name: text("name"),
 	emailVerified: boolean("email_verified").notNull().default(false),
 	image: text("image"),
-	onboardingStep: onboardingStepEnum("onboarding_step").notNull().default("upload"),
 	settings: json("settings"),
 	createdAt: timestamp("created_at").notNull().defaultNow(),
 	updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -152,40 +151,32 @@ export const protocols = pgTable("protocols", {
 		.notNull()
 		.references(() => users.id, { onDelete: "cascade" }),
 	name: text("name").notNull(),
-	parsedData: text("parsed_data").notNull(),
+	parsedData: text("parsed_data"),
 	status: protocolStatusEnum("status").notNull().default("draft"),
 	startDate: date("start_date"),
 	createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const protocolSupplements = pgTable(
-	"protocol_supplements",
-	{
-		id: text("id")
-			.primaryKey()
-			.$defaultFn(() => createId()),
-		protocolId: text("protocol_id")
-			.notNull()
-			.references(() => protocols.id, { onDelete: "cascade" }),
-		supplementId: text("supplement_id")
-			.notNull()
-			.references(() => supplements.id, { onDelete: "cascade" }),
-		notes: text("notes"),
-		isCritical: boolean("is_critical").notNull().default(false),
-		cycleDaysOn: integer("cycle_days_on"),
-		cycleDaysOff: integer("cycle_days_off"),
-		prerequisiteId: text("prerequisite_id").references((): AnyPgColumn => protocolSupplements.id, {
-			onDelete: "set null",
-		}),
-		delayDays: integer("delay_days"),
-		sortOrder: integer("sort_order").notNull().default(0),
-		active: boolean("active").notNull().default(true),
-		createdAt: timestamp("created_at").notNull().defaultNow(),
-	},
-	(table) => ({
-		uniqueProtocolSupplement: unique().on(table.protocolId, table.supplementId),
-	}),
-);
+export const protocolSupplements = pgTable("protocol_supplements", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => createId()),
+	protocolId: text("protocol_id")
+		.notNull()
+		.references(() => protocols.id, { onDelete: "cascade" }),
+	supplementId: text("supplement_id")
+		.notNull()
+		.references(() => supplements.id, { onDelete: "cascade" }),
+	notes: text("notes"),
+	isCritical: boolean("is_critical").notNull().default(false),
+	cycleDaysOn: integer("cycle_days_on"),
+	cycleDaysOff: integer("cycle_days_off"),
+	startDayOffset: integer("start_day_offset").notNull().default(0),
+	durationDays: integer("duration_days"),
+	sortOrder: integer("sort_order").notNull().default(0),
+	active: boolean("active").notNull().default(true),
+	createdAt: timestamp("created_at").notNull().defaultNow(),
+});
 
 export const supplementSchedules = pgTable("supplement_schedules", {
 	id: text("id")

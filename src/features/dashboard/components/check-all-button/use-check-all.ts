@@ -7,9 +7,10 @@ import { markBlockTaken } from "@/features/dashboard/api/actions/mark-block-take
 type UseCheckAllParams = {
 	scheduleIds: string[];
 	date: string;
+	onCheckChange?: () => void;
 };
 
-export function useCheckAll({ scheduleIds, date }: UseCheckAllParams) {
+export function useCheckAll({ scheduleIds, date, onCheckChange }: UseCheckAllParams) {
 	const [confirmOpen, setConfirmOpen] = useState(false);
 	const [isPending, startTransition] = useTransition();
 
@@ -27,7 +28,9 @@ export function useCheckAll({ scheduleIds, date }: UseCheckAllParams) {
 			const result = await markBlockTaken({ scheduleIds, date });
 			if (result?.serverError) {
 				toast.error(result.serverError);
+				return;
 			}
+			onCheckChange?.();
 		});
 	}
 

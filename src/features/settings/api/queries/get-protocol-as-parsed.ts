@@ -1,5 +1,5 @@
 import { and, asc, eq } from "drizzle-orm";
-import type { ParsedProtocol } from "@/features/onboarding/schemas/parsed-protocol-schema";
+import type { ParsedProtocol } from "@/features/protocol-wizard/schemas/parsed-protocol-schema";
 import { db } from "@/shared/db/client";
 import {
 	type DosageUnit,
@@ -24,11 +24,10 @@ export async function getProtocolAsParsed(
 		.from(protocols)
 		.where(and(eq(protocols.id, protocolId), eq(protocols.userId, userId)));
 
-	if (!protocol[0]) return null;
+	if (!protocol[0] || !protocol[0].parsedData) return null;
 
 	const rows = await db
 		.select({
-			psId: protocolSupplements.id,
 			supplementId: supplements.id,
 			supplementName: supplements.name,
 			brandName: supplements.brandName,
@@ -37,10 +36,9 @@ export async function getProtocolAsParsed(
 			notes: protocolSupplements.notes,
 			cycleDaysOn: protocolSupplements.cycleDaysOn,
 			cycleDaysOff: protocolSupplements.cycleDaysOff,
-			prerequisiteId: protocolSupplements.prerequisiteId,
-			delayDays: protocolSupplements.delayDays,
+			startDayOffset: protocolSupplements.startDayOffset,
+			durationDays: protocolSupplements.durationDays,
 			sortOrder: protocolSupplements.sortOrder,
-			scheduleId: supplementSchedules.id,
 			dosageAmount: supplementSchedules.dosageAmount,
 			dosageUnit: supplementSchedules.dosageUnit,
 			timeBlockId: supplementSchedules.timeBlockId,
@@ -63,11 +61,11 @@ export async function getProtocolAsParsed(
 		notes: string | null;
 		cycleDaysOn: number | null;
 		cycleDaysOff: number | null;
-		prerequisiteName: string | null;
-		delayDays: number | null;
+		startDayOffset: number;
+		durationDays: number | null;
 		confidence: number;
+		uncertaintyReason: string | null;
 		schedules: { dosageAmount: number; dosageUnit: DosageUnit; timeBlockId: string }[];
-		_prerequisiteId: string | null;
 	};
 
 	const supplementMap = new Map<string, SupplementEntry>();
@@ -83,11 +81,11 @@ export async function getProtocolAsParsed(
 				notes: row.notes,
 				cycleDaysOn: row.cycleDaysOn,
 				cycleDaysOff: row.cycleDaysOff,
-				prerequisiteName: null,
-				delayDays: row.delayDays,
+				startDayOffset: row.startDayOffset,
+				durationDays: row.durationDays,
 				confidence: 1.0,
+				uncertaintyReason: null,
 				schedules: [],
-				_prerequisiteId: row.prerequisiteId,
 			});
 		}
 
@@ -98,20 +96,10 @@ export async function getProtocolAsParsed(
 		});
 	}
 
-	const psIdToName = new Map<string, string>();
-	for (const row of rows) {
-		psIdToName.set(row.psId, row.supplementName);
-	}
-	for (const entry of supplementMap.values()) {
-		if (entry._prerequisiteId) {
-			entry.prerequisiteName = psIdToName.get(entry._prerequisiteId) ?? null;
-		}
-	}
-
 	return {
 		parsed: {
 			protocolName: protocol[0].name,
-			supplements: Array.from(supplementMap.values()).map(({ _prerequisiteId, ...rest }) => rest),
+			supplements: Array.from(supplementMap.values()),
 		},
 		startDate: protocol[0].startDate,
 	};

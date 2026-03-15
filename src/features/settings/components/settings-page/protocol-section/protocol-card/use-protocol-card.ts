@@ -23,6 +23,8 @@ export function useProtocolCard({ protocol }: UseProtocolCardParams) {
 
 	const isDraft = protocol.status === "draft";
 	const isArchived = protocol.status === "archived";
+	const isProcessing = protocol.status === "processing";
+	const isFailed = protocol.status === "failed";
 
 	const { execute: execArchive, isPending: isArchiving } = useAction(archiveProtocol, {
 		onSuccess: () => {
@@ -52,7 +54,12 @@ export function useProtocolCard({ protocol }: UseProtocolCardParams) {
 	}
 
 	function handleContinueDraft() {
-		router.push("/protocol/new/preview");
+		router.push(`/protocol/new/preview/${protocol.id}`);
+	}
+
+	function handleRetry() {
+		execDelete({ protocolId: protocol.id });
+		router.push("/protocol/new");
 	}
 
 	function handleArchive() {
@@ -74,6 +81,8 @@ export function useProtocolCard({ protocol }: UseProtocolCardParams) {
 		setDeleteConfirmOpen,
 		isDraft,
 		isArchived,
+		isProcessing,
+		isFailed,
 		isArchiving,
 		isReactivating,
 		isDeleting,
@@ -82,5 +91,6 @@ export function useProtocolCard({ protocol }: UseProtocolCardParams) {
 		handleArchive,
 		handleReactivate,
 		handleDelete,
+		handleRetry,
 	};
 }

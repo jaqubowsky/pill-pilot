@@ -5,7 +5,7 @@ type BlockInfo = {
 	blockName: string;
 	blockIcon: string;
 	startTime: string;
-	blockSortOrder: number;
+	blockSortOrder: string;
 };
 
 export function groupByTimeBlock(
@@ -34,8 +34,10 @@ export function groupByTimeBlock(
 	}
 
 	for (const block of blockMap.values()) {
-		block.entries.sort((a, b) => a.sortOrder - b.sortOrder);
+		block.entries.sort(
+			(a, b) => Number(b.isCritical) - Number(a.isCritical) || a.sortOrder - b.sortOrder,
+		);
 	}
 
-	return Array.from(blockMap.values()).sort((a, b) => a.sortOrder - b.sortOrder);
+	return Array.from(blockMap.values()).sort((a, b) => a.sortOrder.localeCompare(b.sortOrder));
 }

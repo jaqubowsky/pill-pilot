@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/shared/db/client";
 import { supplements } from "@/shared/db/schema";
 import { ActionError, ActionErrorCode } from "@/shared/lib/safe-action";
@@ -82,18 +82,18 @@ class SupplementRepository implements ISupplementRepository {
 		await db
 			.update(supplements)
 			.set({
-				currentStock: sql`GREATEST(0, ${supplements.currentStock}::numeric - ${Number(amount)})::text`,
+				currentStock: sql`GREATEST(0, ${supplements.currentStock} - ${Number(amount)})`,
 			})
-			.where(and(eq(supplements.id, id), sql`${supplements.currentStock} IS NOT NULL`));
+			.where(and(eq(supplements.id, id), isNotNull(supplements.currentStock)));
 	}
 
 	async incrementStock(id: string, amount: string): Promise<void> {
 		await db
 			.update(supplements)
 			.set({
-				currentStock: sql`(${supplements.currentStock}::numeric + ${Number(amount)})::text`,
+				currentStock: sql`${supplements.currentStock} + ${Number(amount)}`,
 			})
-			.where(and(eq(supplements.id, id), sql`${supplements.currentStock} IS NOT NULL`));
+			.where(and(eq(supplements.id, id), isNotNull(supplements.currentStock)));
 	}
 }
 

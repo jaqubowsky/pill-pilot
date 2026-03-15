@@ -15,7 +15,7 @@ type StockListProps = {
 
 export function StockListView({ data }: StockListProps) {
 	const t = useTranslations();
-	const { isEmpty, addOpen, setAddOpen, openAddSheet, navigateToOnboarding } = useStockList(data);
+	const { isEmpty, addOpen, setAddOpen, openAddSheet, navigateToNewProtocol } = useStockList(data);
 
 	if (isEmpty) {
 		return (
@@ -31,7 +31,7 @@ export function StockListView({ data }: StockListProps) {
 					<Button
 						variant="default"
 						className="w-full bg-brand-500 text-content-inverse rounded-lg px-lg py-sm text-sm font-medium"
-						onClick={navigateToOnboarding}
+						onClick={navigateToNewProtocol}
 					>
 						{t("common.uploadProtocol")}
 					</Button>

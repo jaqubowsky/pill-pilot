@@ -22,7 +22,7 @@ class TimeBlockRepository implements ITimeBlockRepository {
 			.select()
 			.from(timeBlocks)
 			.where(and(eq(timeBlocks.userId, userId), eq(timeBlocks.active, true)))
-			.orderBy(asc(timeBlocks.sortOrder));
+			.orderBy(asc(timeBlocks.startTime));
 	}
 
 	async findById(id: string): Promise<TimeBlock | undefined> {

@@ -14,9 +14,9 @@ export function useStockList(data: StockList) {
 		setAddOpen(true);
 	}
 
-	function navigateToOnboarding() {
-		router.push("/onboarding");
+	function navigateToNewProtocol() {
+		router.push("/protocol/new");
 	}
 
-	return { isEmpty, addOpen, setAddOpen, openAddSheet, navigateToOnboarding };
+	return { isEmpty, addOpen, setAddOpen, openAddSheet, navigateToNewProtocol };
 }

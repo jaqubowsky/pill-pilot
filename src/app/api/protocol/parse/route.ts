@@ -1,199 +1,450 @@
-import type { UserContent } from 'ai'
-import { generateText, Output } from 'ai'
-import ExcelJS from 'exceljs'
-import { headers } from 'next/headers'
-import type { NextRequest } from 'next/server'
-import { z } from 'zod'
-import { parsedProtocolSchema } from '@/features/onboarding'
-import { anthropic } from '@/shared/lib/ai'
-import { auth } from '@/shared/lib/auth'
+import type { UserContent } from "ai";
+import { generateText, Output } from "ai";
+import ExcelJS from "exceljs";
+import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import type { NextRequest } from "next/server";
+import { after } from "next/server";
+import { z } from "zod";
+import {
+	CONFIDENCE_THRESHOLD,
+	parsedProtocolSchema,
+	rawExtractionSchema,
+} from "@/features/protocol-wizard";
+import { anthropic } from "@/shared/lib/ai";
+import { auth } from "@/shared/lib/auth";
+import { protocolRepository } from "@/shared/repositories/protocol-repository";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024
-const RATE_LIMIT_WINDOW_MS = 60_000
-const RATE_LIMIT_MAX_REQUESTS = 5
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX_REQUESTS = 5;
 
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
 function isRateLimited(userId: string): boolean {
-  const now = Date.now()
-  const entry = rateLimitMap.get(userId)
+	const now = Date.now();
+	const entry = rateLimitMap.get(userId);
 
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS })
-    return false
-  }
+	if (!entry || now > entry.resetAt) {
+		rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+		return false;
+	}
 
-  entry.count++
-  return entry.count > RATE_LIMIT_MAX_REQUESTS
+	entry.count++;
+	return entry.count > RATE_LIMIT_MAX_REQUESTS;
 }
 
-const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 function isPdf(file: File) {
-  return file.type === 'application/pdf' || file.name.endsWith('.pdf')
+	return file.type === "application/pdf" || file.name.endsWith(".pdf");
 }
 
 function isExcel(file: File) {
-  return (
-    file.type.includes('spreadsheet') ||
-    file.type.includes('excel') ||
-    file.name.endsWith('.xlsx') ||
-    file.name.endsWith('.xls')
-  )
+	return (
+		file.type.includes("spreadsheet") ||
+		file.type.includes("excel") ||
+		file.name.endsWith(".xlsx") ||
+		file.name.endsWith(".xls")
+	);
 }
 
 function isImage(file: File) {
-  return IMAGE_TYPES.includes(file.type)
+	return IMAGE_TYPES.includes(file.type);
 }
 
 function isText(file: File) {
-  return file.type === 'text/plain' || file.name.endsWith('.txt')
+	return file.type === "text/plain" || file.name.endsWith(".txt");
+}
+
+function getCellColor(cell: ExcelJS.Cell): string | null {
+	const fill = cell.fill;
+	if (!fill || fill.type !== "pattern" || !fill.fgColor) return null;
+	const color = fill.fgColor;
+	if (color.argb) {
+		const hex = color.argb.slice(2).toLowerCase();
+		if (hex === "ffffff" || hex === "000000") return null;
+		return `#${hex}`;
+	}
+	return null;
 }
 
 async function extractTextFromExcel(buffer: Buffer): Promise<string> {
-  const workbook = new ExcelJS.Workbook()
-  await workbook.xlsx.load(buffer as unknown as ExcelJS.Buffer)
-  const lines: string[] = []
-  for (const worksheet of workbook.worksheets) {
-    lines.push(`Sheet: ${worksheet.name}`)
-    worksheet.eachRow((row) => {
-      const values = row.values as (string | number | null | undefined)[]
-      lines.push(values.slice(1).join(','))
-    })
-  }
-  return lines.join('\n')
+	const workbook = new ExcelJS.Workbook();
+	await workbook.xlsx.load(buffer as unknown as ExcelJS.Buffer);
+	const lines: string[] = [];
+	for (const worksheet of workbook.worksheets) {
+		lines.push(`Sheet: ${worksheet.name}`);
+
+		const legendColors = new Map<string, string>();
+		const legendRow = worksheet.getRow(2);
+		if (legendRow) {
+			legendRow.eachCell((cell, colNumber) => {
+				const color = getCellColor(cell);
+				const text = String(cell.value ?? "").trim();
+				if (color && text) {
+					legendColors.set(color, text);
+				}
+			});
+		}
+
+		if (legendColors.size > 0) {
+			lines.push(
+				`COLOR LEGEND: ${Array.from(legendColors.entries())
+					.map(([c, t]) => `${c}=${t}`)
+					.join(", ")}`,
+			);
+		}
+
+		worksheet.eachRow((row, rowNumber) => {
+			const values = row.values as (string | number | null | undefined)[];
+			const text = values.slice(1).join(",");
+
+			const firstCell = row.getCell(1);
+			const color = getCellColor(firstCell);
+			const phase = color ? legendColors.get(color) : null;
+
+			if (phase) {
+				lines.push(`[PHASE: ${phase}] ${text}`);
+			} else {
+				lines.push(text);
+			}
+		});
+	}
+	return lines.join("\n");
 }
 
-function buildUserContent(file: File, buffer: Buffer, textContent?: string): UserContent {
-  const content: UserContent = []
+function buildExtractionContent(file: File, buffer: Buffer, textContent?: string): UserContent {
+	const content: UserContent = [];
 
-  if (isPdf(file)) {
-    content.push({ type: 'file', data: buffer, mediaType: 'application/pdf' })
-    content.push({ type: 'text', text: 'Parse the treatment protocol from this PDF document.' })
-  } else if (isImage(file)) {
-    content.push({ type: 'image', image: buffer, mediaType: file.type })
-    content.push({
-      type: 'text',
-      text: 'Parse the treatment protocol from this photo/image.',
-    })
-  } else {
-    content.push({
-      type: 'text',
-      text: `Parse this treatment protocol document:\n\n${textContent}`,
-    })
-  }
+	if (isPdf(file)) {
+		content.push({ type: "file", data: buffer, mediaType: "application/pdf" });
+		content.push({
+			type: "text",
+			text: "Extract all supplements and medications from this PDF document.",
+		});
+	} else if (isImage(file)) {
+		content.push({ type: "image", image: buffer, mediaType: file.type });
+		content.push({
+			type: "text",
+			text: "Extract all supplements and medications from this image.",
+		});
+	} else {
+		content.push({
+			type: "text",
+			text: `Extract all supplements and medications from this document:\n\n${textContent}`,
+		});
+	}
 
-  return content
+	return content;
+}
+
+function buildExtractionPrompt(): string {
+	return `You are a medical document parser. Extract ALL supplements and medications from the provided document (typically in Polish).
+
+<instructions>
+- Extract every supplement and medication mentioned, even if dosage is unclear.
+- For each item, capture the raw text exactly as written — do NOT interpret or normalize.
+- name: product name as written (e.g. "NAC 600mg", "Witamina D3 2000 IU")
+- rawDosage: dosage as written (e.g. "2x1 kapsułka", "2000 IU rano + 1000 IU wieczór")
+- rawTiming: when to take as written (e.g. "na czczo", "z posiłkiem", "rano i wieczorem")
+- rawNotes: any special instructions AND duration/period info as written (e.g. "30 min przed jedzeniem", "rozpuścić w wodzie", "Okres: 2-3 msc", "Okres: Leczenie jelit", "Okres: Zużyć 2 opak.", "Okres: Czas leczenia + do zużycia opak."). Include the "Okres" column value if present. null if none.
+- rawCategory: type as written or inferred (e.g. "witamina", "minerał", "antybiotyk", "probiotyk")
+- rawCycling: cycling pattern as written (e.g. "30 dni brania, 30 dni przerwy"). null if none.
+- rawDependency: dependency/sequencing info as written (e.g. "zacząć 2 tyg przed lekami", "po zakończeniu antybiotyku"). null if none.
+- isMedication: true for prescription drugs (antibiotics, thyroid meds, etc.), false for supplements.
+- protocolName: derive a short name for the protocol from the document title or content.
+</instructions>
+
+<excel_phases>
+Rows may have [PHASE: ...] prefixes from cell background colors. Include phase info in rawDependency.
+</excel_phases>
+
+Return ONLY the structured JSON. No prose.`;
+}
+
+function buildEnrichmentPrompt(userContext: string): string {
+	return `You are a medical protocol enrichment system. You receive raw extracted supplement data and must match, structure, and score each item against the user's inventory and time blocks.
+
+<user_context>
+${userContext}
+</user_context>
+
+<instructions>
+Process each raw extraction item into a structured supplement entry. Follow every rule precisely.
+
+<matching>
+SUPPLEMENT MATCHING:
+- Fuzzy-match each item name against user_context supplements (spelling variations, abbreviations, brand names).
+- Match found → set existingSupplementId to the user's supplement ID.
+- No match → set existingSupplementId to null (creates a new supplement).
+
+TIME BLOCK MATCHING:
+- Assign each dose to a user time block by ID based on rawTiming AND rawDosage.
+- CRITICAL: Pay attention to PRZED (before) vs PO (after) vs DO (with) — these mean DIFFERENT time blocks.
+- Match by Polish keywords:
+  "na czczo", "rano na czczo", "przed śniadaniem", "PRZED śniadaniem" → Na czczo block
+  "do śniadania", "ze śniadaniem" → Śniadanie block
+  "2. śniadanie", "drugie śniadanie" → 2. śniadanie block
+  "przed obiadem", "PRZED obiadem" → Przed obiadem block
+  "do obiadu", "z obiadem" → Obiad block
+  "przed kolacją", "PRZED kolacją" → Przed kolacją block
+  "do kolacji", "z kolacją" → Kolacja block
+  "po kolacji", "PO kolacji" → Po kolacji block
+  "przed snem", "na noc" → Przed snem block
+- If timing says "PRZED [meal]" → use the "Przed [meal]" block, NOT the meal block.
+- If timing says "PO [meal]" → use the "Po [meal]" block, NOT the meal block.
+- If ambiguous, pick the closest time block by typical timing and set confidence below ${CONFIDENCE_THRESHOLD}.
+</matching>
+
+<categories>
+- "medication" — prescription drugs only.
+- For everything else, pick the best fit: vitamin, mineral, supplement, probiotic, herb, amino_acid, other.
+</categories>
+
+<critical_flag>
+isCritical = true when skipping would have health consequences:
+- Prescription medications (thyroid, blood thinners, antibiotics, chronic conditions).
+- Supplements addressing diagnosed deficiencies.
+isCritical = false for general wellness supplements.
+</critical_flag>
+
+<schedule_consolidation>
+CRITICAL: One supplement entry per product. If the same supplement appears at multiple time blocks, create ONE entry with MULTIPLE schedule objects.
+Example: "Witamina D: 2000 IU rano, 1000 IU wieczór" → one supplement, two schedules (one per time block).
+NEVER duplicate supplement entries.
+</schedule_consolidation>
+
+<confidence_and_uncertainty>
+Score 0.0–1.0 reflecting certainty about name, dosage, linking, and parsing.
+Set below ${CONFIDENCE_THRESHOLD} when: dosage unclear, name ambiguous, matching uncertain, information missing.
+When confidence < ${CONFIDENCE_THRESHOLD}, you MUST set uncertaintyReason — a short explanation in Polish of what's uncertain.
+Examples: "Dawka nieczytelna", "Nazwa niejednoznaczna", "Nie udało się dopasować do istniejącego suplementu", "Brak informacji o dawkowaniu".
+When confidence >= ${CONFIDENCE_THRESHOLD}, set uncertaintyReason to null.
+</confidence_and_uncertainty>
+
+<notes_rules>
+- Set at the SUPPLEMENT level (not per schedule).
+- MUST be in Polish.
+- Include medical intake instructions: "30 min przed jedzeniem", "z posiłkiem", "na pusty żołądek", "rozpuścić w wodzie", "2h odstępu od leków".
+- Include phase/sequencing info: "zacząć 2 tyg przed antybiotykiem", "brać w trakcie antybiotyku", "brać po zakończeniu antybiotyku".
+- Include duration/period info from rawNotes (e.g. "Okres: 2-3 msc", "Okres: Leczenie jelit", "Okres: Zużyć 2 opak."). Keep as-is in Polish.
+- EXCLUDE: discount codes, promo codes, shop names, URLs, prices, purchase info.
+- If no special instructions → null.
+</notes_rules>
+
+<cycling>
+If rawCycling mentions cycling ("30 dni brania, 30 dni przerwy", "1 miesiąc brania, 1 miesiąc przerwy"):
+- Set cycleDaysOn and cycleDaysOff. Convert months → 30 days.
+If no cycling pattern → both null.
+</cycling>
+
+<start_day_offset>
+startDayOffset: day number (from protocol start) when this supplement becomes active.
+- 0 = starts immediately (day 0 of the protocol).
+- Use rawDependency and phase info to determine the offset.
+
+Examples:
+- rawDependency="zacząć 2 tyg przed lekami" → this supplement starts at day 0, medications start at day 14.
+- rawDependency="po zakończeniu antybiotyku" → if antibiotics are 14 days, this starts at day 28 (or appropriate offset).
+- No phase/dependency info → startDayOffset = 0.
+
+Phase mapping from rawDependency or [PHASE: ...]:
+- "Stale" / no phase → startDayOffset = 0
+- "2 tyg PRZED lekami" → startDayOffset = 0 (these start first; medications get startDayOffset = 14)
+- "W trakcie antybiotyku" → same startDayOffset as antibiotics
+- "Po antybiotyku" → startDayOffset = antibiotics offset + antibiotic duration
+
+Rules:
+- "2 tyg" → 14, "1 msc" → 30
+- ALL medications in the same phase should share the same startDayOffset
+- ALL supplements in a "before medications" phase should share the same startDayOffset (typically 0)
+- Include sequencing info in notes too (e.g. "zacząć 2 tyg przed antybiotykiem")
+- The SAME supplement CAN appear as separate entries with different startDayOffset/durationDays if it's taken at different times in different phases (e.g. Debretin during antibiotics in Kolacja block AND Debretin after antibiotics in Przed snem block).
+</start_day_offset>
+
+<duration_days>
+durationDays: how many days to take this supplement. null = indefinitely/permanently.
+Derived from the "Okres" column or rawNotes duration info.
+
+Mapping:
+- "Stale" → null (permanent)
+- "14 dni antybiotyk" → 14
+- "2-3 msc" → 75 (midpoint)
+- "3 msc" → 90
+- "~miesiąc" → 30
+- "Czas leczenia" → null (duration unknown, keep in notes)
+- "Leczenie jelit" → null (duration unknown, keep in notes)
+- "Leczenie + 1 msc po" → null (duration unknown, keep in notes)
+- "Do zużycia opakowania" → null (stock system handles cutoff)
+- "Zużyć 2 opak." → null (stock-based)
+- "Min. 6 msc" → 180
+
+Rules:
+- Convert months → 30 days each
+- For ranges like "2-3 msc", use the midpoint
+- If unclear, set null and lower confidence
+</duration_days>
+</instructions>
+
+<verification>
+Before outputting, self-check:
+1. DUPLICATES — Same supplement name at same phase? Merge into one entry with multiple schedules. Different phases? Keep as separate entries.
+2. NOTES — All in Polish, no discount codes/URLs/purchase info.
+3. CONFIDENCE — Uncertain entries below ${CONFIDENCE_THRESHOLD}, each with uncertaintyReason in Polish.
+4. START DAY OFFSETS — Supplements in the same phase share the same offset. Medications that start later have higher offsets.
+5. DURATION — Each supplement has durationDays matching its "Okres" value. null for permanent ("Stale") or stock-based.
+</verification>
+
+Return ONLY the structured JSON object matching the schema. No prose, no explanations.`;
+}
+
+function buildEnrichmentContent(
+	file: File,
+	buffer: Buffer,
+	rawExtraction: string,
+	textContent?: string,
+): UserContent {
+	const content: UserContent = [];
+
+	if (isPdf(file)) {
+		content.push({ type: "file", data: buffer, mediaType: "application/pdf" });
+	} else if (isImage(file)) {
+		content.push({ type: "image", image: buffer, mediaType: file.type });
+	}
+
+	const text = textContent
+		? `<raw_extraction>\n${rawExtraction}\n</raw_extraction>\n\n<original_document>\n${textContent}\n</original_document>`
+		: `<raw_extraction>\n${rawExtraction}\n</raw_extraction>`;
+
+	content.push({
+		type: "text",
+		text: `Enrich this raw extraction into structured protocol data:\n\n${text}`,
+	});
+
+	return content;
 }
 
 export async function POST(request: NextRequest) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  })
+	const session = await auth.api.getSession({
+		headers: await headers(),
+	});
 
-  if (!session) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+	if (!session) {
+		return Response.json({ error: "Unauthorized" }, { status: 401 });
+	}
 
-  if (isRateLimited(session.user.id)) {
-    return Response.json({ error: 'rate_limited' }, { status: 429 })
-  }
+	const userId = session.user.id;
 
-  const formData = await request.formData()
-  const file = formData.get('file') as File | null
-  const supplementsJson = formData.get('supplements') as string | null
-  const timeBlocksJson = formData.get('timeBlocks') as string | null
+	if (isRateLimited(userId)) {
+		return Response.json({ error: "rate_limited" }, { status: 429 });
+	}
 
-  if (!file) {
-    return Response.json({ error: 'no_file' }, { status: 400 })
-  }
+	const formData = await request.formData();
+	const file = formData.get("file") as File | null;
+	const supplementsJson = formData.get("supplements") as string | null;
+	const timeBlocksJson = formData.get("timeBlocks") as string | null;
 
-  if (file.size > MAX_FILE_SIZE) {
-    return Response.json({ error: 'file_too_large' }, { status: 400 })
-  }
+	if (!file) {
+		return Response.json({ error: "no_file" }, { status: 400 });
+	}
 
-  if (!isPdf(file) && !isExcel(file) && !isImage(file) && !isText(file)) {
-    return Response.json({ error: 'unsupported_file_type' }, { status: 400 })
-  }
+	if (file.size > MAX_FILE_SIZE) {
+		return Response.json({ error: "file_too_large" }, { status: 400 });
+	}
 
-  const contextItemSchema = z.object({
-    id: z.string().max(128),
-    name: z.string().max(200),
-  })
+	if (!isPdf(file) && !isExcel(file) && !isImage(file) && !isText(file)) {
+		return Response.json({ error: "unsupported_file_type" }, { status: 400 });
+	}
 
-  let supplements: z.infer<typeof contextItemSchema>[] = []
-  let timeBlocks: z.infer<typeof contextItemSchema>[] = []
+	const contextItemSchema = z.object({
+		id: z.string().max(128),
+		name: z.string().max(200),
+	});
 
-  try {
-    const rawSupplements = supplementsJson ? JSON.parse(supplementsJson) : []
-    const rawTimeBlocks = timeBlocksJson ? JSON.parse(timeBlocksJson) : []
-    supplements = z.array(contextItemSchema).max(200).parse(rawSupplements)
-    timeBlocks = z.array(contextItemSchema).max(50).parse(rawTimeBlocks)
-  } catch {
-    return Response.json({ error: 'invalid_context' }, { status: 400 })
-  }
+	let supplements: z.infer<typeof contextItemSchema>[] = [];
+	let timeBlocks: z.infer<typeof contextItemSchema>[] = [];
 
-  const buffer = Buffer.from(await file.arrayBuffer())
-  let textContent: string | undefined
+	try {
+		const rawSupplements = supplementsJson ? JSON.parse(supplementsJson) : [];
+		const rawTimeBlocks = timeBlocksJson ? JSON.parse(timeBlocksJson) : [];
+		supplements = z.array(contextItemSchema).max(200).parse(rawSupplements);
+		timeBlocks = z.array(contextItemSchema).max(50).parse(rawTimeBlocks);
+	} catch {
+		return Response.json({ error: "invalid_context" }, { status: 400 });
+	}
 
-  if (isExcel(file)) {
-    try {
-      textContent = await extractTextFromExcel(buffer)
-    } catch (err) {
-      console.error('[protocol/parse] Excel extraction failed:', err)
-      return Response.json({ error: 'unreadable_file' }, { status: 422 })
-    }
-  } else if (isText(file)) {
-    textContent = buffer.toString('utf-8')
-  }
+	const buffer = Buffer.from(await file.arrayBuffer());
+	let textContent: string | undefined;
 
-  if (textContent !== undefined && !textContent.trim()) {
-    return Response.json({ error: 'empty_file' }, { status: 422 })
-  }
+	if (isExcel(file)) {
+		try {
+			textContent = await extractTextFromExcel(buffer);
+		} catch (err) {
+			console.error("[protocol/parse] Excel extraction failed:", err);
+			return Response.json({ error: "unreadable_file" }, { status: 422 });
+		}
+	} else if (isText(file)) {
+		textContent = buffer.toString("utf-8");
+	}
 
-  const userContent = buildUserContent(file, buffer, textContent)
+	if (textContent !== undefined && !textContent.trim()) {
+		return Response.json({ error: "empty_file" }, { status: 422 });
+	}
 
-  const userContext = JSON.stringify({ supplements, timeBlocks }, null, 2)
+	const extractionContent = buildExtractionContent(file, buffer, textContent);
+	const userContext = JSON.stringify({ supplements, timeBlocks }, null, 2);
 
-  const systemPrompt = `You are a medical protocol parser. You receive a supplement/medication protocol document and user context, and you extract a structured list of supplements and their schedules.
+	const protocol = await protocolRepository.create({
+		userId,
+		name: file.name,
+		parsedData: null,
+		status: "processing",
+	});
 
-User context (existing inventory and time blocks):
-${userContext}
+	after(async () => {
+		try {
+			const { output: raw } = await generateText({
+				model: anthropic("claude-haiku-4-5"),
+				output: Output.object({ schema: rawExtractionSchema }),
+				system: buildExtractionPrompt(),
+				messages: [{ role: "user", content: extractionContent }],
+			});
 
-Rules:
-- If a supplement from the protocol matches an existing one in the user context by name (fuzzy match) → set existingSupplementId to its ID
-- If it doesn't match → existingSupplementId = null (will be created as new)
-- timeBlockId must be the ID of one of the user's time blocks. Match doses to blocks by name/time (e.g. "rano", "morning" → "Na czczo" or "Śniadanie", "wieczór" → "Kolacja" or "Przed snem"). If no good match → use the closest by time
-- category: use "medication" for prescription drugs, use the most appropriate category (vitamin, mineral, supplement, probiotic, herb, amino_acid, other) for everything else
-- isCritical: set to true for medically important items where skipping could have health consequences — not just prescriptions, also key protocol supplements (e.g. thyroid medication, blood thinners, critical deficiency supplements). Use your medical knowledge to assess importance
-- Same supplement appearing in multiple time blocks = ONE supplement entry with MULTIPLE schedule objects. NEVER create duplicate supplement entries for the same product. Example: "Vitamin D: morning 2000IU, evening 1000IU" → one supplement entry with two schedule objects (one for morning block, one for evening block)
-- confidence: 0.0-1.0 — how certain you are about the name/linking/parsing (below 0.7 means user should verify)
-- Extract ALL supplements and medications listed, even if dosage is unclear
-- notes: set on the SUPPLEMENT level (not per schedule). MUST be written in Polish (e.g. "30 min przed jedzeniem", "z posiłkiem", "na pusty żołądek"). If no special notes → null
-- Cycling patterns: if the protocol mentions cycling (e.g. "take for 30 days, pause 30 days", "1 month on, 1 month off", "30 dni brania, 30 dni przerwy"), set cycleDaysOn and cycleDaysOff on the supplement. Convert months to 30 days. If no cycling pattern → both null
-- Dependencies: if the protocol says "take A for X days/weeks before starting B", "najpierw A przez X dni, potem B", or similar sequencing, set prerequisiteName (the supplement that goes first) and delayDays on the dependent supplement. Convert weeks to days. Names must match the supplements array. If no dependency → both null
-- Return only the structured data — no explanations
+			if (!raw?.items?.length) {
+				await protocolRepository.updateStatus(protocol.id, "failed");
+				revalidatePath("/settings");
+				return;
+			}
 
-MANDATORY SELF-VERIFICATION (do this before returning):
-1. Check: Are there any duplicate supplement names? If yes → merge into one entry with multiple schedules
-2. Check: For every supplement, re-read the source document — does the dosage, time block, and linking match?
-If after both checks you are still uncertain about any field → set confidence below 0.7 so the user can verify`
+			const rawJson = JSON.stringify(raw);
+			const enrichmentContent = buildEnrichmentContent(file, buffer, rawJson, textContent);
 
-  try {
-    const { output } = await generateText({
-      model: anthropic('claude-haiku-4-5'),
-      output: Output.object({ schema: parsedProtocolSchema }),
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userContent }],
-    })
+			const { output } = await generateText({
+				model: anthropic("claude-sonnet-4-5"),
+				output: Output.object({ schema: parsedProtocolSchema }),
+				system: buildEnrichmentPrompt(userContext),
+				messages: [{ role: "user", content: enrichmentContent }],
+			});
 
-    if (!output || !output.supplements || output.supplements.length === 0) {
-      return Response.json({ error: 'no_supplements_found' }, { status: 422 })
-    }
+			if (!output?.supplements?.length) {
+				await protocolRepository.updateStatus(protocol.id, "failed");
+				revalidatePath("/settings");
+				return;
+			}
 
-    return Response.json(output)
-  } catch (err) {
-    console.error('[protocol/parse] AI generation failed:', err)
-    return Response.json({ error: 'ai_error' }, { status: 500 })
-  }
+			await protocolRepository.update(protocol.id, {
+				parsedData: JSON.stringify(output),
+				name: output.protocolName,
+				status: "draft",
+			});
+			revalidatePath("/settings");
+		} catch (err) {
+			console.error("[protocol/parse] AI generation failed:", err);
+			await protocolRepository.updateStatus(protocol.id, "failed");
+			revalidatePath("/settings");
+		}
+	});
+
+	return Response.json({ protocolId: protocol.id });
 }

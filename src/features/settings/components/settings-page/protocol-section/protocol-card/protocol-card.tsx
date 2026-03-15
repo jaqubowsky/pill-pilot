@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, RotateCcw, Trash2 } from "lucide-react";
+import { Loader2, Pencil, RefreshCw, RotateCcw, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ProtocolWithSchedules } from "@/features/settings/api/queries/get-user-protocols";
 import {
@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
+import { ProcessingPhrase } from "./processing-phrase";
 import { useProtocolCard } from "./use-protocol-card";
 
 type ProtocolCardProps = {
@@ -32,6 +33,8 @@ export function ProtocolCard({ protocol, borderColor }: ProtocolCardProps) {
 		setDeleteConfirmOpen,
 		isDraft,
 		isArchived,
+		isProcessing,
+		isFailed,
 		isArchiving,
 		isReactivating,
 		isDeleting,
@@ -40,6 +43,7 @@ export function ProtocolCard({ protocol, borderColor }: ProtocolCardProps) {
 		handleArchive,
 		handleReactivate,
 		handleDelete,
+		handleRetry,
 	} = useProtocolCard({ protocol });
 
 	return (
@@ -54,7 +58,16 @@ export function ProtocolCard({ protocol, borderColor }: ProtocolCardProps) {
 				<div className="flex items-center justify-between px-md py-sm">
 					<span className="text-sm font-bold text-content truncate min-w-0">{protocol.name}</span>
 					<div className="flex items-center gap-sm shrink-0">
-						{isDraft ? (
+						{isProcessing ? (
+							<Badge className="rounded-lg px-sm py-xs text-xs font-semibold uppercase tracking-wide bg-brand-100 text-brand-700 flex items-center gap-xs">
+								<Loader2 className="size-3 animate-spin" />
+								{t("settings.statusProcessing")}
+							</Badge>
+						) : isFailed ? (
+							<Badge className="rounded-lg px-sm py-xs text-xs font-semibold uppercase tracking-wide bg-danger-bg text-danger">
+								{t("settings.statusFailed")}
+							</Badge>
+						) : isDraft ? (
 							<Badge className="rounded-lg px-sm py-xs text-xs font-semibold uppercase tracking-wide bg-warning-bg text-[#8B6914]">
 								{t("settings.statusDraft")}
 							</Badge>
@@ -91,15 +104,55 @@ export function ProtocolCard({ protocol, borderColor }: ProtocolCardProps) {
 					</div>
 				</div>
 
-				{isDraft && (
-					<div className="px-md pb-md pt-sm border-t border-edge-subtle">
-						<Button className="w-full" onClick={handleContinueDraft}>
-							{t("settings.continueDraft")}
+				{isProcessing && (
+					<div className="px-md pb-md pt-sm border-t border-edge-subtle flex flex-col gap-sm">
+						<ProcessingPhrase />
+						<Button
+							variant="destructive"
+							className="w-full"
+							onClick={() => setDeleteConfirmOpen(true)}
+						>
+							<Trash2 className="size-4" />
+							{t("common.delete")}
 						</Button>
 					</div>
 				)}
 
-				{!isDraft && !isArchived && (
+				{isFailed && (
+					<div className="px-md pb-md pt-sm border-t border-edge-subtle flex flex-col gap-sm">
+						<p className="text-sm text-danger">{t("settings.failedDescription")}</p>
+						<Button className="w-full" onClick={handleRetry}>
+							<RefreshCw className="size-4" />
+							{t("settings.retry")}
+						</Button>
+						<Button
+							variant="destructive"
+							className="w-full"
+							onClick={() => setDeleteConfirmOpen(true)}
+						>
+							<Trash2 className="size-4" />
+							{t("common.delete")}
+						</Button>
+					</div>
+				)}
+
+				{isDraft && (
+					<div className="px-md pb-md pt-sm border-t border-edge-subtle flex flex-col gap-sm">
+						<Button className="w-full" onClick={handleContinueDraft}>
+							{t("settings.continueDraft")}
+						</Button>
+						<Button
+							variant="destructive"
+							className="w-full"
+							onClick={() => setDeleteConfirmOpen(true)}
+						>
+							<Trash2 className="size-4" />
+							{t("common.delete")}
+						</Button>
+					</div>
+				)}
+
+				{!isDraft && !isArchived && !isProcessing && !isFailed && (
 					<div className="px-md pb-md pt-sm border-t border-edge-subtle">
 						<Button
 							variant="destructive"

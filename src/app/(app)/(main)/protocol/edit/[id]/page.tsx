@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { ProtocolEditPage } from "@/features/onboarding";
+import { ProtocolEditPage } from "@/features/protocol-wizard";
 import { auth } from "@/shared/lib/auth";
 
 type Props = {

@@ -16,8 +16,7 @@ export function StockProgressBar({ currentStock, dailyUsage, packageSize }: Stoc
 	const maxStock = packageSize ?? (dailyUsage > 0 ? dailyUsage * 30 : currentStock);
 	const percent = maxStock > 0 ? Math.min(100, Math.round((currentStock / maxStock) * 100)) : 0;
 
-	const fillColor =
-		exactDays < 3 ? "bg-danger" : exactDays < 7 ? "bg-warning" : "bg-brand-500";
+	const fillColor = exactDays < 3 ? "bg-danger" : exactDays < 7 ? "bg-warning" : "bg-brand-500";
 
 	const daysLabel = currentStock > 0 && daysRemaining === 0 ? "<1" : `~${daysRemaining}`;
 

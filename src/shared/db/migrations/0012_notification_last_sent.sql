@@ -1,0 +1,1 @@
+ALTER TABLE "notification_settings" ADD COLUMN "last_sent_date" text;

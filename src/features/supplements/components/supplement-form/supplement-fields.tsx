@@ -40,9 +40,7 @@ export function SupplementFields({ readOnlyUnit }: SupplementFieldsProps) {
 	const unitLabel = stockUnit ? t(`schedule.units.${stockUnit}`) : "";
 
 	const unitSelect = readOnlyUnit ? (
-		<span className="text-sm text-content-muted shrink-0">
-			{unitLabel}
-		</span>
+		<span className="text-sm text-content-muted shrink-0">{unitLabel}</span>
 	) : (
 		<Select value={stockUnit} onValueChange={handleStockUnitChange}>
 			<SelectTrigger className="w-auto shrink-0 bg-surface-sunken border-edge rounded-lg">

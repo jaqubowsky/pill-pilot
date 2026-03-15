@@ -44,7 +44,8 @@ export function PreviewSupplementSheet({
 	});
 
 	const title =
-		titleOverride ?? (isNew ? t("protocolWizard.addSupplement") : t("protocolWizard.editSupplement"));
+		titleOverride ??
+		(isNew ? t("protocolWizard.addSupplement") : t("protocolWizard.editSupplement"));
 
 	return (
 		<BottomSheet

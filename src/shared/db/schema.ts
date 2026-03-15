@@ -233,5 +233,6 @@ export const notificationSettings = pgTable("notification_settings", {
 		.references(() => timeBlocks.id, { onDelete: "cascade" }),
 	enabled: boolean("enabled").notNull().default(true),
 	notifyAt: text("notify_at").notNull(),
+	lastSentDate: text("last_sent_date"),
 	createdAt: timestamp("created_at").notNull().defaultNow(),
 });

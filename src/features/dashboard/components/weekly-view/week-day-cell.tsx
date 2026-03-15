@@ -48,11 +48,7 @@ export function WeekDayCell({
 					<div
 						className={cn(
 							"h-full rounded-full transition-all duration-300",
-							percent === 100
-								? "bg-brand-500"
-								: percent > 0
-									? "bg-brand-300"
-									: "bg-transparent",
+							percent === 100 ? "bg-brand-500" : percent > 0 ? "bg-brand-300" : "bg-transparent",
 						)}
 						style={{ width: `${percent}%` }}
 					/>

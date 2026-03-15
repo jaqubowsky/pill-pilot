@@ -125,9 +125,7 @@ export function ManualProtocolForm({ supplements, timeBlocks }: ManualProtocolFo
 				disabled={isPending}
 				className="w-full bg-brand-500 text-content-inverse h-12 rounded-xl text-base font-semibold hover:bg-brand-600 active:scale-[0.98] transition-all duration-150"
 			>
-				{isPending
-					? t("protocolWizard.manual.saving")
-					: t("protocolWizard.manual.saveAndPreview")}
+				{isPending ? t("protocolWizard.manual.saving") : t("protocolWizard.manual.saveAndPreview")}
 			</Button>
 
 			{hasExisting && (
@@ -150,9 +148,7 @@ export function ManualProtocolForm({ supplements, timeBlocks }: ManualProtocolFo
 				}}
 				onSave={handleSheetSave}
 				title={
-					sheetState?.fromExisting
-						? t("protocolWizard.configureExistingSupplement")
-						: undefined
+					sheetState?.fromExisting ? t("protocolWizard.configureExistingSupplement") : undefined
 				}
 			/>
 		</div>

@@ -69,15 +69,21 @@ export function useNotificationSection(
 						notifyAt: s.notifyAt,
 					}));
 					startTransition(() => {
-						setOptimisticSettings(
-							blockSettings.map((s) => ({ ...s, enabled: true })),
-						);
+						setOptimisticSettings(blockSettings.map((s) => ({ ...s, enabled: true })));
 						execute({ settings: allEnabled });
 					});
 				}
 			}
 		}
-	}, [isSubscribed, subscribe, unsubscribe, initialSettings, blockSettings, setOptimisticSettings, execute]);
+	}, [
+		isSubscribed,
+		subscribe,
+		unsubscribe,
+		initialSettings,
+		blockSettings,
+		setOptimisticSettings,
+		execute,
+	]);
 
 	const handleToggleBlock = useCallback(
 		(timeBlockId: string, enabled: boolean) => {

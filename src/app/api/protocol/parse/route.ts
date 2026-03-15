@@ -166,7 +166,11 @@ function buildExtractionContent(
 			text: "Extract all supplements and medications from this PDF document.",
 		});
 	} else if (isImage(file) && compressedImage) {
-		content.push({ type: "image", image: compressedImage.data, mediaType: compressedImage.mediaType });
+		content.push({
+			type: "image",
+			image: compressedImage.data,
+			mediaType: compressedImage.mediaType,
+		});
 		content.push({
 			type: "text",
 			text: "Extract all supplements and medications from this image.",
@@ -353,7 +357,11 @@ function buildEnrichmentContent(
 	if (isPdf(file)) {
 		content.push({ type: "file", data: buffer, mediaType: "application/pdf" });
 	} else if (isImage(file) && compressedImage) {
-		content.push({ type: "image", image: compressedImage.data, mediaType: compressedImage.mediaType });
+		content.push({
+			type: "image",
+			image: compressedImage.data,
+			mediaType: compressedImage.mediaType,
+		});
 	}
 
 	const text = textContent
@@ -466,7 +474,13 @@ export async function POST(request: NextRequest) {
 			}
 
 			const rawJson = JSON.stringify(raw);
-			const enrichmentContent = buildEnrichmentContent(file, buffer, rawJson, textContent, compressedImage);
+			const enrichmentContent = buildEnrichmentContent(
+				file,
+				buffer,
+				rawJson,
+				textContent,
+				compressedImage,
+			);
 
 			const { output } = await generateText({
 				model: anthropic("claude-sonnet-4-5"),

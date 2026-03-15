@@ -65,9 +65,7 @@ export function ExistingSupplementPicker({
 								}}
 							>
 								<span className="text-sm font-medium text-content">{s.name}</span>
-								{s.brandName && (
-									<span className="text-xs text-content-faint">{s.brandName}</span>
-								)}
+								{s.brandName && <span className="text-xs text-content-faint">{s.brandName}</span>}
 							</button>
 						))
 					)}

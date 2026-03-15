@@ -15,9 +15,7 @@ export function BuySoonItem({ item }: BuySoonItemProps) {
 	const unit = t(`schedule.units.${item.stockUnit}`);
 	const isCritical = item.daysRemaining < 3;
 	const daysLabel =
-		Number(item.currentStock) > 0 && item.daysRemaining === 0
-			? "<1"
-			: `~${item.daysRemaining}`;
+		Number(item.currentStock) > 0 && item.daysRemaining === 0 ? "<1" : `~${item.daysRemaining}`;
 
 	return (
 		<div className="flex items-center gap-md p-md bg-surface-raised border border-edge-subtle rounded-xl shadow-sm">

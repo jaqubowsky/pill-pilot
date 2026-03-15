@@ -1,8 +1,7 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, desc, eq, lte, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/shared/db/client";
 import {
-	dailyLogs,
 	notificationSettings,
 	protocolSupplements,
 	protocols,
@@ -22,26 +21,51 @@ export async function POST(request: Request) {
 	const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 	const today = now.toISOString().slice(0, 10);
 
-	const settings = await db
+	const pending = await db
 		.select({
+			id: notificationSettings.id,
 			userId: notificationSettings.userId,
 			timeBlockId: notificationSettings.timeBlockId,
 			timeBlockName: timeBlocks.name,
+			notifyAt: notificationSettings.notifyAt,
 		})
 		.from(notificationSettings)
 		.innerJoin(timeBlocks, eq(notificationSettings.timeBlockId, timeBlocks.id))
 		.where(
 			and(
 				eq(notificationSettings.enabled, true),
-				eq(notificationSettings.notifyAt, currentTime),
+				lte(notificationSettings.notifyAt, currentTime),
+				sql`(${notificationSettings.lastSentDate} IS NULL OR ${notificationSettings.lastSentDate} != ${today})`,
 			),
-		);
+		)
+		.orderBy(desc(notificationSettings.notifyAt));
+
+	const latestPerUser = new Map<
+		string,
+		(typeof pending)[number]
+	>();
+	const staleIds: string[] = [];
+
+	for (const setting of pending) {
+		if (!latestPerUser.has(setting.userId)) {
+			latestPerUser.set(setting.userId, setting);
+		} else {
+			staleIds.push(setting.id);
+		}
+	}
+
+	if (staleIds.length > 0) {
+		await db
+			.update(notificationSettings)
+			.set({ lastSentDate: today })
+			.where(sql`${notificationSettings.id} IN ${staleIds}`);
+	}
 
 	let sent = 0;
 	let failed = 0;
 	let skipped = 0;
 
-	for (const setting of settings) {
+	for (const setting of latestPerUser.values()) {
 		const unchecked = await db
 			.select({ id: supplementSchedules.id })
 			.from(supplementSchedules)
@@ -67,6 +91,10 @@ export async function POST(request: Request) {
 
 		if (unchecked.length === 0) {
 			skipped++;
+			await db
+				.update(notificationSettings)
+				.set({ lastSentDate: today })
+				.where(eq(notificationSettings.id, setting.id));
 			continue;
 		}
 
@@ -75,6 +103,7 @@ export async function POST(request: Request) {
 			.from(pushSubscriptions)
 			.where(eq(pushSubscriptions.userId, setting.userId));
 
+		let settingSent = false;
 		for (const sub of subscriptions) {
 			try {
 				await sendPushNotification(sub.subscriptionJson, {
@@ -82,11 +111,24 @@ export async function POST(request: Request) {
 					body: `Czas na suplementy: ${setting.timeBlockName}`,
 				});
 				sent++;
+				settingSent = true;
 			} catch {
 				failed++;
 			}
 		}
+
+		if (settingSent) {
+			await db
+				.update(notificationSettings)
+				.set({ lastSentDate: today })
+				.where(eq(notificationSettings.id, setting.id));
+		}
 	}
 
-	return NextResponse.json({ sent, failed, matched: settings.length, skipped });
+	return NextResponse.json({
+		sent,
+		failed,
+		matched: latestPerUser.size,
+		skipped,
+	});
 }

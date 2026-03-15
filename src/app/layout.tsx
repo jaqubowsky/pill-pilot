@@ -52,7 +52,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 	return (
 		<html lang={locale}>
 			<body
-				className={cn(dmSerif.variable, plusJakarta.variable, "font-body bg-surface text-content overflow-x-hidden")}
+				className={cn(
+					dmSerif.variable,
+					plusJakarta.variable,
+					"font-body bg-surface text-content overflow-x-hidden",
+				)}
 			>
 				<NextIntlClientProvider messages={messages}>
 					<ServiceWorkerRegistrar />

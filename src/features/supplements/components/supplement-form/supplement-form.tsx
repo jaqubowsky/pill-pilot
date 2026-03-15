@@ -12,7 +12,12 @@ type SupplementFormProps = {
 	readOnlyUnit?: boolean;
 };
 
-export function SupplementForm({ defaultValues, onSubmit, formId, readOnlyUnit }: SupplementFormProps) {
+export function SupplementForm({
+	defaultValues,
+	onSubmit,
+	formId,
+	readOnlyUnit,
+}: SupplementFormProps) {
 	const { methods, handleSubmit } = useSupplementForm({ defaultValues, onSubmit });
 
 	return (

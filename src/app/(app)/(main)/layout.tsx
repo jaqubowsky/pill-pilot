@@ -16,9 +16,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
 	return (
 		<>
 			<div className="pb-16">
-				<ViewTransition name="main-content">
-					{children}
-				</ViewTransition>
+				<ViewTransition name="main-content">{children}</ViewTransition>
 			</div>
 			<BottomNav />
 		</>

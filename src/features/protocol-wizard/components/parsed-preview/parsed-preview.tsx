@@ -13,7 +13,7 @@ import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useTranslations } from "next-intl";
 import type { ParsedProtocol } from "@/features/protocol-wizard/schemas/parsed-protocol-schema";
-import type { ExistingSupplementSummary, TimeBlockSummary } from "@/features/protocol-wizard/types";
+import type { TimeBlockSummary } from "@/features/protocol-wizard/types";
 import { BackButton } from "@/shared/components/back-button";
 import { LabeledInput } from "@/shared/components/labeled-input";
 import {
@@ -34,7 +34,6 @@ type ParsedPreviewProps = {
 	protocolId: string;
 	initialParsed: ParsedProtocol;
 	timeBlocks: TimeBlockSummary[];
-	existingSupplements: ExistingSupplementSummary[];
 	mode?: PreviewMode;
 	initialStartDate?: string;
 };
@@ -45,14 +44,12 @@ export function ParsedPreview({
 	protocolId,
 	initialParsed,
 	timeBlocks,
-	existingSupplements,
 	mode = PreviewMode.create,
 	initialStartDate,
 }: ParsedPreviewProps) {
 	const t = useTranslations();
 	const {
 		protocolName,
-		supplements: allSupplements,
 		startDate,
 		setStartDate,
 		unverifiedCount,
@@ -116,9 +113,7 @@ export function ParsedPreview({
 									key={tb.id}
 									timeBlock={tb}
 									supplements={blockSupplements}
-									allSupplements={allSupplements}
 									allTimeBlocks={timeBlocks}
-									existingSupplements={existingSupplements}
 									onUpdateSupplement={handleUpdateSupplement}
 									onAddSupplement={handleAddSupplement}
 									onDeleteSupplement={handleDeleteSupplement}

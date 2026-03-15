@@ -66,7 +66,14 @@ export function usePreviewSupplementSheet({
 			dosageUnit: schedule?.dosageUnit ?? DosageUnit.capsule,
 			timeBlockId: schedule?.timeBlockId ?? defaultTimeBlockId ?? "",
 		});
-	}, [supplement, scheduleIndex, defaultTimeBlockId]);
+	}, [
+		supplement,
+		defaultTimeBlockId,
+		methods.reset,
+		schedule?.dosageAmount,
+		schedule?.dosageUnit,
+		schedule?.timeBlockId,
+	]);
 
 	function handleSubmit(values: PreviewSupplementSheetValues) {
 		const editedSupplement: EditedSupplement = {

@@ -33,8 +33,6 @@ async function handleServerError(e: Error) {
 	return t("generic");
 }
 
-export const actionClient = createSafeActionClient({ handleServerError });
-
 export const authActionClient = createSafeActionClient({ handleServerError }).use(
 	async ({ next }) => {
 		const session = await auth.api.getSession({

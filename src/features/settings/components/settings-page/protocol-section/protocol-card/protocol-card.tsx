@@ -73,29 +73,31 @@ export function ProtocolCard({ protocol, borderColor }: ProtocolCardProps) {
 							</Badge>
 						) : isArchived ? (
 							<>
-								<button
-									type="button"
-									className="opacity-[1.67] p-1.5 rounded-lg bg-brand-100 text-brand-700 hover:bg-brand-200 active:scale-95 transition-all disabled:opacity-50"
+								<Button
+									variant="ghost"
+									size="icon-sm"
+									className="bg-brand-100 text-brand-700 hover:bg-brand-200"
 									onClick={handleReactivate}
 									disabled={isReactivating}
 									aria-label={t("common.reactivate")}
 								>
 									<RotateCcw className="size-4 stroke-[2.5]" />
-								</button>
+								</Button>
 								<Badge className="rounded-lg px-sm py-xs text-xs font-semibold uppercase tracking-wide bg-surface-sunken text-content-muted">
 									{t("settings.statusArchived")}
 								</Badge>
 							</>
 						) : (
 							<>
-								<button
-									type="button"
-									className="p-1.5 rounded-lg text-content-muted hover:bg-surface-sunken active:scale-95 transition-all"
+								<Button
+									variant="ghost"
+									size="icon-sm"
+									className="text-content-muted"
 									onClick={handleEdit}
 									aria-label={t("common.edit")}
 								>
 									<Pencil className="size-4 stroke-2" />
-								</button>
+								</Button>
 								<Badge className="rounded-lg px-sm py-xs text-xs font-semibold uppercase tracking-wide bg-success-bg text-brand-700">
 									{t("settings.statusActive")}
 								</Badge>

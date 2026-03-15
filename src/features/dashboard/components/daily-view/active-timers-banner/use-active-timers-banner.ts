@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ScheduleEntry } from "@/features/dashboard/api/queries/get-daily-status";
 
 export type ActiveTimer = {
@@ -15,16 +15,19 @@ export type ActiveTimer = {
 
 function collectTimers(entries: ScheduleEntry[]): ActiveTimer[] {
 	const timers: ActiveTimer[] = [];
+	const seenCooldowns = new Set<string>();
 
 	for (const entry of entries) {
-		if (entry.cooldown && entry.cooldown.remainingMs > 0) {
+		if (entry.cooldown && entry.cooldown.remainingMs > 0 && entry.protocolSupplementId) {
+			if (seenCooldowns.has(entry.protocolSupplementId)) continue;
+			seenCooldowns.add(entry.protocolSupplementId);
 			timers.push({
 				scheduleId: entry.scheduleId,
 				supplementName: entry.supplementName,
 				type: "cooldown",
 				remainingMs: entry.cooldown.remainingMs,
-				logId: null,
-				protocolSupplementId: entry.protocolSupplementId ?? null,
+				logId: entry.cooldown.logId,
+				protocolSupplementId: entry.protocolSupplementId,
 			});
 		}
 		if (entry.waitTimer && entry.waitTimer.remainingMs > 0) {
@@ -49,28 +52,43 @@ type Params = {
 export function useActiveTimersBanner({ allEntries }: Params) {
 	const router = useRouter();
 	const [expanded, setExpanded] = useState(false);
-	const [tick, setTick] = useState(0);
+	const [elapsedMs, setElapsedMs] = useState(0);
+	const startRef = useRef(Date.now());
 
-	const timers = useMemo(() => collectTimers(allEntries), [allEntries]);
+	const baseTimers = useMemo(() => {
+		startRef.current = Date.now();
+		setElapsedMs(0);
+		return collectTimers(allEntries);
+	}, [allEntries]);
 
 	useEffect(() => {
-		if (timers.length === 0) return;
+		if (baseTimers.length === 0) return;
 
 		const interval = setInterval(() => {
-			setTick((prev) => prev + 1);
-		}, 30_000);
+			setElapsedMs(Date.now() - startRef.current);
+		}, 1_000);
 
 		return () => clearInterval(interval);
-	}, [timers.length]);
+	}, [baseTimers]);
+
+	const timers = useMemo(() => {
+		const live = baseTimers
+			.map((t) => ({
+				...t,
+				remainingMs: Math.max(0, t.remainingMs - elapsedMs),
+			}))
+			.filter((t) => t.remainingMs > 0);
+
+		return live.sort((a, b) => a.remainingMs - b.remainingMs);
+	}, [baseTimers, elapsedMs]);
 
 	useEffect(() => {
-		if (tick === 0) return;
-
-		const anyExpired = timers.some((t) => t.remainingMs - tick * 30_000 <= 0);
+		if (baseTimers.length === 0) return;
+		const anyExpired = baseTimers.some((t) => t.remainingMs - elapsedMs <= 0);
 		if (anyExpired) {
 			router.refresh();
 		}
-	}, [tick, timers, router]);
+	}, [elapsedMs, baseTimers, router]);
 
 	const nearest = timers[0] ?? null;
 

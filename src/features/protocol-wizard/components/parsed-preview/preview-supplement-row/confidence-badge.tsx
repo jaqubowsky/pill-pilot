@@ -17,7 +17,7 @@ export function ConfidenceBadge({ confidence, uncertaintyReason, onVerify }: Con
 
 	return (
 		<Popover>
-			<PopoverTrigger className="flex items-center gap-xs text-left">
+			<PopoverTrigger className="flex items-center gap-xs text-left min-h-11">
 				<AlertTriangle className="size-3 shrink-0 text-[#8B6914]" />
 				<span className="text-xs text-[#8B6914] truncate">
 					{uncertaintyReason ?? t("badgeCheck")}

@@ -14,7 +14,6 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { ScheduleEntry } from "@/features/dashboard/api/queries/get-daily-status";
 import { IconBadge } from "@/shared/components/icon-badge";
-import { StatusIcon } from "@/shared/components/status-icon";
 import { SupplementInfo } from "@/shared/components/supplement-info";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -26,7 +25,6 @@ import {
 	DialogTitle,
 } from "@/shared/components/ui/dialog";
 import type { SupplementCategory } from "@/shared/db/schema";
-import { formatQuantity } from "@/shared/lib/format";
 import { formatMinutes } from "@/shared/lib/format-minutes";
 import { cn } from "@/shared/lib/utils";
 import { formatRemainingTime } from "../../lib/format-remaining-time";
@@ -66,15 +64,19 @@ export function SupplementRow({
 	} = entry;
 	const t = useTranslations("dashboard");
 	const ts = useTranslations("schedule");
+	const hasTimer = entry.dosageIntervalMinutes !== null || entry.waitAfterTakingMinutes !== null;
 	const {
 		checked,
 		pending,
 		confirmOpen,
 		setConfirmOpen,
+		timerPromptOpen,
+		setTimerPromptOpen,
 		handleClick,
+		handleTimerConfirm,
 		handleConfirmUncheck,
 		handleCloseConfirm,
-	} = useSupplementRow({ scheduleId, date, initialChecked, onCheckChange });
+	} = useSupplementRow({ scheduleId, date, initialChecked, hasTimer, onCheckChange });
 
 	const [editOpen, setEditOpen] = useState(false);
 
@@ -154,7 +156,7 @@ export function SupplementRow({
 									label={t("daysUntilResume", { count: cycling.daysRemaining })}
 								/>
 							)}
-							{cycling && cycling.isOnPhase && (
+							{cycling?.isOnPhase && (
 								<IconBadge
 									icon={Repeat}
 									label={t("daysUntilPause", { count: cycling.daysRemaining })}
@@ -199,13 +201,14 @@ export function SupplementRow({
 						</>
 					}
 				/>
-				<button
-					type="button"
+				<Button
+					variant="ghost"
+					size="icon-sm"
 					onClick={() => setEditOpen(true)}
-					className="p-sm shrink-0 rounded-lg text-content-faint hover:bg-surface-sunken hover:text-content-muted active:text-content-muted transition-colors"
+					className="shrink-0 text-content-faint hover:text-content-muted"
 				>
 					<Pencil className="size-3.5" />
-				</button>
+				</Button>
 			</div>
 
 			<ScheduleEditSheet
@@ -232,6 +235,27 @@ export function SupplementRow({
 				open={editOpen}
 				onOpenChange={setEditOpen}
 			/>
+
+			<Dialog open={timerPromptOpen} onOpenChange={setTimerPromptOpen}>
+				<DialogContent showCloseButton={false}>
+					<DialogHeader>
+						<DialogTitle>{t("timerPromptTitle")}</DialogTitle>
+						<DialogDescription>
+							{t("timerPromptDescription", {
+								time: formatMinutes(
+									entry.waitAfterTakingMinutes ?? entry.dosageIntervalMinutes ?? 0,
+								),
+							})}
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter>
+						<Button variant="ghost" onClick={() => handleTimerConfirm(true)}>
+							{t("timerPromptSkip")}
+						</Button>
+						<Button onClick={() => handleTimerConfirm(false)}>{t("timerPromptStart")}</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 
 			<Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
 				<DialogContent showCloseButton={false}>

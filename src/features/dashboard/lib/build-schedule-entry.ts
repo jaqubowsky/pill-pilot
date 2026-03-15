@@ -28,7 +28,12 @@ type ScheduleRow = {
 	waitAfterTakingMinutes: number | null;
 };
 
-type Log = { id: string; takenAt: Date; timerAdjustmentMinutes: number | null };
+type Log = {
+	id: string;
+	takenAt: Date;
+	timerAdjustmentMinutes: number | null;
+	timerNotifiedAt: Date | null;
+};
 
 type Context = {
 	logMap: Map<string, Log>;
@@ -36,7 +41,7 @@ type Context = {
 	date: string;
 	siblingTakenAtMap: Map<
 		string,
-		{ takenAt: Date; adjustmentMinutes: number; cooldownSkipped: boolean }
+		{ logId: string; takenAt: Date; adjustmentMinutes: number; cooldownSkipped: boolean }
 	>;
 };
 
@@ -125,7 +130,7 @@ function computeCooldown(
 	row: ScheduleRow,
 	log: Log | undefined,
 	ctx: Context,
-): { remainingMs: number } | null {
+): { remainingMs: number; logId: string } | null {
 	if (!row.dosageIntervalMinutes || log) return null;
 
 	const sibling = ctx.siblingTakenAtMap.get(row.protocolSupplementId);
@@ -137,11 +142,12 @@ function computeCooldown(
 	const remainingMs = expiresAt - Date.now();
 
 	if (remainingMs <= 0) return null;
-	return { remainingMs };
+	return { remainingMs, logId: sibling.logId };
 }
 
 function computeWaitTimer(row: ScheduleRow, log: Log | undefined): { remainingMs: number } | null {
 	if (!row.waitAfterTakingMinutes || !log) return null;
+	if (log.timerNotifiedAt) return null;
 
 	const waitMs = row.waitAfterTakingMinutes * 60 * 1000;
 	const adjustmentMs = (log.timerAdjustmentMinutes ?? 0) * 60 * 1000;

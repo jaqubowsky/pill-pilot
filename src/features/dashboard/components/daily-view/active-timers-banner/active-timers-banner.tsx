@@ -24,11 +24,13 @@ export function ActiveTimersBanner({ entries, date }: Props) {
 				<button
 					type="button"
 					onClick={toggleExpanded}
-					className="flex w-full items-center gap-sm px-md py-sm"
+					className="flex w-full items-center gap-sm px-md py-sm min-h-11"
 				>
 					<Timer className="size-4 text-brand-500 shrink-0" />
 					<span className="flex-1 text-left text-sm font-medium text-content truncate">
-						{nearest.supplementName}: {formatRemainingTime(nearest.remainingMs)}
+						{nearest.supplementName}
+						{timers.length > 1 && <span className="text-content-faint"> +{timers.length - 1}</span>}
+						: {formatRemainingTime(nearest.remainingMs)}
 					</span>
 					{expanded ? (
 						<ChevronDown className="size-4 text-content-faint shrink-0" />

@@ -68,9 +68,9 @@ export function PreviewSupplementRow({
 				</span>
 				<Button
 					variant="ghost"
-					size="icon-lg"
+					size="icon-sm"
 					onClick={onRestore}
-					className="min-h-11 min-w-11 active:scale-[0.98] transition-transform"
+					className="active:scale-[0.98] transition-transform"
 				>
 					<RotateCcw className="size-4 text-brand-600 stroke-[1.5]" />
 				</Button>
@@ -89,7 +89,7 @@ export function PreviewSupplementRow({
 		>
 			<button
 				type="button"
-				className="cursor-grab touch-none text-content-faint"
+				className="p-1.5 cursor-grab touch-none text-content-faint"
 				{...attributes}
 				{...listeners}
 			>
@@ -121,9 +121,9 @@ export function PreviewSupplementRow({
 			<div className="flex items-center">
 				<Button
 					variant="ghost"
-					size="icon-lg"
+					size="icon-sm"
 					onClick={onEdit}
-					className="min-h-11 min-w-11 active:scale-[0.98] transition-transform"
+					className="active:scale-[0.98] transition-transform"
 				>
 					<Pencil className="size-4 text-content-faint stroke-[1.5]" />
 				</Button>
@@ -143,9 +143,9 @@ export function PreviewSupplementRow({
 				</div>
 				<Button
 					variant="ghost"
-					size="icon-lg"
+					size="icon-sm"
 					onClick={onDelete}
-					className="min-h-11 min-w-11 active:scale-[0.98] transition-transform"
+					className="active:scale-[0.98] transition-transform"
 				>
 					<Trash2 className="size-4 text-danger stroke-[1.5]" />
 				</Button>

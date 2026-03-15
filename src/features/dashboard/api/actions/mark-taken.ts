@@ -13,11 +13,12 @@ import { supplementScheduleRepository } from "@/shared/repositories/supplement-s
 const schema = z.object({
 	scheduleId: z.string(),
 	date: z.iso.date(),
+	skipTimer: z.boolean().optional(),
 });
 
 export const markTaken = authActionClient
 	.inputSchema(schema)
-	.action(async ({ parsedInput: { scheduleId, date }, ctx }) => {
+	.action(async ({ parsedInput: { scheduleId, date, skipTimer }, ctx }) => {
 		const existing = await dailyLogRepository.findByScheduleAndDate(scheduleId, date);
 
 		if (existing) {
@@ -39,10 +40,12 @@ export const markTaken = authActionClient
 
 		await enforceCooldown(schedule.protocolSupplementId, date);
 
+		const now = new Date();
 		const log = await dailyLogRepository.create({
 			scheduleId,
 			date,
-			takenAt: new Date(),
+			takenAt: now,
+			...(skipTimer && { timerNotifiedAt: now }),
 		});
 
 		await supplementRepository.decrementStock(schedule.supplementId, schedule.dosageAmount);

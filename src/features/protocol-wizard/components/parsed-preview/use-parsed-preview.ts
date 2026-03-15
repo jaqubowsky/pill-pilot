@@ -180,7 +180,7 @@ export function useParsedPreview({
 			const next = new Map<string, string[]>();
 			for (const supplement of supps) {
 				for (const schedule of supplement.schedules) {
-					const prevOrder = prev.get(schedule.timeBlockId);
+					const _prevOrder = prev.get(schedule.timeBlockId);
 					const existing = next.get(schedule.timeBlockId) ?? [];
 					if (!existing.includes(supplement._id)) {
 						existing.push(supplement._id);
@@ -234,7 +234,7 @@ export function useParsedPreview({
 
 	const blockMap = useMemo(() => {
 		const map = new Map<string, IdentifiedSupplement[]>();
-		const supMap = new Map(supplements.map((s) => [s._id, s]));
+		const _supMap = new Map(supplements.map((s) => [s._id, s]));
 
 		for (const supplement of supplements) {
 			const seenBlocks = new Set<string>();

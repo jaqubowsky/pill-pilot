@@ -45,8 +45,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
 	Flame,
 };
 
-export const TIME_BLOCK_ICONS = Object.keys(ICON_MAP);
-export type TimeBlockIcon = keyof typeof ICON_MAP;
+const TIME_BLOCK_ICONS = Object.keys(ICON_MAP);
+type TimeBlockIcon = keyof typeof ICON_MAP;
 
 type IconPickerProps = {
 	value: string;

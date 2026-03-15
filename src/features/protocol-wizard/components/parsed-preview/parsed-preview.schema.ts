@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { DOSAGE_UNITS, SUPPLEMENT_CATEGORIES } from "@/shared/db/schema";
 
-export const editedScheduleSchema = z.object({
+const editedScheduleSchema = z.object({
 	dosageAmount: z.number().positive(),
 	dosageUnit: z.enum(DOSAGE_UNITS),
 	timeBlockId: z.string().min(1),
@@ -25,10 +25,4 @@ export const editedSupplementSchema = z.object({
 	schedules: z.array(editedScheduleSchema),
 });
 
-export const editedProtocolSchema = z.object({
-	protocolName: z.string().min(1),
-	supplements: z.array(editedSupplementSchema),
-});
-
-export type EditedProtocol = z.infer<typeof editedProtocolSchema>;
 export type EditedSupplement = z.infer<typeof editedSupplementSchema>;

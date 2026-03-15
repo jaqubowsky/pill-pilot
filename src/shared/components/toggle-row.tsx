@@ -20,8 +20,8 @@ export function ToggleRow({ label, hint, checked, onCheckedChange, disabled }: T
 				<Label className="text-sm text-content-muted">{label}</Label>
 				{hint && (
 					<Popover>
-						<PopoverTrigger className="text-content-faint">
-							<Info className="size-3.5" />
+						<PopoverTrigger className="relative p-1 text-content-faint after:absolute after:inset-1/2 after:min-h-11 after:min-w-11 after:-translate-1/2">
+							<Info className="size-4" />
 						</PopoverTrigger>
 						<PopoverContent className="text-xs w-64">{hint}</PopoverContent>
 					</Popover>

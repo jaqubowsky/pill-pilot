@@ -21,4 +21,3 @@ export function sendPushNotification(
 	return webPush.sendNotification(subscription, JSON.stringify(payload));
 }
 
-export { webPush };

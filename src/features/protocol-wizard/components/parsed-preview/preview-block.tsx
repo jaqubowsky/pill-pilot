@@ -4,7 +4,7 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import type { ExistingSupplementSummary, TimeBlockSummary } from "@/features/protocol-wizard/types";
+import type { TimeBlockSummary } from "@/features/protocol-wizard/types";
 import { Button } from "@/shared/components/ui/button";
 import type { EditedSupplement } from "./parsed-preview.schema";
 import { PreviewSupplementRow } from "./preview-supplement-row";
@@ -20,9 +20,7 @@ type SheetState = {
 type PreviewBlockProps = {
 	timeBlock: TimeBlockSummary;
 	supplements: IdentifiedSupplement[];
-	allSupplements: IdentifiedSupplement[];
 	allTimeBlocks: TimeBlockSummary[];
-	existingSupplements: ExistingSupplementSummary[];
 	onUpdateSupplement: (id: string, updated: EditedSupplement) => void;
 	onAddSupplement: (supplement: EditedSupplement) => void;
 	onDeleteSupplement: (id: string) => void;
@@ -34,9 +32,7 @@ type PreviewBlockProps = {
 export function PreviewBlock({
 	timeBlock,
 	supplements,
-	allSupplements,
 	allTimeBlocks,
-	existingSupplements,
 	onUpdateSupplement,
 	onAddSupplement,
 	onDeleteSupplement,
@@ -105,7 +101,7 @@ export function PreviewBlock({
 						defaultTimeBlockId: timeBlock.id,
 					})
 				}
-				className="text-brand-600 py-xs"
+				className="text-brand-600 min-h-11"
 			>
 				<Plus className="size-4 stroke-[1.5]" />
 				{t("protocolWizard.addSupplement")}

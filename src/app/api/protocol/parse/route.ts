@@ -124,7 +124,7 @@ async function extractTextFromExcel(buffer: Buffer): Promise<string> {
 		const legendColors = new Map<string, string>();
 		const legendRow = worksheet.getRow(2);
 		if (legendRow) {
-			legendRow.eachCell((cell, colNumber) => {
+			legendRow.eachCell((cell, _colNumber) => {
 				const color = getCellColor(cell);
 				const text = String(cell.value ?? "").trim();
 				if (color && text) {
@@ -141,7 +141,7 @@ async function extractTextFromExcel(buffer: Buffer): Promise<string> {
 			);
 		}
 
-		worksheet.eachRow((row, rowNumber) => {
+		worksheet.eachRow((row, _rowNumber) => {
 			const values = row.values as (string | number | null | undefined)[];
 			const text = values.slice(1).join(",");
 

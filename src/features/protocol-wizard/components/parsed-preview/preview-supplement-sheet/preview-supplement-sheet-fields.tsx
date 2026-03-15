@@ -138,7 +138,7 @@ export function PreviewSupplementSheetFields({ timeBlocks }: PreviewSupplementSh
 			<button
 				type="button"
 				onClick={() => setAdvancedOpen((prev) => !prev)}
-				className="flex items-center gap-xs text-sm font-medium text-content-muted py-xs"
+				className="flex items-center gap-xs text-sm font-medium text-content-muted min-h-11"
 			>
 				{advancedOpen ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
 				{t("schedule.advanced")}

@@ -23,8 +23,13 @@ const variantStyles = {
 export function IconBadge({ icon: Icon, label, variant = "default" }: IconBadgeProps) {
 	return (
 		<Popover>
-			<PopoverTrigger className={cn("rounded-lg p-xs", variantStyles[variant])}>
-				<Icon className="size-3.5 stroke-[1.5]" />
+			<PopoverTrigger
+				className={cn(
+					"relative rounded-lg p-xs after:absolute after:inset-1/2 after:min-h-11 after:min-w-11 after:-translate-1/2",
+					variantStyles[variant],
+				)}
+			>
+				<Icon className="size-4 stroke-[1.5]" />
 			</PopoverTrigger>
 			<PopoverContent className="w-auto max-w-52 p-sm text-xs">{label}</PopoverContent>
 		</Popover>

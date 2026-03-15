@@ -9,10 +9,10 @@ export function useCheckSupplement(initialChecked: boolean, onComplete?: () => v
 	const [checked, setChecked] = useState(initialChecked);
 	const [isPending, startTransition] = useTransition();
 
-	function check(scheduleId: string, date: string) {
+	function check(scheduleId: string, date: string, skipTimer?: boolean) {
 		setChecked(true);
 		startTransition(async () => {
-			const result = await markTaken({ scheduleId, date });
+			const result = await markTaken({ scheduleId, date, skipTimer });
 			if (result?.serverError) {
 				setChecked(false);
 				toast.error(result.serverError);

@@ -40,7 +40,7 @@ export function CalendarDay({
 			type="button"
 			onClick={() => onSelect(date)}
 			className={cn(
-				"flex aspect-square items-center justify-center rounded-lg text-sm font-medium transition-colors duration-150",
+				"flex aspect-square min-h-11 min-w-11 items-center justify-center rounded-lg text-sm font-medium transition-colors duration-150",
 				getHeatmapColor(totalSchedules > 0 ? completionPercent : 0, isFuture),
 				getTextColor(totalSchedules > 0 ? completionPercent : 0, isFuture),
 				isToday && "ring-2 ring-brand-400",

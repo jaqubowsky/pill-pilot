@@ -28,7 +28,7 @@ export function ViewSwitcher() {
 					key={key}
 					href={href}
 					className={cn(
-						"flex-1 rounded-md px-sm py-xs text-center text-sm font-medium transition-colors duration-150",
+						"flex-1 rounded-md min-h-11 flex items-center justify-center text-center text-sm font-medium transition-colors duration-150",
 						activeKey === key ? "bg-surface-raised text-content shadow-sm" : "text-content-muted",
 					)}
 				>

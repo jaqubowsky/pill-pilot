@@ -47,7 +47,7 @@ export type ScheduleEntry = {
 	protocolSupplementId: string;
 	dosageIntervalMinutes: number | null;
 	waitAfterTakingMinutes: number | null;
-	cooldown: { remainingMs: number } | null;
+	cooldown: { remainingMs: number; logId: string } | null;
 	waitTimer: { remainingMs: number } | null;
 };
 
@@ -139,7 +139,7 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 
 	const siblingTakenAtMap = new Map<
 		string,
-		{ takenAt: Date; adjustmentMinutes: number; cooldownSkipped: boolean }
+		{ logId: string; takenAt: Date; adjustmentMinutes: number; cooldownSkipped: boolean }
 	>();
 	for (const row of activeSchedules) {
 		if (!row.dosageIntervalMinutes) continue;
@@ -148,6 +148,7 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 		const existing = siblingTakenAtMap.get(row.protocolSupplementId);
 		if (!existing || log.takenAt > existing.takenAt) {
 			siblingTakenAtMap.set(row.protocolSupplementId, {
+				logId: log.id,
 				takenAt: log.takenAt,
 				adjustmentMinutes: log.timerAdjustmentMinutes ?? 0,
 				cooldownSkipped: log.cooldownSkippedAt !== null,

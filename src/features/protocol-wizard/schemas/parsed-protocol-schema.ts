@@ -3,7 +3,7 @@ import { DOSAGE_UNITS, SUPPLEMENT_CATEGORIES } from "@/shared/db/schema";
 
 export const CONFIDENCE_THRESHOLD = 0.9;
 
-export const rawExtractionItemSchema = z.object({
+const rawExtractionItemSchema = z.object({
 	name: z.string(),
 	rawDosage: z.string(),
 	rawTiming: z.string(),
@@ -21,9 +21,7 @@ export const rawExtractionSchema = z.object({
 	items: z.array(rawExtractionItemSchema),
 });
 
-export type RawExtraction = z.infer<typeof rawExtractionSchema>;
-
-export const parsedScheduleSchema = z.object({
+const parsedScheduleSchema = z.object({
 	dosageAmount: z.number().describe("Dosage amount, must be positive"),
 	dosageUnit: z.enum(DOSAGE_UNITS),
 	timeBlockId: z.string(),
@@ -106,4 +104,3 @@ export const parsedProtocolSchema = z.object({
 
 export type ParsedProtocol = z.infer<typeof parsedProtocolSchema>;
 export type ParsedSupplement = z.infer<typeof parsedSupplementSchema>;
-export type ParsedSchedule = z.infer<typeof parsedScheduleSchema>;

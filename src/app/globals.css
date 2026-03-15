@@ -212,3 +212,33 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+::view-transition-old(bottom-nav),
+::view-transition-new(bottom-nav) {
+  animation: none;
+}
+
+::view-transition-old(main-content) {
+  animation: 150ms ease-out both fade-out;
+}
+
+::view-transition-new(main-content) {
+  animation: 150ms ease-in 50ms both fade-in;
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}

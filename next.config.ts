@@ -8,6 +8,9 @@ const isDev = process.env.NODE_ENV === "development";
 const nextConfig: NextConfig = {
 	reactStrictMode: true,
 	output: "standalone",
+	experimental: {
+		viewTransition: true,
+	},
 	async headers() {
 		return [
 			{

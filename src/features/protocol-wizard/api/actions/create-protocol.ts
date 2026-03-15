@@ -53,6 +53,7 @@ export const createProtocol = authActionClient
 					name: item.name,
 					brandName: item.brandName ?? null,
 					category: item.category,
+					stockUnit: item.schedules[0]?.dosageUnit ?? "capsule",
 				});
 				supplementIdMap[item.name] = created.id;
 			}

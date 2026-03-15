@@ -16,7 +16,11 @@ import {
 import { DOSAGE_UNITS, SUPPLEMENT_CATEGORIES } from "@/shared/db/schema";
 import { useSupplementFields } from "./use-supplement-fields";
 
-export function SupplementFields() {
+type SupplementFieldsProps = {
+	readOnlyUnit?: boolean;
+};
+
+export function SupplementFields({ readOnlyUnit }: SupplementFieldsProps) {
 	const t = useTranslations();
 	const {
 		register,
@@ -33,7 +37,13 @@ export function SupplementFields() {
 		handleStockUnitChange,
 	} = useSupplementFields();
 
-	const unitSelect = (
+	const unitLabel = stockUnit ? t(`schedule.units.${stockUnit}`) : "";
+
+	const unitSelect = readOnlyUnit ? (
+		<span className="text-sm text-content-muted shrink-0">
+			{unitLabel}
+		</span>
+	) : (
 		<Select value={stockUnit} onValueChange={handleStockUnitChange}>
 			<SelectTrigger className="w-auto shrink-0 bg-surface-sunken border-edge rounded-lg">
 				<SelectValue>{stockUnit ? t(`schedule.units.${stockUnit}`) : ""}</SelectValue>

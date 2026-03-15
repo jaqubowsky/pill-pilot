@@ -248,6 +248,8 @@
 		"addTitle": "Dodaj suplement",
 		"editTitle": "Edytuj suplement",
 		"delete": "Usuń suplement",
+		"deleteConfirmTitle": "Usunąć suplement?",
+		"deleteConfirmDescription": "Suplement zostanie trwale usunięty. Tej operacji nie można cofnąć.",
 		"categories": {
 			"medication": "Lek",
 			"supplement": "Suplement",

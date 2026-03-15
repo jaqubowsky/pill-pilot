@@ -1,3 +1,4 @@
+import { ViewTransition } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/shared/lib/auth";
@@ -14,7 +15,11 @@ export default async function MainLayout({ children }: { children: React.ReactNo
 
 	return (
 		<>
-			<div className="pb-16">{children}</div>
+			<div className="pb-16">
+				<ViewTransition name="main-content">
+					{children}
+				</ViewTransition>
+			</div>
 			<BottomNav />
 		</>
 	);

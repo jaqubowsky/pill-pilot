@@ -9,15 +9,16 @@ type SupplementFormProps = {
 	defaultValues?: Partial<SupplementFormValues>;
 	onSubmit: SubmitHandler<SupplementFormValues>;
 	formId: string;
+	readOnlyUnit?: boolean;
 };
 
-export function SupplementForm({ defaultValues, onSubmit, formId }: SupplementFormProps) {
+export function SupplementForm({ defaultValues, onSubmit, formId, readOnlyUnit }: SupplementFormProps) {
 	const { methods, handleSubmit } = useSupplementForm({ defaultValues, onSubmit });
 
 	return (
 		<FormProvider {...methods}>
 			<form id={formId} onSubmit={handleSubmit}>
-				<SupplementFields />
+				<SupplementFields readOnlyUnit={readOnlyUnit} />
 			</form>
 		</FormProvider>
 	);

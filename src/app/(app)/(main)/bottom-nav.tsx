@@ -17,7 +17,7 @@ export function BottomNav() {
 	const t = useTranslations();
 
 	return (
-		<nav className="fixed bottom-0 inset-x-0 bg-surface-raised/90 backdrop-blur-md border-t border-edge-subtle h-16 pb-[env(safe-area-inset-bottom)]">
+		<nav className="fixed bottom-0 inset-x-0 bg-surface-raised/90 backdrop-blur-md border-t border-edge-subtle h-16 pb-[env(safe-area-inset-bottom)] z-50" style={{ viewTransitionName: "bottom-nav" }}>
 			<div className="mx-auto max-w-md flex h-full">
 				{navItems.map(({ href, icon: Icon, labelKey }) => {
 					const isActive = pathname === href || pathname.startsWith(`${href}/`);

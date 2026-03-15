@@ -1,6 +1,7 @@
 "use client";
 
 import { useAction } from "next-safe-action/hooks";
+import { useState } from "react";
 import { toast } from "sonner";
 import type { StockListItem } from "@/features/stock/api/queries/get-stock-list";
 import {
@@ -17,6 +18,7 @@ type UseSupplementEditSheetParams = {
 
 export function useSupplementEditSheet({ supplement, onOpenChange }: UseSupplementEditSheetParams) {
 	const isNew = supplement === null;
+	const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
 	const { execute: executeAdd, isPending: isAdding } = useAction(addSupplement, {
 		onSuccess: () => onOpenChange(false),
@@ -46,7 +48,7 @@ export function useSupplementEditSheet({ supplement, onOpenChange }: UseSuppleme
 		}
 	}
 
-	function handleDelete() {
+	function handleDeleteConfirm() {
 		if (!supplement) return;
 		executeDelete({ supplementId: supplement.id });
 	}
@@ -67,7 +69,9 @@ export function useSupplementEditSheet({ supplement, onOpenChange }: UseSuppleme
 		isNew,
 		isPending,
 		handleSubmit,
-		handleDelete,
+		handleDeleteConfirm,
+		deleteConfirmOpen,
+		setDeleteConfirmOpen,
 		defaultValues,
 	};
 }

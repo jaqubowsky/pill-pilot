@@ -1,55 +1,55 @@
 {
-  "version": "7",
-  "dialect": "postgresql",
-  "entries": [
-    {
-      "idx": 0,
-      "version": "7",
-      "when": 1773440855768,
-      "tag": "0000_loud_rhino",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1773485387210,
-      "tag": "0001_clammy_black_tarantula",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1773490057391,
-      "tag": "0002_cuddly_logan",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1773511142805,
-      "tag": "0003_clever_stark_industries",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1773512216466,
-      "tag": "0004_known_wallow",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1773513925575,
-      "tag": "0005_past_tomas",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1773564094784,
-      "tag": "0006_conscious_cassandra_nova",
-      "breakpoints": true
-    }
-  ]
+	"version": "7",
+	"dialect": "postgresql",
+	"entries": [
+		{
+			"idx": 0,
+			"version": "7",
+			"when": 1773440855768,
+			"tag": "0000_loud_rhino",
+			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "7",
+			"when": 1773485387210,
+			"tag": "0001_clammy_black_tarantula",
+			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1773490057391,
+			"tag": "0002_cuddly_logan",
+			"breakpoints": true
+		},
+		{
+			"idx": 3,
+			"version": "7",
+			"when": 1773511142805,
+			"tag": "0003_clever_stark_industries",
+			"breakpoints": true
+		},
+		{
+			"idx": 4,
+			"version": "7",
+			"when": 1773512216466,
+			"tag": "0004_known_wallow",
+			"breakpoints": true
+		},
+		{
+			"idx": 5,
+			"version": "7",
+			"when": 1773513925575,
+			"tag": "0005_past_tomas",
+			"breakpoints": true
+		},
+		{
+			"idx": 6,
+			"version": "7",
+			"when": 1773564094784,
+			"tag": "0006_conscious_cassandra_nova",
+			"breakpoints": true
+		}
+	]
 }

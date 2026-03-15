@@ -42,4 +42,3 @@ export function getCycleStatus(
 		daysRemaining: cycleLength - dayInCycle,
 	};
 }
-

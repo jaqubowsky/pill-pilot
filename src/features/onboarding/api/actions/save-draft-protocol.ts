@@ -18,6 +18,7 @@ export const saveDraftProtocol = authActionClient
 		const { protocolId, parsedData, name } = parsedInput;
 
 		if (protocolId) {
+			await protocolRepository.findByIdAndUserId(protocolId, userId);
 			const protocol = await protocolRepository.update(protocolId, {
 				parsedData,
 				name,

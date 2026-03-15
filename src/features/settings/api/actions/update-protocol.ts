@@ -6,16 +6,17 @@ import { z } from "zod";
 import { parsedProtocolSchema } from "@/features/onboarding/schemas/parsed-protocol-schema";
 import { db } from "@/shared/db/client";
 import { protocolSupplements } from "@/shared/db/schema";
-import { authActionClient } from "@/shared/lib/safe-action";
+import { ActionError, ActionErrorCode, authActionClient } from "@/shared/lib/safe-action";
 import { protocolRepository } from "@/shared/repositories/protocol-repository";
 import { protocolSupplementRepository } from "@/shared/repositories/protocol-supplement-repository";
 import { supplementRepository } from "@/shared/repositories/supplement-repository";
 import { supplementScheduleRepository } from "@/shared/repositories/supplement-schedule-repository";
+import { timeBlockRepository } from "@/shared/repositories/time-block-repository";
 
 const updateProtocolSchema = z.object({
 	protocolId: z.string(),
 	parsedData: z.string(),
-	startDate: z.string(),
+	startDate: z.iso.date(),
 });
 
 export const updateProtocol = authActionClient
@@ -30,10 +31,14 @@ export const updateProtocol = authActionClient
 
 		await db.delete(protocolSupplements).where(eq(protocolSupplements.protocolId, protocolId));
 
+		const userTimeBlocks = await timeBlockRepository.findByUserId(userId);
+		const validTimeBlockIds = new Set(userTimeBlocks.map((tb) => tb.id));
+
 		const supplementIdMap: Record<string, string> = {};
 
 		for (const item of parsed.supplements) {
 			if (item.existingSupplementId) {
+				await supplementRepository.findByIdAndUserId(item.existingSupplementId, userId);
 				supplementIdMap[item.name] = item.existingSupplementId;
 			} else {
 				const created = await supplementRepository.create({
@@ -72,6 +77,9 @@ export const updateProtocol = authActionClient
 			psIdMap[item.name] = protocolSupplement.id;
 
 			for (const schedule of item.schedules) {
+				if (!validTimeBlockIds.has(schedule.timeBlockId)) {
+					throw new ActionError(ActionErrorCode.TIME_BLOCK_NOT_FOUND);
+				}
 				await supplementScheduleRepository.create({
 					protocolSupplementId: protocolSupplement.id,
 					timeBlockId: schedule.timeBlockId,

@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/shared/db/client";
 import { supplements } from "@/shared/db/schema";
 import { ActionError, ActionErrorCode } from "@/shared/lib/safe-action";
@@ -79,24 +79,21 @@ class SupplementRepository implements ISupplementRepository {
 	}
 
 	async decrementStock(id: string, amount: string): Promise<void> {
-		const supplement = await this.findById(id);
-		if (!supplement || supplement.currentStock === null) return;
-
-		const newStock = Math.max(
-			0,
-			parseFloat(supplement.currentStock) - parseFloat(amount),
-		).toString();
-
-		await db.update(supplements).set({ currentStock: newStock }).where(eq(supplements.id, id));
+		await db
+			.update(supplements)
+			.set({
+				currentStock: sql`GREATEST(0, ${supplements.currentStock}::numeric - ${Number(amount)})::text`,
+			})
+			.where(and(eq(supplements.id, id), sql`${supplements.currentStock} IS NOT NULL`));
 	}
 
 	async incrementStock(id: string, amount: string): Promise<void> {
-		const supplement = await this.findById(id);
-		if (!supplement || supplement.currentStock === null) return;
-
-		const newStock = (parseFloat(supplement.currentStock) + parseFloat(amount)).toString();
-
-		await db.update(supplements).set({ currentStock: newStock }).where(eq(supplements.id, id));
+		await db
+			.update(supplements)
+			.set({
+				currentStock: sql`(${supplements.currentStock}::numeric + ${Number(amount)})::text`,
+			})
+			.where(and(eq(supplements.id, id), sql`${supplements.currentStock} IS NOT NULL`));
 	}
 }
 

@@ -1,12 +1,13 @@
 -- ============================================================
--- PillPilot Seed Script for user: jakub.nalewajk04@gmail.com
+-- PillPilot Seed Script
 -- Covers: stock, price, cycling, dependency, isCritical,
 --         multiple time blocks, all dosage units, shared
 --         supplements, low/zero stock, daily logs
 -- ============================================================
 -- Usage:
---   docker exec -i $(docker ps --filter "publish=5433" -q) \
---     psql -U pillpilot -d pill_pilot < scripts/seed.sql
+--   SEED_EMAIL='user@example.com' envsubst < scripts/seed.sql | \
+--     docker exec -i $(docker ps --filter "publish=5433" -q) \
+--     psql -U pillpilot -d pill_pilot
 -- ============================================================
 
 BEGIN;
@@ -24,7 +25,7 @@ DECLARE
   v_tb_bedtime text;
 BEGIN
 
-SELECT id INTO STRICT v_user_id FROM users WHERE email = 'jakub.nalewajk04@gmail.com';
+SELECT id INTO STRICT v_user_id FROM users WHERE email = '${SEED_EMAIL}';
 
 SELECT id INTO STRICT v_tb_fasting  FROM time_blocks WHERE user_id = v_user_id AND sort_order = 0 AND active = true;
 SELECT id INTO STRICT v_tb_breakfast FROM time_blocks WHERE user_id = v_user_id AND sort_order = 1 AND active = true;

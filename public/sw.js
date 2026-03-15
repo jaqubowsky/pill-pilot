@@ -34,10 +34,12 @@ self.addEventListener("fetch", (event) => {
 				(cached) =>
 					cached ||
 					fetch(request).then((response) => {
-						const clone = response.clone();
-						caches
-							.open(STATIC_CACHE)
-							.then((cache) => cache.put(request, clone));
+						if (response.ok) {
+							const clone = response.clone();
+							caches
+								.open(STATIC_CACHE)
+								.then((cache) => cache.put(request, clone));
+						}
 						return response;
 					}),
 			),
@@ -56,10 +58,14 @@ self.addEventListener("fetch", (event) => {
 self.addEventListener("push", (event) => {
 	if (!event.data) return;
 	const data = event.data.json();
+	const title =
+		typeof data.title === "string" ? data.title.slice(0, 100) : "PillPilot";
+	const body =
+		typeof data.body === "string" ? data.body.slice(0, 200) : "";
 	event.waitUntil(
-		self.registration.showNotification(data.title, {
-			body: data.body,
-			icon: data.icon || "/icon-192x192.png",
+		self.registration.showNotification(title, {
+			body,
+			icon: "/icon-192x192.png",
 		}),
 	);
 });

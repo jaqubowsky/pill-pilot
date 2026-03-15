@@ -13,6 +13,7 @@ const DEFAULT_TIME_BLOCKS = [
 ];
 
 export const auth = betterAuth({
+	secret: process.env.BETTER_AUTH_SECRET!,
 	database: drizzleAdapter(db, {
 		provider: "pg",
 		schema: {
@@ -28,7 +29,18 @@ export const auth = betterAuth({
 			clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
 		},
 	},
-	baseURL: process.env.NEXT_PUBLIC_APP_URL!,
+	baseURL: process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL!,
+	trustedOrigins: [process.env.NEXT_PUBLIC_APP_URL!],
+	session: {
+		cookieCache: { enabled: true, maxAge: 300 },
+	},
+	advanced: {
+		cookiePrefix: "pillpilot",
+		defaultCookieAttributes: {
+			secure: process.env.NODE_ENV === "production",
+			sameSite: "lax",
+		},
+	},
 	databaseHooks: {
 		user: {
 			create: {

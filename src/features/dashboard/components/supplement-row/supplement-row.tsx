@@ -2,6 +2,7 @@
 
 import { AlertTriangle, Lock, Repeat } from "lucide-react";
 import { useTranslations } from "next-intl";
+import type { StockStatus } from "@/features/dashboard/api/queries/get-daily-status";
 import { CriticalBadge } from "@/shared/components/critical-badge";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -17,8 +18,6 @@ import { formatQuantity } from "@/shared/lib/format";
 import { cn } from "@/shared/lib/utils";
 import { SupplementCheckbox } from "./supplement-checkbox";
 import { useSupplementRow } from "./use-supplement-row";
-
-import type { StockStatus } from "@/features/dashboard/api/queries/get-daily-status";
 
 type Props = {
 	scheduleId: string;
@@ -67,8 +66,10 @@ export function SupplementRow({
 	const isNotStarted = notStartedDays !== null && notStartedDays > 0;
 	const isLocked = dependency !== null && !dependency.isUnlocked;
 	const isOutOfStock = stockStatus !== null && stockStatus.currentStock === 0;
-	const isLowStock = stockStatus !== null && stockStatus.currentStock > 0 && stockStatus.daysRemaining < 7;
-	const isDisabled = isNotStarted || isLocked || isOutOfStock || (cycling !== null && !cycling.isOnPhase);
+	const isLowStock =
+		stockStatus !== null && stockStatus.currentStock > 0 && stockStatus.daysRemaining < 7;
+	const isDisabled =
+		isNotStarted || isLocked || isOutOfStock || (cycling !== null && !cycling.isOnPhase);
 
 	return (
 		<>
@@ -109,9 +110,7 @@ export function SupplementRow({
 								<PopoverTrigger className="text-destructive">
 									<AlertTriangle className="size-3.5" />
 								</PopoverTrigger>
-								<PopoverContent className="text-xs w-64">
-									{t("outOfStock")}
-								</PopoverContent>
+								<PopoverContent className="text-xs w-64">{t("outOfStock")}</PopoverContent>
 							</Popover>
 						)}
 						{isLowStock && (

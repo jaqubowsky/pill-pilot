@@ -1,129 +1,161 @@
-import type { UserContent } from "ai";
-import { generateText, Output } from "ai";
-import { headers } from "next/headers";
-import type { NextRequest } from "next/server";
-import * as XLSX from "xlsx";
-import { parsedProtocolSchema } from "@/features/onboarding";
-import { anthropic } from "@/shared/lib/ai";
-import { auth } from "@/shared/lib/auth";
+import type { UserContent } from 'ai'
+import { generateText, Output } from 'ai'
+import ExcelJS from 'exceljs'
+import { headers } from 'next/headers'
+import type { NextRequest } from 'next/server'
+import { z } from 'zod'
+import { parsedProtocolSchema } from '@/features/onboarding'
+import { anthropic } from '@/shared/lib/ai'
+import { auth } from '@/shared/lib/auth'
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_FILE_SIZE = 10 * 1024 * 1024
+const RATE_LIMIT_WINDOW_MS = 60_000
+const RATE_LIMIT_MAX_REQUESTS = 5
 
-const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+
+function isRateLimited(userId: string): boolean {
+  const now = Date.now()
+  const entry = rateLimitMap.get(userId)
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS })
+    return false
+  }
+
+  entry.count++
+  return entry.count > RATE_LIMIT_MAX_REQUESTS
+}
+
+const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 
 function isPdf(file: File) {
-	return file.type === "application/pdf" || file.name.endsWith(".pdf");
+  return file.type === 'application/pdf' || file.name.endsWith('.pdf')
 }
 
 function isExcel(file: File) {
-	return (
-		file.type.includes("spreadsheet") ||
-		file.type.includes("excel") ||
-		file.name.endsWith(".xlsx") ||
-		file.name.endsWith(".xls")
-	);
+  return (
+    file.type.includes('spreadsheet') ||
+    file.type.includes('excel') ||
+    file.name.endsWith('.xlsx') ||
+    file.name.endsWith('.xls')
+  )
 }
 
 function isImage(file: File) {
-	return IMAGE_TYPES.includes(file.type);
+  return IMAGE_TYPES.includes(file.type)
 }
 
 function isText(file: File) {
-	return file.type === "text/plain" || file.name.endsWith(".txt");
+  return file.type === 'text/plain' || file.name.endsWith('.txt')
 }
 
-function extractTextFromExcel(buffer: Buffer): string {
-	const workbook = XLSX.read(buffer, { type: "buffer" });
-	const lines: string[] = [];
-	for (const sheetName of workbook.SheetNames) {
-		const sheet = workbook.Sheets[sheetName];
-		lines.push(`Sheet: ${sheetName}`);
-		lines.push(XLSX.utils.sheet_to_csv(sheet));
-	}
-	return lines.join("\n");
+async function extractTextFromExcel(buffer: Buffer): Promise<string> {
+  const workbook = new ExcelJS.Workbook()
+  await workbook.xlsx.load(buffer as unknown as ExcelJS.Buffer)
+  const lines: string[] = []
+  for (const worksheet of workbook.worksheets) {
+    lines.push(`Sheet: ${worksheet.name}`)
+    worksheet.eachRow((row) => {
+      const values = row.values as (string | number | null | undefined)[]
+      lines.push(values.slice(1).join(','))
+    })
+  }
+  return lines.join('\n')
 }
 
 function buildUserContent(file: File, buffer: Buffer, textContent?: string): UserContent {
-	const content: UserContent = [];
+  const content: UserContent = []
 
-	if (isPdf(file)) {
-		content.push({ type: "file", data: buffer, mediaType: "application/pdf" });
-		content.push({ type: "text", text: "Parse the treatment protocol from this PDF document." });
-	} else if (isImage(file)) {
-		content.push({ type: "image", image: buffer, mediaType: file.type });
-		content.push({
-			type: "text",
-			text: "Parse the treatment protocol from this photo/image.",
-		});
-	} else {
-		content.push({
-			type: "text",
-			text: `Parse this treatment protocol document:\n\n${textContent}`,
-		});
-	}
+  if (isPdf(file)) {
+    content.push({ type: 'file', data: buffer, mediaType: 'application/pdf' })
+    content.push({ type: 'text', text: 'Parse the treatment protocol from this PDF document.' })
+  } else if (isImage(file)) {
+    content.push({ type: 'image', image: buffer, mediaType: file.type })
+    content.push({
+      type: 'text',
+      text: 'Parse the treatment protocol from this photo/image.',
+    })
+  } else {
+    content.push({
+      type: 'text',
+      text: `Parse this treatment protocol document:\n\n${textContent}`,
+    })
+  }
 
-	return content;
+  return content
 }
 
 export async function POST(request: NextRequest) {
-	const session = await auth.api.getSession({
-		headers: await headers(),
-	});
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
 
-	if (!session) {
-		return Response.json({ error: "Unauthorized" }, { status: 401 });
-	}
+  if (!session) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
-	const formData = await request.formData();
-	const file = formData.get("file") as File | null;
-	const supplementsJson = formData.get("supplements") as string | null;
-	const timeBlocksJson = formData.get("timeBlocks") as string | null;
+  if (isRateLimited(session.user.id)) {
+    return Response.json({ error: 'rate_limited' }, { status: 429 })
+  }
 
-	if (!file) {
-		return Response.json({ error: "no_file" }, { status: 400 });
-	}
+  const formData = await request.formData()
+  const file = formData.get('file') as File | null
+  const supplementsJson = formData.get('supplements') as string | null
+  const timeBlocksJson = formData.get('timeBlocks') as string | null
 
-	if (file.size > MAX_FILE_SIZE) {
-		return Response.json({ error: "file_too_large" }, { status: 400 });
-	}
+  if (!file) {
+    return Response.json({ error: 'no_file' }, { status: 400 })
+  }
 
-	if (!isPdf(file) && !isExcel(file) && !isImage(file) && !isText(file)) {
-		return Response.json({ error: "unsupported_file_type" }, { status: 400 });
-	}
+  if (file.size > MAX_FILE_SIZE) {
+    return Response.json({ error: 'file_too_large' }, { status: 400 })
+  }
 
-	let supplements: unknown[] = [];
-	let timeBlocks: unknown[] = [];
+  if (!isPdf(file) && !isExcel(file) && !isImage(file) && !isText(file)) {
+    return Response.json({ error: 'unsupported_file_type' }, { status: 400 })
+  }
 
-	try {
-		supplements = supplementsJson ? JSON.parse(supplementsJson) : [];
-		timeBlocks = timeBlocksJson ? JSON.parse(timeBlocksJson) : [];
-	} catch {
-		return Response.json({ error: "invalid_context" }, { status: 400 });
-	}
+  const contextItemSchema = z.object({
+    id: z.string().max(128),
+    name: z.string().max(200),
+  })
 
-	const buffer = Buffer.from(await file.arrayBuffer());
-	let textContent: string | undefined;
+  let supplements: z.infer<typeof contextItemSchema>[] = []
+  let timeBlocks: z.infer<typeof contextItemSchema>[] = []
 
-	if (isExcel(file)) {
-		try {
-			textContent = extractTextFromExcel(buffer);
-		} catch (err) {
-			console.error("[protocol/parse] Excel extraction failed:", err);
-			return Response.json({ error: "unreadable_file" }, { status: 422 });
-		}
-	} else if (isText(file)) {
-		textContent = buffer.toString("utf-8");
-	}
+  try {
+    const rawSupplements = supplementsJson ? JSON.parse(supplementsJson) : []
+    const rawTimeBlocks = timeBlocksJson ? JSON.parse(timeBlocksJson) : []
+    supplements = z.array(contextItemSchema).max(200).parse(rawSupplements)
+    timeBlocks = z.array(contextItemSchema).max(50).parse(rawTimeBlocks)
+  } catch {
+    return Response.json({ error: 'invalid_context' }, { status: 400 })
+  }
 
-	if (textContent !== undefined && !textContent.trim()) {
-		return Response.json({ error: "empty_file" }, { status: 422 });
-	}
+  const buffer = Buffer.from(await file.arrayBuffer())
+  let textContent: string | undefined
 
-	const userContent = buildUserContent(file, buffer, textContent);
+  if (isExcel(file)) {
+    try {
+      textContent = await extractTextFromExcel(buffer)
+    } catch (err) {
+      console.error('[protocol/parse] Excel extraction failed:', err)
+      return Response.json({ error: 'unreadable_file' }, { status: 422 })
+    }
+  } else if (isText(file)) {
+    textContent = buffer.toString('utf-8')
+  }
 
-	const userContext = JSON.stringify({ supplements, timeBlocks }, null, 2);
+  if (textContent !== undefined && !textContent.trim()) {
+    return Response.json({ error: 'empty_file' }, { status: 422 })
+  }
 
-	const systemPrompt = `You are a medical protocol parser. You receive a supplement/medication protocol document and user context, and you extract a structured list of supplements and their schedules.
+  const userContent = buildUserContent(file, buffer, textContent)
+
+  const userContext = JSON.stringify({ supplements, timeBlocks }, null, 2)
+
+  const systemPrompt = `You are a medical protocol parser. You receive a supplement/medication protocol document and user context, and you extract a structured list of supplements and their schedules.
 
 User context (existing inventory and time blocks):
 ${userContext}
@@ -145,23 +177,23 @@ Rules:
 MANDATORY SELF-VERIFICATION (do this before returning):
 1. Check: Are there any duplicate supplement names? If yes → merge into one entry with multiple schedules
 2. Check: For every supplement, re-read the source document — does the dosage, time block, and linking match?
-If after both checks you are still uncertain about any field → set confidence below 0.7 so the user can verify`;
+If after both checks you are still uncertain about any field → set confidence below 0.7 so the user can verify`
 
-	try {
-		const { output } = await generateText({
-			model: anthropic("claude-haiku-4-5"),
-			output: Output.object({ schema: parsedProtocolSchema }),
-			system: systemPrompt,
-			messages: [{ role: "user", content: userContent }],
-		});
+  try {
+    const { output } = await generateText({
+      model: anthropic('claude-haiku-4-5'),
+      output: Output.object({ schema: parsedProtocolSchema }),
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userContent }],
+    })
 
-		if (!output || !output.supplements || output.supplements.length === 0) {
-			return Response.json({ error: "no_supplements_found" }, { status: 422 });
-		}
+    if (!output || !output.supplements || output.supplements.length === 0) {
+      return Response.json({ error: 'no_supplements_found' }, { status: 422 })
+    }
 
-		return Response.json(output);
-	} catch (err) {
-		console.error("[protocol/parse] AI generation failed:", err);
-		return Response.json({ error: "ai_error" }, { status: 500 });
-	}
+    return Response.json(output)
+  } catch (err) {
+    console.error('[protocol/parse] AI generation failed:', err)
+    return Response.json({ error: 'ai_error' }, { status: 500 })
+  }
 }

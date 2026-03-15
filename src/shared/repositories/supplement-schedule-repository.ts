@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/shared/db/client";
-import { protocolSupplements, supplementSchedules } from "@/shared/db/schema";
+import { protocolSupplements, protocols, supplementSchedules } from "@/shared/db/schema";
+import { ActionError, ActionErrorCode } from "@/shared/lib/safe-action";
 
 type SupplementSchedule = typeof supplementSchedules.$inferSelect;
 type NewSupplementSchedule = typeof supplementSchedules.$inferInsert;
@@ -10,6 +11,7 @@ type ScheduleWithContext = SupplementSchedule & { supplementId: string };
 interface ISupplementScheduleRepository {
 	findById(id: string): Promise<SupplementSchedule | undefined>;
 	findWithContext(id: string): Promise<ScheduleWithContext | undefined>;
+	findOwnedWithContext(id: string, userId: string): Promise<ScheduleWithContext>;
 	findByProtocolSupplementId(protocolSupplementId: string): Promise<SupplementSchedule[]>;
 	hasActiveSchedulesForTimeBlock(timeBlockId: string): Promise<boolean>;
 	create(data: NewSupplementSchedule): Promise<SupplementSchedule>;
@@ -40,6 +42,32 @@ class SupplementScheduleRepository implements ISupplementScheduleRepository {
 			)
 			.where(eq(supplementSchedules.id, id));
 		return rows[0];
+	}
+
+	async findOwnedWithContext(id: string, userId: string): Promise<ScheduleWithContext> {
+		const rows = await db
+			.select({
+				id: supplementSchedules.id,
+				protocolSupplementId: supplementSchedules.protocolSupplementId,
+				timeBlockId: supplementSchedules.timeBlockId,
+				dosageAmount: supplementSchedules.dosageAmount,
+				dosageUnit: supplementSchedules.dosageUnit,
+				supplementId: protocolSupplements.supplementId,
+			})
+			.from(supplementSchedules)
+			.innerJoin(
+				protocolSupplements,
+				eq(supplementSchedules.protocolSupplementId, protocolSupplements.id),
+			)
+			.innerJoin(protocols, eq(protocolSupplements.protocolId, protocols.id))
+			.where(and(eq(supplementSchedules.id, id), eq(protocols.userId, userId)));
+
+		const schedule = rows[0];
+		if (!schedule) {
+			throw new ActionError(ActionErrorCode.SCHEDULE_NOT_FOUND);
+		}
+
+		return schedule;
 	}
 
 	async findByProtocolSupplementId(protocolSupplementId: string): Promise<SupplementSchedule[]> {

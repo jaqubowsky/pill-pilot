@@ -1,7 +1,7 @@
 import type { DosageUnit } from "@/shared/db/schema";
+import type { ScheduleEntry, StockStatus } from "../api/queries/get-daily-status";
 import { getCycleStatus } from "./cycling";
 import { getDependencyStatus } from "./dependency";
-import type { ScheduleEntry, StockStatus } from "../api/queries/get-daily-status";
 
 type ScheduleRow = {
 	scheduleId: string;
@@ -32,10 +32,18 @@ type Context = {
 	date: string;
 };
 
-export function buildScheduleEntry(row: ScheduleRow, ctx: Context): { entry: ScheduleEntry; hasLog: boolean } {
+export function buildScheduleEntry(
+	row: ScheduleRow,
+	ctx: Context,
+): { entry: ScheduleEntry; hasLog: boolean } {
 	const log = ctx.logMap.get(row.scheduleId);
 
-	const cycleStatus = getCycleStatus(row.protocolStartDate, row.cycleDaysOn, row.cycleDaysOff, ctx.date);
+	const cycleStatus = getCycleStatus(
+		row.protocolStartDate,
+		row.cycleDaysOn,
+		row.cycleDaysOff,
+		ctx.date,
+	);
 
 	const depStatus = getDependencyStatus(
 		row.prerequisiteId,
@@ -54,7 +62,11 @@ export function buildScheduleEntry(row: ScheduleRow, ctx: Context): { entry: Sch
 		}
 	}
 
-	const stockStatus = buildStockStatus(row.currentStock, row.stockUnit, ctx.dailyDosageMap.get(row.supplementId) ?? 0);
+	const stockStatus = buildStockStatus(
+		row.currentStock,
+		row.stockUnit,
+		ctx.dailyDosageMap.get(row.supplementId) ?? 0,
+	);
 
 	return {
 		entry: {

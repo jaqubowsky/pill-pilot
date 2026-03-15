@@ -9,29 +9,28 @@ import { supplementScheduleRepository } from "@/shared/repositories/supplement-s
 
 const schema = z.object({
 	scheduleId: z.string(),
-	date: z.string(),
+	date: z.iso.date(),
 });
 
 export const markTaken = authActionClient
 	.inputSchema(schema)
-	.action(async ({ parsedInput: { scheduleId, date } }) => {
+	.action(async ({ parsedInput: { scheduleId, date }, ctx }) => {
 		const existing = await dailyLogRepository.findByScheduleAndDate(scheduleId, date);
 
 		if (existing) {
 			return { logId: existing.id };
 		}
 
-		const schedule = await supplementScheduleRepository.findWithContext(scheduleId);
-		if (!schedule) {
-			throw new ActionError(ActionErrorCode.SCHEDULE_NOT_FOUND);
-		}
+		const schedule = await supplementScheduleRepository.findOwnedWithContext(
+			scheduleId,
+			ctx.userId,
+		);
 
-		const supplement = await supplementRepository.findById(schedule.supplementId);
-		if (
-			supplement &&
-			supplement.currentStock !== null &&
-			parseFloat(supplement.currentStock) <= 0
-		) {
+		const supplement = await supplementRepository.findByIdAndUserId(
+			schedule.supplementId,
+			ctx.userId,
+		);
+		if (supplement.currentStock !== null && parseFloat(supplement.currentStock) <= 0) {
 			throw new ActionError(ActionErrorCode.OUT_OF_STOCK);
 		}
 

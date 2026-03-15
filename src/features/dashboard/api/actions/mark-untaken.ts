@@ -9,12 +9,17 @@ import { supplementScheduleRepository } from "@/shared/repositories/supplement-s
 
 const schema = z.object({
 	scheduleId: z.string(),
-	date: z.string(),
+	date: z.iso.date(),
 });
 
 export const markUntaken = authActionClient
 	.inputSchema(schema)
-	.action(async ({ parsedInput: { scheduleId, date } }) => {
+	.action(async ({ parsedInput: { scheduleId, date }, ctx }) => {
+		const schedule = await supplementScheduleRepository.findOwnedWithContext(
+			scheduleId,
+			ctx.userId,
+		);
+
 		const existing = await dailyLogRepository.findByScheduleAndDate(scheduleId, date);
 
 		if (!existing) {
@@ -22,11 +27,7 @@ export const markUntaken = authActionClient
 		}
 
 		await dailyLogRepository.deleteByScheduleAndDate(scheduleId, date);
-
-		const schedule = await supplementScheduleRepository.findWithContext(scheduleId);
-		if (schedule) {
-			await supplementRepository.incrementStock(schedule.supplementId, schedule.dosageAmount);
-		}
+		await supplementRepository.incrementStock(schedule.supplementId, schedule.dosageAmount);
 
 		revalidatePath("/dashboard");
 

@@ -14,10 +14,18 @@ type Props = {
 	date: string;
 	defaultOpen: boolean;
 	protocolColors: Record<string, number>;
+	timeBlocks: { id: string; name: string; startTime: string }[];
 	onCheckChange?: () => void;
 };
 
-export function TimeBlock({ block, date, defaultOpen, protocolColors, onCheckChange }: Props) {
+export function TimeBlock({
+	block,
+	date,
+	defaultOpen,
+	protocolColors,
+	timeBlocks,
+	onCheckChange,
+}: Props) {
 	const { isOpen, uncheckedIds, allScheduleIds, toggleOpen } = useTimeBlock({ block, defaultOpen });
 
 	return (
@@ -48,20 +56,11 @@ export function TimeBlock({ block, date, defaultOpen, protocolColors, onCheckCha
 						{block.entries.map((entry) => (
 							<SupplementRow
 								key={entry.scheduleId}
-								scheduleId={entry.scheduleId}
+								entry={entry}
 								date={date}
-								supplementName={entry.supplementName}
-								dosageAmount={entry.dosageAmount}
-								dosageUnit={entry.dosageUnit}
-								notes={entry.notes}
-								isCritical={entry.isCritical}
 								initialChecked={!!entry.logId}
-								cycling={entry.cycling}
-								dependency={entry.dependency}
-								isExpired={entry.isExpired}
-								notStartedDays={entry.notStartedDays}
-								stockStatus={entry.stockStatus}
 								protocolBorderColor={PROTOCOL_BORDER_COLORS[protocolColors[entry.protocolId] ?? 0]}
+								timeBlocks={timeBlocks}
 								onCheckChange={onCheckChange}
 							/>
 						))}

@@ -11,6 +11,8 @@ type ScheduleRow = {
 	sortOrder: number;
 	supplementId: string;
 	supplementName: string;
+	supplementBrandName: string | null;
+	supplementCategory: string;
 	isCritical: boolean;
 	currentStock: string | null;
 	stockUnit: DosageUnit;
@@ -21,6 +23,7 @@ type ScheduleRow = {
 	protocolSupplementId: string;
 	protocolStartDate: string | null;
 	protocolId: string;
+	blockId: string;
 };
 
 type Log = { id: string; takenAt: Date };
@@ -76,7 +79,14 @@ export function buildScheduleEntry(
 			sortOrder: row.sortOrder,
 			supplementId: row.supplementId,
 			supplementName: row.supplementName,
+			supplementBrandName: row.supplementBrandName,
+			supplementCategory: row.supplementCategory,
 			isCritical: row.isCritical,
+			cycleDaysOn: row.cycleDaysOn,
+			cycleDaysOff: row.cycleDaysOff,
+			startDayOffset: row.startDayOffset,
+			durationDays: row.durationDays,
+			timeBlockId: row.blockId,
 			stockStatus,
 			logId: log?.id ?? null,
 			takenAt: log?.takenAt ?? null,

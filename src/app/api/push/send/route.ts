@@ -40,10 +40,7 @@ export async function POST(request: Request) {
 		)
 		.orderBy(desc(notificationSettings.notifyAt));
 
-	const latestPerUser = new Map<
-		string,
-		(typeof pending)[number]
-	>();
+	const latestPerUser = new Map<string, (typeof pending)[number]>();
 	const staleIds: string[] = [];
 
 	for (const setting of pending) {

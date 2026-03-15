@@ -7,11 +7,21 @@ import { TimeBlockEditSheet } from "./time-block-edit-sheet";
 import { TimeBlockRow } from "./time-block-row";
 import { useTimeBlocksSection } from "./use-time-blocks-section";
 
-type TimeBlocksSectionProps = {
-	timeBlocks: UserTimeBlock[];
+type NotificationSettingData = {
+	timeBlockId: string;
+	enabled: boolean;
+	notifyAt: string;
 };
 
-export function TimeBlocksSection({ timeBlocks }: TimeBlocksSectionProps) {
+type TimeBlocksSectionProps = {
+	timeBlocks: UserTimeBlock[];
+	notificationSettings: NotificationSettingData[];
+};
+
+export function TimeBlocksSection({
+	timeBlocks,
+	notificationSettings,
+}: TimeBlocksSectionProps) {
 	const t = useTranslations();
 	const { addSheetOpen, setAddSheetOpen, handleAddBlock } = useTimeBlocksSection();
 
@@ -19,7 +29,13 @@ export function TimeBlocksSection({ timeBlocks }: TimeBlocksSectionProps) {
 		<div>
 			<div className="bg-surface-raised rounded-xl">
 				{timeBlocks.map((block) => (
-					<TimeBlockRow key={block.id} timeBlock={block} />
+					<TimeBlockRow
+						key={block.id}
+						timeBlock={block}
+						hasNotification={notificationSettings.some(
+							(ns) => ns.timeBlockId === block.id && ns.enabled,
+						)}
+					/>
 				))}
 
 				<div className="px-md py-sm">

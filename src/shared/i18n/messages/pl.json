@@ -302,7 +302,11 @@
 		"editTitle": "Edytuj blok",
 		"addTitle": "Dodaj blok",
 		"deleteBlock": "Usuń blok",
-		"deleteBlockedError": "Nie można usunąć bloku — ma aktywne dawki. Najpierw przenieś lub dezaktywuj dawki."
+		"deleteBlockedError": "Nie można usunąć bloku — ma aktywne dawki. Najpierw przenieś lub dezaktywuj dawki.",
+		"syncNotificationTitle": "Zaktualizować powiadomienie?",
+		"syncNotificationDescription": "Zmieniono godzinę bloku na {time}. Czy chcesz również zaktualizować godzinę powiadomienia?",
+		"syncNotificationAccept": "Tak, zaktualizuj",
+		"syncNotificationDecline": "Nie"
 	},
 	"errors": {
 		"generic": "Coś poszło nie tak. Spróbuj ponownie.",

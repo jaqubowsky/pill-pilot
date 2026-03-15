@@ -4,6 +4,16 @@ import { useTranslations } from "next-intl";
 import type { UserTimeBlock } from "@/features/settings/api/queries/get-user-time-blocks";
 import { BottomSheet } from "@/shared/components/bottom-sheet";
 import { LabeledInput } from "@/shared/components/labeled-input";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
 import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
 import { IconPicker } from "../icon-picker";
@@ -13,9 +23,15 @@ type TimeBlockEditSheetProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	timeBlock?: UserTimeBlock;
+	hasNotification?: boolean;
 };
 
-export function TimeBlockEditSheet({ open, onOpenChange, timeBlock }: TimeBlockEditSheetProps) {
+export function TimeBlockEditSheet({
+	open,
+	onOpenChange,
+	timeBlock,
+	hasNotification = false,
+}: TimeBlockEditSheetProps) {
 	const t = useTranslations();
 	const {
 		isNew,
@@ -28,53 +44,77 @@ export function TimeBlockEditSheet({ open, onOpenChange, timeBlock }: TimeBlockE
 		isPending,
 		handleSave,
 		handleDelete,
-	} = useTimeBlockEditSheet({ timeBlock, onOpenChange });
+		syncDialogOpen,
+		setSyncDialogOpen,
+		handleSyncConfirm,
+	} = useTimeBlockEditSheet({ timeBlock, hasNotification, onOpenChange });
 
 	return (
-		<BottomSheet
-			open={open}
-			onOpenChange={onOpenChange}
-			title={isNew ? t("timeBlock.addTitle") : t("timeBlock.editTitle")}
-		>
-			<div className="flex flex-col gap-md">
-				<LabeledInput
-					label={t("timeBlock.name")}
-					value={name}
-					onChange={(e) => setName(e.target.value)}
-					placeholder={t("timeBlock.name")}
-				/>
+		<>
+			<BottomSheet
+				open={open}
+				onOpenChange={onOpenChange}
+				title={isNew ? t("timeBlock.addTitle") : t("timeBlock.editTitle")}
+			>
+				<div className="flex flex-col gap-md">
+					<LabeledInput
+						label={t("timeBlock.name")}
+						value={name}
+						onChange={(e) => setName(e.target.value)}
+						placeholder={t("timeBlock.name")}
+					/>
 
-				<div className="flex flex-col gap-xs">
-					<Label className="text-sm text-content-muted">{t("timeBlock.icon")}</Label>
-					<IconPicker value={icon} onValueChange={setIcon} />
-				</div>
+					<div className="flex flex-col gap-xs">
+						<Label className="text-sm text-content-muted">{t("timeBlock.icon")}</Label>
+						<IconPicker value={icon} onValueChange={setIcon} />
+					</div>
 
-				<LabeledInput
-					label={t("timeBlock.startTime")}
-					type="time"
-					value={startTime}
-					onChange={(e) => setStartTime(e.target.value)}
-				/>
+					<LabeledInput
+						label={t("timeBlock.startTime")}
+						type="time"
+						value={startTime}
+						onChange={(e) => setStartTime(e.target.value)}
+					/>
 
-				<Button
-					className="w-full mt-sm"
-					onClick={handleSave}
-					disabled={isPending || !name.trim() || !startTime}
-				>
-					{t("common.saveChanges")}
-				</Button>
-
-				{!isNew && (
 					<Button
-						variant="destructive"
-						className="w-full"
-						onClick={handleDelete}
-						disabled={isPending}
+						className="w-full mt-sm"
+						onClick={handleSave}
+						disabled={isPending || !name.trim() || !startTime}
 					>
-						{t("timeBlock.deleteBlock")}
+						{t("common.saveChanges")}
 					</Button>
-				)}
-			</div>
-		</BottomSheet>
+
+					{!isNew && (
+						<Button
+							variant="destructive"
+							className="w-full"
+							onClick={handleDelete}
+							disabled={isPending}
+						>
+							{t("timeBlock.deleteBlock")}
+						</Button>
+					)}
+				</div>
+			</BottomSheet>
+
+			<AlertDialog open={syncDialogOpen} onOpenChange={setSyncDialogOpen}>
+				<AlertDialogContent size="sm">
+					<AlertDialogHeader>
+						<AlertDialogTitle>{t("timeBlock.syncNotificationTitle")}</AlertDialogTitle>
+						<AlertDialogDescription>
+							{t("timeBlock.syncNotificationDescription", { time: startTime })}
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel onClick={() => handleSyncConfirm(false)}>
+							{t("timeBlock.syncNotificationDecline")}
+						</AlertDialogCancel>
+						<AlertDialogAction onClick={() => handleSyncConfirm(true)}>
+							{t("timeBlock.syncNotificationAccept")}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+		</>
 	);
 }

@@ -28,7 +28,14 @@ export type ScheduleEntry = {
 	sortOrder: number;
 	supplementId: string;
 	supplementName: string;
+	supplementBrandName: string | null;
+	supplementCategory: string;
 	isCritical: boolean;
+	cycleDaysOn: number | null;
+	cycleDaysOff: number | null;
+	startDayOffset: number;
+	durationDays: number | null;
+	timeBlockId: string;
 	stockStatus: StockStatus | null;
 	logId: string | null;
 	takenAt: Date | null;
@@ -66,6 +73,8 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 			sortOrder: protocolSupplements.sortOrder,
 			supplementId: supplements.id,
 			supplementName: supplements.name,
+			supplementBrandName: supplements.brandName,
+			supplementCategory: supplements.category,
 			isCritical: protocolSupplements.isCritical,
 			currentStock: supplements.currentStock,
 			stockUnit: supplements.stockUnit,

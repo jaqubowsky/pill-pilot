@@ -77,9 +77,14 @@ class NotificationRepository implements INotificationRepository {
 				);
 
 			if (existing[0]) {
+				const timeChanged = existing[0].notifyAt !== setting.notifyAt;
 				await db
 					.update(notificationSettings)
-					.set({ enabled: setting.enabled, notifyAt: setting.notifyAt })
+					.set({
+						enabled: setting.enabled,
+						notifyAt: setting.notifyAt,
+						...(timeChanged && { lastSentDate: null }),
+					})
 					.where(eq(notificationSettings.id, existing[0].id));
 			} else {
 				await db.insert(notificationSettings).values({

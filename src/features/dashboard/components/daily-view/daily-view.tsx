@@ -25,6 +25,12 @@ export function DailyView({ status, date, activeBlockIndex, hasProcessing, hasDr
 		status,
 	});
 
+	const timeBlockSummaries = status.timeBlocks.map((b) => ({
+		id: b.blockId,
+		name: b.blockName,
+		startTime: b.startTime,
+	}));
+
 	return (
 		<div className="flex flex-col gap-lg px-md pt-2xl pb-3xl">
 			<ViewSwitcher />
@@ -62,6 +68,7 @@ export function DailyView({ status, date, activeBlockIndex, hasProcessing, hasDr
 							date={date}
 							defaultOpen={index === activeBlockIndex}
 							protocolColors={status.protocolColors}
+							timeBlocks={timeBlockSummaries}
 							onCheckChange={refresh}
 						/>
 					))}

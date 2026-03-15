@@ -48,7 +48,7 @@ export function SettingsPage({
 
 			<div>
 				<SectionHeader label={t("timeBlocks")} />
-				<TimeBlocksSection timeBlocks={timeBlocks} />
+				<TimeBlocksSection timeBlocks={timeBlocks} notificationSettings={notificationSettings} />
 			</div>
 
 			<div>

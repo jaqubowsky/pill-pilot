@@ -9,9 +9,10 @@ import { useTimeBlockRow } from "./use-time-block-row";
 
 type TimeBlockRowProps = {
 	timeBlock: UserTimeBlock;
+	hasNotification: boolean;
 };
 
-export function TimeBlockRow({ timeBlock }: TimeBlockRowProps) {
+export function TimeBlockRow({ timeBlock, hasNotification }: TimeBlockRowProps) {
 	const { sheetOpen, setSheetOpen, handleOpen } = useTimeBlockRow();
 	const Icon = ICON_MAP[timeBlock.icon] ?? Clock;
 
@@ -29,7 +30,12 @@ export function TimeBlockRow({ timeBlock }: TimeBlockRowProps) {
 				<span className="text-sm text-content-faint">{timeBlock.startTime}</span>
 			</Button>
 
-			<TimeBlockEditSheet open={sheetOpen} onOpenChange={setSheetOpen} timeBlock={timeBlock} />
+			<TimeBlockEditSheet
+				open={sheetOpen}
+				onOpenChange={setSheetOpen}
+				timeBlock={timeBlock}
+				hasNotification={hasNotification}
+			/>
 		</>
 	);
 }

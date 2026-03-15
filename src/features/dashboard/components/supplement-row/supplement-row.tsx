@@ -1,8 +1,9 @@
 "use client";
 
-import { AlertTriangle, CheckCircle, Lock, MessageSquareText, Repeat } from "lucide-react";
+import { AlertTriangle, CheckCircle, Lock, MessageSquareText, Pencil, Repeat } from "lucide-react";
 import { useTranslations } from "next-intl";
-import type { StockStatus } from "@/features/dashboard/api/queries/get-daily-status";
+import { useState } from "react";
+import type { ScheduleEntry } from "@/features/dashboard/api/queries/get-daily-status";
 import { CriticalBadge } from "@/shared/components/critical-badge";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -14,46 +15,43 @@ import {
 	DialogTitle,
 } from "@/shared/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover";
+import type { SupplementCategory } from "@/shared/db/schema";
 import { formatQuantity } from "@/shared/lib/format";
 import { cn } from "@/shared/lib/utils";
+import { ScheduleEditSheet } from "./schedule-edit-sheet";
 import { SupplementCheckbox } from "./supplement-checkbox";
 import { useSupplementRow } from "./use-supplement-row";
 
 type Props = {
-	scheduleId: string;
+	entry: ScheduleEntry;
 	date: string;
-	supplementName: string;
-	dosageAmount: string;
-	dosageUnit: string;
-	notes: string | null;
-	isCritical: boolean;
 	initialChecked: boolean;
-	cycling: { isOnPhase: boolean; daysRemaining: number } | null;
-	dependency: { isUnlocked: boolean; daysRemaining: number } | null;
-	isExpired: boolean;
-	notStartedDays: number | null;
-	stockStatus: StockStatus | null;
 	protocolBorderColor: string;
+	timeBlocks: { id: string; name: string; startTime: string }[];
 	onCheckChange?: () => void;
 };
 
 export function SupplementRow({
-	scheduleId,
+	entry,
 	date,
-	supplementName,
-	dosageAmount,
-	dosageUnit,
-	notes,
-	isCritical,
 	initialChecked,
-	cycling,
-	dependency,
-	isExpired,
-	notStartedDays,
-	stockStatus,
 	protocolBorderColor,
+	timeBlocks,
 	onCheckChange,
 }: Props) {
+	const {
+		scheduleId,
+		supplementName,
+		dosageAmount,
+		dosageUnit,
+		notes,
+		isCritical,
+		cycling,
+		dependency,
+		isExpired,
+		notStartedDays,
+		stockStatus,
+	} = entry;
 	const t = useTranslations("dashboard");
 	const {
 		checked,
@@ -64,6 +62,8 @@ export function SupplementRow({
 		handleConfirmUncheck,
 		handleCloseConfirm,
 	} = useSupplementRow({ scheduleId, date, initialChecked, onCheckChange });
+
+	const [editOpen, setEditOpen] = useState(false);
 
 	const isNotStarted = notStartedDays !== null && notStartedDays > 0;
 	const isLocked = dependency !== null && !dependency.isUnlocked;
@@ -177,7 +177,37 @@ export function SupplementRow({
 						</span>
 					)}
 				</div>
+				<button
+					type="button"
+					onClick={() => setEditOpen(true)}
+					className="p-xs shrink-0 text-content-faint active:text-content-muted"
+				>
+					<Pencil className="size-3.5" />
+				</button>
 			</div>
+
+			<ScheduleEditSheet
+				key={scheduleId}
+				scheduleId={scheduleId}
+				supplementName={supplementName}
+				defaultValues={{
+					name: entry.supplementName,
+					brandName: entry.supplementBrandName ?? undefined,
+					category: entry.supplementCategory as SupplementCategory,
+					isCritical: entry.isCritical,
+					notes: entry.notes ?? undefined,
+					cycleDaysOn: entry.cycleDaysOn ?? undefined,
+					cycleDaysOff: entry.cycleDaysOff ?? undefined,
+					startDayOffset: entry.startDayOffset,
+					durationDays: entry.durationDays ?? undefined,
+					dosageAmount: Number(entry.dosageAmount),
+					dosageUnit: entry.dosageUnit,
+					timeBlockId: entry.timeBlockId,
+				}}
+				timeBlocks={timeBlocks}
+				open={editOpen}
+				onOpenChange={setEditOpen}
+			/>
 
 			<Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
 				<DialogContent showCloseButton={false}>

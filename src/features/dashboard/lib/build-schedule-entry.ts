@@ -42,6 +42,7 @@ export function buildScheduleEntry(
 		row.cycleDaysOn,
 		row.cycleDaysOff,
 		ctx.date,
+		row.startDayOffset,
 	);
 
 	const depStatus = getDependencyStatus(

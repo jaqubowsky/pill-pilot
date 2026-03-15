@@ -7,6 +7,7 @@ export function getCycleStatus(
 	cycleDaysOn: number | null,
 	cycleDaysOff: number | null,
 	currentDate: string,
+	startDayOffset = 0,
 ): CycleStatus {
 	if (protocolStartDate === null || cycleDaysOn === null || cycleDaysOff === null) {
 		return { isCycling: false };
@@ -15,7 +16,8 @@ export function getCycleStatus(
 	const start = new Date(protocolStartDate);
 	const current = new Date(currentDate);
 	const diffMs = current.getTime() - start.getTime();
-	const daysSinceStart = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+	const daysSinceProtocol = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+	const daysSinceStart = daysSinceProtocol - startDayOffset;
 	const cycleLength = cycleDaysOn + cycleDaysOff;
 
 	if (daysSinceStart < 0) {

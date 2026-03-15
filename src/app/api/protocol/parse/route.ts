@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import type { NextRequest } from "next/server";
 import { after } from "next/server";
+import sharp from "sharp";
 import { z } from "zod";
 import {
 	CONFIDENCE_THRESHOLD,
@@ -16,6 +17,7 @@ import { auth } from "@/shared/lib/auth";
 import { protocolRepository } from "@/shared/repositories/protocol-repository";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 4.5 * 1024 * 1024;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 5;
 
@@ -55,6 +57,41 @@ function isImage(file: File) {
 
 function isText(file: File) {
 	return file.type === "text/plain" || file.name.endsWith(".txt");
+}
+
+async function compressImage(buffer: Buffer): Promise<{ data: Buffer; mediaType: string }> {
+	if (buffer.byteLength <= MAX_IMAGE_BYTES) {
+		const meta = await sharp(buffer).metadata();
+		const mediaType =
+			meta.format === "png"
+				? "image/png"
+				: meta.format === "webp"
+					? "image/webp"
+					: meta.format === "gif"
+						? "image/gif"
+						: "image/jpeg";
+		return { data: buffer, mediaType };
+	}
+
+	const image = sharp(buffer);
+	const meta = await image.metadata();
+	const maxDim = 2048;
+
+	let pipeline = image;
+	if (meta.width && meta.height && (meta.width > maxDim || meta.height > maxDim)) {
+		pipeline = pipeline.resize(maxDim, maxDim, { fit: "inside", withoutEnlargement: true });
+	}
+
+	const compressed = await pipeline.jpeg({ quality: 80 }).toBuffer();
+	if (compressed.byteLength <= MAX_IMAGE_BYTES) {
+		return { data: compressed, mediaType: "image/jpeg" };
+	}
+
+	const further = await sharp(buffer)
+		.resize(maxDim, maxDim, { fit: "inside", withoutEnlargement: true })
+		.jpeg({ quality: 50 })
+		.toBuffer();
+	return { data: further, mediaType: "image/jpeg" };
 }
 
 function getCellColor(cell: ExcelJS.Cell): string | null {
@@ -114,7 +151,12 @@ async function extractTextFromExcel(buffer: Buffer): Promise<string> {
 	return lines.join("\n");
 }
 
-function buildExtractionContent(file: File, buffer: Buffer, textContent?: string): UserContent {
+function buildExtractionContent(
+	file: File,
+	buffer: Buffer,
+	textContent?: string,
+	compressedImage?: { data: Buffer; mediaType: string },
+): UserContent {
 	const content: UserContent = [];
 
 	if (isPdf(file)) {
@@ -123,8 +165,8 @@ function buildExtractionContent(file: File, buffer: Buffer, textContent?: string
 			type: "text",
 			text: "Extract all supplements and medications from this PDF document.",
 		});
-	} else if (isImage(file)) {
-		content.push({ type: "image", image: buffer, mediaType: file.type });
+	} else if (isImage(file) && compressedImage) {
+		content.push({ type: "image", image: compressedImage.data, mediaType: compressedImage.mediaType });
 		content.push({
 			type: "text",
 			text: "Extract all supplements and medications from this image.",
@@ -304,13 +346,14 @@ function buildEnrichmentContent(
 	buffer: Buffer,
 	rawExtraction: string,
 	textContent?: string,
+	compressedImage?: { data: Buffer; mediaType: string },
 ): UserContent {
 	const content: UserContent = [];
 
 	if (isPdf(file)) {
 		content.push({ type: "file", data: buffer, mediaType: "application/pdf" });
-	} else if (isImage(file)) {
-		content.push({ type: "image", image: buffer, mediaType: file.type });
+	} else if (isImage(file) && compressedImage) {
+		content.push({ type: "image", image: compressedImage.data, mediaType: compressedImage.mediaType });
 	}
 
 	const text = textContent
@@ -392,7 +435,12 @@ export async function POST(request: NextRequest) {
 		return Response.json({ error: "empty_file" }, { status: 422 });
 	}
 
-	const extractionContent = buildExtractionContent(file, buffer, textContent);
+	let compressedImage: { data: Buffer; mediaType: string } | undefined;
+	if (isImage(file)) {
+		compressedImage = await compressImage(buffer);
+	}
+
+	const extractionContent = buildExtractionContent(file, buffer, textContent, compressedImage);
 	const userContext = JSON.stringify({ supplements, timeBlocks }, null, 2);
 
 	const protocol = await protocolRepository.create({
@@ -418,7 +466,7 @@ export async function POST(request: NextRequest) {
 			}
 
 			const rawJson = JSON.stringify(raw);
-			const enrichmentContent = buildEnrichmentContent(file, buffer, rawJson, textContent);
+			const enrichmentContent = buildEnrichmentContent(file, buffer, rawJson, textContent, compressedImage);
 
 			const { output } = await generateText({
 				model: anthropic("claude-sonnet-4-5"),

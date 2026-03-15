@@ -35,13 +35,11 @@ export function StockItem({ item }: StockItemProps) {
 								packageSize={item.packageSize}
 								stockUnit={item.stockUnit}
 							/>
-							{item.dailyUsage > 0 && (
-								<StockProgressBar
-									currentStock={Number(item.currentStock)}
-									dailyUsage={item.dailyUsage}
-									packageSize={item.packageSize}
-								/>
-							)}
+							<StockProgressBar
+								currentStock={Number(item.currentStock)}
+								dailyUsage={item.dailyUsage}
+								packageSize={item.packageSize}
+							/>
 						</>
 					)}
 				</div>
@@ -86,6 +84,7 @@ export function StockItem({ item }: StockItemProps) {
 			<RestockDialog
 				supplementId={item.id}
 				supplementName={item.name}
+				stockUnit={item.stockUnit}
 				open={restockOpen}
 				onOpenChange={setRestockOpen}
 			/>

@@ -82,7 +82,16 @@ export async function getStockList(userId: string): Promise<StockList> {
 		}
 	}
 
-	tracked.sort((a, b) => parseFloat(a.currentStock!) - parseFloat(b.currentStock!));
+	tracked.sort((a, b) => {
+		const stockA = parseFloat(a.currentStock!);
+		const stockB = parseFloat(b.currentStock!);
+		const daysA = a.dailyUsage > 0 ? stockA / a.dailyUsage : Infinity;
+		const daysB = b.dailyUsage > 0 ? stockB / b.dailyUsage : Infinity;
+		if (daysA !== daysB) return daysA - daysB;
+		const pctA = a.packageSize ? stockA / a.packageSize : 1;
+		const pctB = b.packageSize ? stockB / b.packageSize : 1;
+		return pctA - pctB;
+	});
 
 	return { tracked, untracked };
 }

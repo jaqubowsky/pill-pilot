@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import type { MonthlyStatus } from "@/features/dashboard/api/queries/get-monthly-status";
 import { ViewSwitcher } from "@/features/dashboard/components/view-switcher";
 import { Button } from "@/shared/components/ui/button";
+import { toDateString } from "@/shared/lib/date";
 import { cn } from "@/shared/lib/utils";
 import { CalendarDay } from "./calendar-day";
 import { useMonthlyView } from "./use-monthly-view";
@@ -15,13 +16,6 @@ type Props = {
 };
 
 const WEEKDAY_LABELS = ["Pn", "Wt", "Śr", "Cz", "Pt", "Sb", "Nd"];
-
-function toDateString(date: Date): string {
-	const y = date.getFullYear();
-	const m = String(date.getMonth() + 1).padStart(2, "0");
-	const d = String(date.getDate()).padStart(2, "0");
-	return `${y}-${m}-${d}`;
-}
 
 export function MonthlyView({ status, yearMonth }: Props) {
 	const t = useTranslations("dashboard.monthlyView");

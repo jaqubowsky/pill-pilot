@@ -41,7 +41,7 @@ export function PreviewSupplementSheetFields({ timeBlocks }: PreviewSupplementSh
 	const timeBlockId = watch("timeBlockId");
 
 	const isCycling = cycleDaysOn !== undefined;
-	const hasOffset = startDayOffset !== undefined && startDayOffset > 0;
+	const hasOffset = startDayOffset !== undefined && startDayOffset !== 0;
 	const hasDuration = durationDays !== undefined;
 
 	return (
@@ -121,7 +121,7 @@ export function PreviewSupplementSheetFields({ timeBlocks }: PreviewSupplementSh
 					if (v) {
 						setValue("startDayOffset", 14);
 					} else {
-						setValue("startDayOffset", 0);
+						setValue("startDayOffset", undefined);
 					}
 				}}
 			/>

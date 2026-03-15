@@ -7,6 +7,7 @@ import { useAction } from "next-safe-action/hooks";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { createProtocol } from "@/features/protocol-wizard/api/actions/create-protocol";
+import { toDateString } from "@/shared/lib/date";
 import { deleteDraftProtocol } from "@/features/protocol-wizard/api/actions/delete-draft-protocol";
 import { saveDraftProtocol } from "@/features/protocol-wizard/api/actions/save-draft-protocol";
 import {
@@ -64,7 +65,7 @@ export function useParsedPreview({
 	const [supplements, setSupplements] = useState<IdentifiedSupplement[]>(initialSupplements);
 	const [protocolName] = useState(initialParsed.protocolName);
 	const [startDate, setStartDate] = useState(
-		() => initialStartDate ?? new Date().toISOString().slice(0, 10),
+		() => initialStartDate ?? toDateString(new Date()),
 	);
 	const [discardOpen, setDiscardOpen] = useState(false);
 

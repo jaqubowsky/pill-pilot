@@ -3,13 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import type { DailyStatus } from "@/features/dashboard/api/queries/get-daily-status";
-
-function toLocalDateString(date: Date): string {
-	const y = date.getFullYear();
-	const m = String(date.getMonth() + 1).padStart(2, "0");
-	const d = String(date.getDate()).padStart(2, "0");
-	return `${y}-${m}-${d}`;
-}
+import { toDateString } from "@/shared/lib/date";
 
 type Params = {
 	date: string;
@@ -26,8 +20,8 @@ export function useDailyView({ date, status }: Params) {
 
 	const navigateToDate = useCallback(
 		(d: Date) => {
-			const ds = toLocalDateString(d);
-			const today = toLocalDateString(new Date());
+			const ds = toDateString(d);
+			const today = toDateString(new Date());
 			router.replace(ds === today ? "/dashboard" : `/dashboard?date=${ds}`);
 		},
 		[router],

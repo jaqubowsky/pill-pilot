@@ -50,7 +50,7 @@ export function BottomSheet({
 					)}
 				</SheetHeader>
 				{scrollable ? (
-					<div className="overflow-y-auto min-h-0 min-w-0 flex-1">{children}</div>
+					<div className="overflow-y-auto overflow-x-hidden min-h-0 min-w-0 flex-1 pr-xs">{children}</div>
 				) : (
 					children
 				)}

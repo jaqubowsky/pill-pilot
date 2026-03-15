@@ -9,6 +9,7 @@ import {
 	supplementSchedules,
 	timeBlocks,
 } from "@/shared/db/schema";
+import { toDateString, toTimeString } from "@/shared/lib/date";
 import { sendPushNotification } from "@/shared/lib/web-push";
 
 export async function POST(request: Request) {
@@ -18,8 +19,8 @@ export async function POST(request: Request) {
 	}
 
 	const now = new Date();
-	const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-	const today = now.toISOString().slice(0, 10);
+	const currentTime = toTimeString(now);
+	const today = toDateString(now);
 
 	const pending = await db
 		.select({

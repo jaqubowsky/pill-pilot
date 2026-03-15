@@ -7,6 +7,7 @@ import { useRestockDialog } from "./use-restock-dialog";
 type RestockDialogProps = {
 	supplementId: string;
 	supplementName: string;
+	stockUnit: string;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 };
@@ -14,6 +15,7 @@ type RestockDialogProps = {
 export function RestockDialog({
 	supplementId,
 	supplementName,
+	stockUnit,
 	open,
 	onOpenChange,
 }: RestockDialogProps) {
@@ -25,12 +27,14 @@ export function RestockDialog({
 		onOpenChange,
 	});
 
+	const unitLabel = t(`schedule.units.${stockUnit}`);
+
 	return (
 		<NumberInputDialog
 			open={open}
 			onOpenChange={onOpenChange}
 			title={`${t("stock.restockTitle")}: ${supplementName}`}
-			hint={t("stock.howManyBought")}
+			hint={t("stock.howManyBoughtUnit", { unit: unitLabel })}
 			inputMin={1}
 			placeholder="90"
 			cancelLabel={t("common.cancel")}

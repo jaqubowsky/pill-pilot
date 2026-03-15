@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import type { WeeklyStatus } from "@/features/dashboard/api/queries/get-weekly-status";
 import { ViewSwitcher } from "@/features/dashboard/components/view-switcher";
 import { Button } from "@/shared/components/ui/button";
+import { toDateString } from "@/shared/lib/date";
 import { cn } from "@/shared/lib/utils";
 import { useWeeklyView } from "./use-weekly-view";
 import { WeekDayCell } from "./week-day-cell";
@@ -13,13 +14,6 @@ type Props = {
 	status: WeeklyStatus;
 	startDate: string;
 };
-
-function toDateString(date: Date): string {
-	const y = date.getFullYear();
-	const m = String(date.getMonth() + 1).padStart(2, "0");
-	const d = String(date.getDate()).padStart(2, "0");
-	return `${y}-${m}-${d}`;
-}
 
 export function WeeklyView({ status, startDate }: Props) {
 	const t = useTranslations("dashboard.weeklyView");

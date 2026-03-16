@@ -1,4 +1,4 @@
-import { generateObject } from "ai";
+import { Output, generateText } from "ai";
 import { headers } from "next/headers";
 import type { NextRequest } from "next/server";
 import sharp from "sharp";
@@ -134,9 +134,10 @@ export async function POST(request: NextRequest) {
 	const compressedData = await compressImage(buffer);
 
 	try {
-		const { object } = await generateObject({
-			model: anthropic("claude-haiku-4-5-20251001"),
-			schema: cartParseSchema,
+		const { output } = await generateText({
+			model: anthropic("claude-haiku-4-5"),
+			output: Output.object({ schema: cartParseSchema }),
+			system: buildPrompt(supplements),
 			messages: [
 				{
 					role: "user",
@@ -147,14 +148,18 @@ export async function POST(request: NextRequest) {
 						},
 						{
 							type: "text",
-							text: buildPrompt(supplements),
+							text: "Extract all products and prices from this shopping cart screenshot.",
 						},
 					],
 				},
 			],
 		});
 
-		return Response.json(object);
+		if (!output) {
+			return Response.json({ error: "ai_error" }, { status: 500 });
+		}
+
+		return Response.json(output);
 	} catch (e) {
 		console.error("[cart/parse] AI error:", e);
 		return Response.json({ error: "ai_error" }, { status: 500 });

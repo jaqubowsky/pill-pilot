@@ -359,8 +359,8 @@ export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPri
 					if (!open) closeSheet();
 				}}
 			>
-				<SheetContent side="bottom" className="max-h-[90dvh] overflow-hidden flex flex-col">
-					<SheetHeader>
+				<SheetContent side="bottom" className="max-h-[90dvh] overflow-hidden flex flex-col p-0">
+					<SheetHeader className="shrink-0 p-md pb-0">
 						<SheetTitle>{t("title")}</SheetTitle>
 					</SheetHeader>
 
@@ -411,7 +411,7 @@ export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPri
 												if (shop) setShopName(shop.name);
 											}}
 										>
-											<SelectTrigger className="flex-1 bg-surface-sunken border-edge rounded-lg">
+											<SelectTrigger className="flex-1 h-9 bg-surface-sunken border-edge rounded-lg">
 												<SelectValue>
 													{selectedShopId
 														? shops.find((s) => s.id === selectedShopId)?.name
@@ -469,7 +469,7 @@ export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPri
 						</div>
 					)}
 
-					<SheetFooter className="flex flex-col gap-sm px-md">
+					<SheetFooter className="shrink-0 flex flex-col gap-sm p-md mt-0">
 						<Button onClick={handleSave} disabled={!canSave || isSaving} className="w-full">
 							{isSaving ? t("saving") : t("savePrices")}
 						</Button>

@@ -2,7 +2,6 @@
 
 import {
 	AlertTriangle,
-	Check,
 	ChevronDown,
 	Clock,
 	Link2,
@@ -15,7 +14,6 @@ import {
 	Store,
 	Trash2,
 	X,
-	XCircle,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
@@ -35,7 +33,6 @@ import {
 } from "@/shared/components/ui/alert-dialog";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover";
 import {
 	Select,
 	SelectContent,
@@ -286,11 +283,11 @@ function CartItemRow({
 			{matchedName && <span className="text-xs text-content-faint truncate">→ {matchedName}</span>}
 
 			{editOpen && (
+				// biome-ignore lint/a11y/noStaticElementInteractions: backdrop overlay
+				// biome-ignore lint/a11y/useKeyWithClickEvents: backdrop overlay
 				<div
 					className="fixed inset-0 z-50 bg-black/20 supports-backdrop-filter:backdrop-blur-xs"
 					onClick={() => setEditOpen(false)}
-					onKeyDown={() => {}}
-					role="presentation"
 				/>
 			)}
 			<BottomSheet

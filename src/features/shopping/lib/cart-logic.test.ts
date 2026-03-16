@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { CartItem } from "@/features/shopping/schemas/cart-parse-schema";
 import {
-	type CartItemState,
 	applyMatch,
 	applyPriceChange,
 	applySkip,
 	applyUnskip,
 	applyVerify,
 	buildPriceUpdates,
+	type CartItemState,
 	canSaveCart,
 	getUnverifiedCount,
 	matchShopByName,
@@ -99,9 +99,7 @@ describe("toCartItemStates", () => {
 	});
 
 	it("handles null optional fields", () => {
-		const result = toCartItemStates([
-			cartItem({ matchedSupplementId: null, quantity: null }),
-		]);
+		const result = toCartItemStates([cartItem({ matchedSupplementId: null, quantity: null })]);
 		expect(result[0].matchedSupplementId).toBeNull();
 		expect(result[0].quantity).toBeNull();
 	});
@@ -168,18 +166,15 @@ describe("canSaveCart", () => {
 	});
 
 	it("allows saving when items are skipped but not explicitly verified", () => {
-		expect(
-			canSaveCart([cartItemState({ verified: false, skipped: true })], "shop-1", ""),
-		).toBe(true);
+		expect(canSaveCart([cartItemState({ verified: false, skipped: true })], "shop-1", "")).toBe(
+			true,
+		);
 	});
 
 	it("returns false with mix of verified and unverified items", () => {
 		expect(
 			canSaveCart(
-				[
-					cartItemState({ _id: "a", verified: true }),
-					cartItemState({ _id: "b", verified: false }),
-				],
+				[cartItemState({ _id: "a", verified: true }), cartItemState({ _id: "b", verified: false })],
 				"shop-1",
 				"",
 			),
@@ -375,10 +370,7 @@ describe("applyPriceChange", () => {
 	});
 
 	it("does not affect other items", () => {
-		const items = [
-			cartItemState({ _id: "a", price: 10 }),
-			cartItemState({ _id: "b", price: 20 }),
-		];
+		const items = [cartItemState({ _id: "a", price: 10 }), cartItemState({ _id: "b", price: 20 })];
 		expect(applyPriceChange(items, "a", 99)[1].price).toBe(20);
 	});
 

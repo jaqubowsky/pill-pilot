@@ -6,18 +6,18 @@ import { deleteCartScan } from "@/features/shopping/api/actions/delete-cart-scan
 import { createShop } from "@/features/shopping/api/actions/manage-shop";
 import { updateSupplementPrices } from "@/features/shopping/api/actions/update-supplement-prices";
 import {
-	type CartItemState,
-	type ShopOption,
-	CART_CONFIDENCE_THRESHOLD,
 	applyMatch,
 	applyPriceChange,
 	applySkip,
 	applyUnskip,
 	applyVerify,
 	buildPriceUpdates,
+	CART_CONFIDENCE_THRESHOLD,
+	type CartItemState,
 	canSaveCart,
 	getUnverifiedCount,
 	matchShopByName,
+	type ShopOption,
 	toCartItemStates,
 } from "@/features/shopping/lib/cart-logic";
 import type { CartItem } from "@/features/shopping/schemas/cart-parse-schema";

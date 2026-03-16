@@ -81,9 +81,17 @@ export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPri
 			/>
 
 			{trigger ? (
-				<button type="button" onClick={handleTriggerClick} className="contents">
+				<div
+					role="button"
+					tabIndex={0}
+					onClick={handleTriggerClick}
+					onKeyDown={(e) => {
+						if (e.key === "Enter" || e.key === " ") handleTriggerClick();
+					}}
+					className="contents"
+				>
 					{trigger}
-				</button>
+				</div>
 			) : (
 				<Button variant="outline" onClick={handleTriggerClick} className="gap-xs">
 					<ShoppingCart className="size-4" />

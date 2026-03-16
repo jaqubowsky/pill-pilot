@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { updateSupplementPrices } from "@/features/shopping/api/actions/update-supplement-prices";
 import type { PriceListItem, ShopOption } from "@/features/shopping/api/queries/get-price-list";
@@ -30,6 +30,19 @@ export function usePriceList({ items, shopOptions, filterIds }: UsePriceListPara
 			localSize: item.packageSize?.toString() ?? "",
 			localShopId: item.shopId,
 		})),
+	);
+
+	const serverValues = useRef(
+		new Map(
+			visibleItems.map((item) => [
+				item.id,
+				{
+					price: item.packagePrice ?? "",
+					size: item.packageSize?.toString() ?? "",
+					shopId: item.shopId,
+				},
+			]),
+		),
 	);
 
 	const [shopEditTarget, setShopEditTarget] = useState<ShopOption | null | "new">(null);
@@ -63,28 +76,42 @@ export function usePriceList({ items, shopOptions, filterIds }: UsePriceListPara
 			field: "packagePrice" | "packageSize" | "shopId",
 			value: string | null,
 		) => {
-			const update: {
-				supplementId: string;
-				packagePrice?: number;
-				packageSize?: number;
-				shopId?: string | null;
-			} = { supplementId };
+			const sv = serverValues.current.get(supplementId);
 
 			if (field === "packagePrice") {
+				if ((value || "") === (sv?.price || "")) return;
 				const parsed = value ? parseFloat(value) : undefined;
 				if (value && (Number.isNaN(parsed) || (parsed !== undefined && parsed <= 0))) return;
-				update.packagePrice = parsed;
+				const result = await updateSupplementPrices({
+					updates: [{ supplementId, packagePrice: parsed }],
+				});
+				if (result?.serverError) {
+					toast.error(result.serverError);
+					return;
+				}
+				if (sv) sv.price = value || "";
 			} else if (field === "packageSize") {
+				if ((value || "") === (sv?.size || "")) return;
 				const parsed = value ? parseInt(value, 10) : undefined;
 				if (value && (Number.isNaN(parsed) || (parsed !== undefined && parsed <= 0))) return;
-				update.packageSize = parsed;
+				const result = await updateSupplementPrices({
+					updates: [{ supplementId, packageSize: parsed }],
+				});
+				if (result?.serverError) {
+					toast.error(result.serverError);
+					return;
+				}
+				if (sv) sv.size = value || "";
 			} else if (field === "shopId") {
-				update.shopId = value;
-			}
-
-			const result = await updateSupplementPrices({ updates: [update] });
-			if (result?.serverError) {
-				toast.error(result.serverError);
+				if (value === (sv?.shopId ?? null)) return;
+				const result = await updateSupplementPrices({
+					updates: [{ supplementId, shopId: value }],
+				});
+				if (result?.serverError) {
+					toast.error(result.serverError);
+					return;
+				}
+				if (sv) sv.shopId = value;
 			}
 		},
 		[],

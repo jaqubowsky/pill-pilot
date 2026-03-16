@@ -16,21 +16,19 @@ type UseParseProtocolParams = {
 	supplements: ExistingSupplementSummary[];
 	timeBlocks: TimeBlockSummary[];
 	activeProtocols: ActiveProtocolSummary[];
-	userInstructions: string;
 };
 
 export function useParseProtocol({
 	supplements,
 	timeBlocks,
 	activeProtocols,
-	userInstructions,
 }: UseParseProtocolParams) {
 	const [status, setStatus] = useState<ParseStatus>("idle");
 	const [errorKey, setErrorKey] = useState<string | null>(null);
 	const router = useRouter();
 	const t = useTranslations();
 
-	async function parseFile(file: File) {
+	async function parseFile(file: File, userInstructions: string) {
 		setStatus("uploading");
 		setErrorKey(null);
 
@@ -39,9 +37,8 @@ export function useParseProtocol({
 		formData.append("supplements", JSON.stringify(supplements));
 		formData.append("timeBlocks", JSON.stringify(timeBlocks));
 
-		const trimmed = userInstructions.trim();
-		if (trimmed) {
-			formData.append("userInstructions", trimmed);
+		if (userInstructions) {
+			formData.append("userInstructions", userInstructions);
 			formData.append("activeProtocols", JSON.stringify(activeProtocols));
 		}
 

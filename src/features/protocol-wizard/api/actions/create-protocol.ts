@@ -10,7 +10,6 @@ import {
 import { ProtocolStatus } from "@/shared/db/schema";
 import { ActionError, ActionErrorCode, authActionClient } from "@/shared/lib/safe-action";
 import { protocolRepository } from "@/shared/repositories/protocol-repository";
-import { protocolSupplementRepository } from "@/shared/repositories/protocol-supplement-repository";
 import { supplementRepository } from "@/shared/repositories/supplement-repository";
 import { supplementScheduleRepository } from "@/shared/repositories/supplement-schedule-repository";
 import { timeBlockRepository } from "@/shared/repositories/time-block-repository";
@@ -71,28 +70,24 @@ export const createProtocol = authActionClient
 					}
 				: {};
 
-			const protocolSupplement = await protocolSupplementRepository.create({
-				protocolId,
-				supplementId,
-				notes: item.notes ?? null,
-				isCritical: item.isCritical,
-				sortOrder: sortOrder++,
-				startDayOffset: item.startDayOffset ?? 0,
-				durationDays: item.durationDays ?? null,
-				dosageIntervalMinutes: item.dosageIntervalMinutes ?? null,
-				waitAfterTakingMinutes: item.waitAfterTakingMinutes ?? null,
-				...cyclingFields,
-			});
-
 			for (const schedule of item.schedules) {
 				if (!validTimeBlockIds.has(schedule.timeBlockId)) {
 					throw new ActionError(ActionErrorCode.TIME_BLOCK_NOT_FOUND);
 				}
 				await supplementScheduleRepository.create({
-					protocolSupplementId: protocolSupplement.id,
+					protocolId,
+					supplementId,
 					timeBlockId: schedule.timeBlockId,
 					dosageAmount: String(schedule.dosageAmount),
 					dosageUnit: schedule.dosageUnit,
+					notes: item.notes ?? null,
+					isCritical: item.isCritical,
+					sortOrder: sortOrder++,
+					startDayOffset: item.startDayOffset ?? 0,
+					durationDays: item.durationDays ?? null,
+					dosageIntervalMinutes: item.dosageIntervalMinutes ?? null,
+					waitAfterTakingMinutes: item.waitAfterTakingMinutes ?? null,
+					...cyclingFields,
 				});
 			}
 		}

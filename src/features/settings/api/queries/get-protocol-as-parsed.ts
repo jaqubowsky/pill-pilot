@@ -3,7 +3,6 @@ import type { ParsedProtocol } from "@/features/protocol-wizard/schemas/parsed-p
 import { db } from "@/shared/db/client";
 import {
 	type DosageUnit,
-	protocolSupplements,
 	protocols,
 	type SupplementCategory,
 	supplementSchedules,
@@ -32,27 +31,23 @@ export async function getProtocolAsParsed(
 			supplementName: supplements.name,
 			brandName: supplements.brandName,
 			category: supplements.category,
-			isCritical: protocolSupplements.isCritical,
-			notes: protocolSupplements.notes,
-			cycleDaysOn: protocolSupplements.cycleDaysOn,
-			cycleDaysOff: protocolSupplements.cycleDaysOff,
-			startDayOffset: protocolSupplements.startDayOffset,
-			durationDays: protocolSupplements.durationDays,
-			dosageIntervalMinutes: protocolSupplements.dosageIntervalMinutes,
-			waitAfterTakingMinutes: protocolSupplements.waitAfterTakingMinutes,
-			sortOrder: protocolSupplements.sortOrder,
+			isCritical: supplementSchedules.isCritical,
+			notes: supplementSchedules.notes,
+			cycleDaysOn: supplementSchedules.cycleDaysOn,
+			cycleDaysOff: supplementSchedules.cycleDaysOff,
+			startDayOffset: supplementSchedules.startDayOffset,
+			durationDays: supplementSchedules.durationDays,
+			dosageIntervalMinutes: supplementSchedules.dosageIntervalMinutes,
+			waitAfterTakingMinutes: supplementSchedules.waitAfterTakingMinutes,
+			sortOrder: supplementSchedules.sortOrder,
 			dosageAmount: supplementSchedules.dosageAmount,
 			dosageUnit: supplementSchedules.dosageUnit,
 			timeBlockId: supplementSchedules.timeBlockId,
 		})
-		.from(protocolSupplements)
-		.innerJoin(supplements, eq(protocolSupplements.supplementId, supplements.id))
-		.innerJoin(
-			supplementSchedules,
-			eq(supplementSchedules.protocolSupplementId, protocolSupplements.id),
-		)
-		.where(eq(protocolSupplements.protocolId, protocolId))
-		.orderBy(asc(protocolSupplements.sortOrder));
+		.from(supplementSchedules)
+		.innerJoin(supplements, eq(supplementSchedules.supplementId, supplements.id))
+		.where(eq(supplementSchedules.protocolId, protocolId))
+		.orderBy(asc(supplementSchedules.sortOrder));
 
 	type SupplementEntry = {
 		name: string;

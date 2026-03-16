@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { db } from "@/shared/db/client";
 import {
 	notificationSettings,
-	protocolSupplements,
 	protocols,
 	pushSubscriptions,
 	supplementSchedules,
@@ -67,17 +66,13 @@ export async function POST(request: Request) {
 		const unchecked = await db
 			.select({ id: supplementSchedules.id })
 			.from(supplementSchedules)
-			.innerJoin(
-				protocolSupplements,
-				eq(supplementSchedules.protocolSupplementId, protocolSupplements.id),
-			)
-			.innerJoin(protocols, eq(protocolSupplements.protocolId, protocols.id))
+			.innerJoin(protocols, eq(supplementSchedules.protocolId, protocols.id))
 			.where(
 				and(
 					eq(supplementSchedules.timeBlockId, setting.timeBlockId),
 					eq(protocols.userId, setting.userId),
 					eq(protocols.status, "active"),
-					eq(protocolSupplements.active, true),
+					eq(supplementSchedules.active, true),
 					sql`NOT EXISTS (
 						SELECT 1 FROM daily_logs
 						WHERE daily_logs.schedule_id = ${supplementSchedules.id}

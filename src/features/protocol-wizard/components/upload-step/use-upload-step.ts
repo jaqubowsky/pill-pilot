@@ -17,45 +17,65 @@ type UseUploadStepParams = {
 export function useUploadStep({ supplements, timeBlocks, activeProtocols }: UseUploadStepParams) {
 	const cameraInputRef = useRef<HTMLInputElement>(null);
 	const [fileName, setFileName] = useState<string | null>(null);
+	const [pendingFile, setPendingFile] = useState<File | null>(null);
 	const [userInstructions, setUserInstructions] = useState("");
-	const [isInstructionsOpen, setIsInstructionsOpen] = useState(false);
 
 	const {
 		status,
 		errorKey,
 		parseFile: rawParseFile,
-	} = useParseProtocol({ supplements, timeBlocks, activeProtocols, userInstructions });
+	} = useParseProtocol({
+		supplements,
+		timeBlocks,
+		activeProtocols,
+	});
 
 	const isParsing = status === "uploading";
 
-	function parseFile(file: File) {
+	function selectFile(file: File) {
 		setFileName(file.name);
-		rawParseFile(file);
+		setPendingFile(file);
+	}
+
+	function confirmUpload() {
+		if (!pendingFile) return;
+		rawParseFile(pendingFile, userInstructions.trim());
+		setPendingFile(null);
+	}
+
+	function skipUpload() {
+		if (!pendingFile) return;
+		rawParseFile(pendingFile, "");
+		setPendingFile(null);
+		setUserInstructions("");
+	}
+
+	function cancelUpload() {
+		setPendingFile(null);
+		setUserInstructions("");
 	}
 
 	function handleCameraChange(e: React.ChangeEvent<HTMLInputElement>) {
 		const file = e.target.files?.[0];
-		if (file) parseFile(file);
+		if (file) selectFile(file);
 	}
 
 	function openCamera() {
 		cameraInputRef.current?.click();
 	}
 
-	function toggleInstructions() {
-		setIsInstructionsOpen((prev) => !prev);
-	}
-
 	return {
 		cameraInputRef,
 		isParsing,
 		fileName,
-		errorKey,
+		pendingFile,
 		userInstructions,
 		setUserInstructions,
-		isInstructionsOpen,
-		toggleInstructions,
-		parseFile,
+		errorKey,
+		selectFile,
+		confirmUpload,
+		skipUpload,
+		cancelUpload,
 		handleCameraChange,
 		openCamera,
 	};

@@ -1,12 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/shared/db/client";
-import {
-	ProtocolStatus,
-	protocolSupplements,
-	protocols,
-	supplementSchedules,
-	supplements,
-} from "@/shared/db/schema";
+import { ProtocolStatus, protocols, supplementSchedules, supplements } from "@/shared/db/schema";
 
 export type LowStockItem = {
 	id: string;
@@ -29,18 +23,14 @@ export async function getLowStock(userId: string): Promise<LowStockItem[]> {
 			stockUnit: supplements.stockUnit,
 			stockWarningThreshold: supplements.stockWarningThreshold,
 			dailyUsage: sql<number>`COALESCE(SUM(
-				CASE WHEN ${protocolSupplements.active} = true AND ${protocols.status} = ${ProtocolStatus.active}
+				CASE WHEN ${supplementSchedules.active} = true AND ${protocols.status} = ${ProtocolStatus.active}
 				THEN CAST(${supplementSchedules.dosageAmount} AS numeric)
 				ELSE 0 END
 			), 0)`,
 		})
 		.from(supplements)
-		.leftJoin(protocolSupplements, eq(protocolSupplements.supplementId, supplements.id))
-		.leftJoin(
-			supplementSchedules,
-			eq(supplementSchedules.protocolSupplementId, protocolSupplements.id),
-		)
-		.leftJoin(protocols, eq(protocolSupplements.protocolId, protocols.id))
+		.leftJoin(supplementSchedules, eq(supplementSchedules.supplementId, supplements.id))
+		.leftJoin(protocols, eq(supplementSchedules.protocolId, protocols.id))
 		.where(
 			and(
 				eq(supplements.userId, userId),
@@ -51,7 +41,7 @@ export async function getLowStock(userId: string): Promise<LowStockItem[]> {
 		.groupBy(supplements.id)
 		.having(
 			sql`COALESCE(SUM(
-				CASE WHEN ${protocolSupplements.active} = true AND ${protocols.status} = ${ProtocolStatus.active}
+				CASE WHEN ${supplementSchedules.active} = true AND ${protocols.status} = ${ProtocolStatus.active}
 				THEN CAST(${supplementSchedules.dosageAmount} AS numeric)
 				ELSE 0 END
 			), 0) > 0`,

@@ -3,7 +3,6 @@ import { db } from "@/shared/db/client";
 import {
 	type DosageUnit,
 	ProtocolStatus,
-	protocolSupplements,
 	protocols,
 	supplementSchedules,
 	supplements,
@@ -16,7 +15,6 @@ export type ProtocolWithSchedules = {
 	status: ProtocolStatus;
 	schedules: {
 		id: string;
-		protocolSupplementId: string;
 		dosageAmount: string;
 		dosageUnit: DosageUnit;
 		notes: string | null;
@@ -73,18 +71,17 @@ export async function getUserProtocols(userId: string): Promise<ProtocolWithSche
 		const scheduleRows = await db
 			.select({
 				id: supplementSchedules.id,
-				protocolSupplementId: protocolSupplements.id,
 				dosageAmount: supplementSchedules.dosageAmount,
 				dosageUnit: supplementSchedules.dosageUnit,
-				notes: protocolSupplements.notes,
-				active: protocolSupplements.active,
-				sortOrder: protocolSupplements.sortOrder,
-				cycleDaysOn: protocolSupplements.cycleDaysOn,
-				cycleDaysOff: protocolSupplements.cycleDaysOff,
+				notes: supplementSchedules.notes,
+				active: supplementSchedules.active,
+				sortOrder: supplementSchedules.sortOrder,
+				cycleDaysOn: supplementSchedules.cycleDaysOn,
+				cycleDaysOff: supplementSchedules.cycleDaysOff,
 				supplement: {
 					id: supplements.id,
 					name: supplements.name,
-					isCritical: protocolSupplements.isCritical,
+					isCritical: supplementSchedules.isCritical,
 				},
 				timeBlock: {
 					id: timeBlocks.id,
@@ -93,14 +90,10 @@ export async function getUserProtocols(userId: string): Promise<ProtocolWithSche
 				},
 			})
 			.from(supplementSchedules)
-			.innerJoin(
-				protocolSupplements,
-				eq(supplementSchedules.protocolSupplementId, protocolSupplements.id),
-			)
-			.innerJoin(supplements, eq(protocolSupplements.supplementId, supplements.id))
+			.innerJoin(supplements, eq(supplementSchedules.supplementId, supplements.id))
 			.innerJoin(timeBlocks, eq(supplementSchedules.timeBlockId, timeBlocks.id))
-			.where(eq(protocolSupplements.protocolId, protocol.id))
-			.orderBy(asc(timeBlocks.startTime), asc(protocolSupplements.sortOrder));
+			.where(eq(supplementSchedules.protocolId, protocol.id))
+			.orderBy(asc(timeBlocks.startTime), asc(supplementSchedules.sortOrder));
 
 		result.push({
 			id: protocol.id,

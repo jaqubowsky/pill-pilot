@@ -158,7 +158,7 @@ export const protocols = pgTable("protocols", {
 	createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const protocolSupplements = pgTable("protocol_supplements", {
+export const supplementSchedules = pgTable("supplement_schedules", {
 	id: text("id")
 		.primaryKey()
 		.$defaultFn(() => createId()),
@@ -168,6 +168,11 @@ export const protocolSupplements = pgTable("protocol_supplements", {
 	supplementId: text("supplement_id")
 		.notNull()
 		.references(() => supplements.id, { onDelete: "cascade" }),
+	timeBlockId: text("time_block_id")
+		.notNull()
+		.references(() => timeBlocks.id, { onDelete: "cascade" }),
+	dosageAmount: decimal("dosage_amount", { precision: 10, scale: 2 }).notNull(),
+	dosageUnit: dosageUnitEnum("dosage_unit").notNull(),
 	notes: text("notes"),
 	isCritical: boolean("is_critical").notNull().default(false),
 	cycleDaysOn: integer("cycle_days_on"),
@@ -179,20 +184,6 @@ export const protocolSupplements = pgTable("protocol_supplements", {
 	sortOrder: integer("sort_order").notNull().default(0),
 	active: boolean("active").notNull().default(true),
 	createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
-export const supplementSchedules = pgTable("supplement_schedules", {
-	id: text("id")
-		.primaryKey()
-		.$defaultFn(() => createId()),
-	protocolSupplementId: text("protocol_supplement_id")
-		.notNull()
-		.references(() => protocolSupplements.id, { onDelete: "cascade" }),
-	timeBlockId: text("time_block_id")
-		.notNull()
-		.references(() => timeBlocks.id, { onDelete: "cascade" }),
-	dosageAmount: decimal("dosage_amount", { precision: 10, scale: 2 }).notNull(),
-	dosageUnit: dosageUnitEnum("dosage_unit").notNull(),
 });
 
 export const dailyLogs = pgTable(

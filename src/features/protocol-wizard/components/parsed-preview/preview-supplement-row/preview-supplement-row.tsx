@@ -101,6 +101,15 @@ export function PreviewSupplementRow({
 				dosageUnit={schedule.dosageUnit}
 				notes={supplement.notes}
 				notesPopoverSide="top"
+				warning={
+					isLowConfidence ? (
+						<ConfidenceBadge
+							confidence={supplement.confidence}
+							uncertaintyReason={supplement.uncertaintyReason}
+							onVerify={onVerify}
+						/>
+					) : null
+				}
 				badges={
 					<>
 						<SupplementLinkBadge existingSupplementId={supplement.existingSupplementId} />
@@ -108,13 +117,6 @@ export function PreviewSupplementRow({
 							<IconBadge icon={ShieldAlert} variant="danger" label={t("dashboard.critical")} />
 						)}
 						<SupplementBadges supplement={supplement} />
-						{isLowConfidence && (
-							<ConfidenceBadge
-								confidence={supplement.confidence}
-								uncertaintyReason={supplement.uncertaintyReason}
-								onVerify={onVerify}
-							/>
-						)}
 					</>
 				}
 			/>

@@ -22,10 +22,7 @@ export const markBlockTaken = authActionClient
 		let checkedCount = 0;
 
 		for (const scheduleId of uncheckedIds) {
-			const schedule = await supplementScheduleRepository.findOwnedWithContext(
-				scheduleId,
-				ctx.userId,
-			);
+			const schedule = await supplementScheduleRepository.findOwned(scheduleId, ctx.userId);
 
 			const supplement = await supplementRepository.findByIdAndUserId(
 				schedule.supplementId,

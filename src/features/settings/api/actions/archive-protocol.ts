@@ -5,7 +5,7 @@ import { z } from "zod";
 import { ProtocolStatus } from "@/shared/db/schema";
 import { authActionClient } from "@/shared/lib/safe-action";
 import { protocolRepository } from "@/shared/repositories/protocol-repository";
-import { protocolSupplementRepository } from "@/shared/repositories/protocol-supplement-repository";
+import { supplementScheduleRepository } from "@/shared/repositories/supplement-schedule-repository";
 
 const schema = z.object({
 	protocolId: z.string(),
@@ -16,7 +16,7 @@ export const archiveProtocol = authActionClient
 	.action(async ({ parsedInput: { protocolId }, ctx: { userId } }) => {
 		await protocolRepository.findByIdAndUserId(protocolId, userId);
 
-		await protocolSupplementRepository.deactivateByProtocolId(protocolId);
+		await supplementScheduleRepository.deactivateByProtocolId(protocolId);
 		await protocolRepository.updateStatus(protocolId, ProtocolStatus.archived);
 
 		revalidatePath("/settings");

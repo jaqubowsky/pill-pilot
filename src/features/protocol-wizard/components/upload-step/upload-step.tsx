@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, ChevronDown, ChevronUp, FileText, Loader2, PenLine } from "lucide-react";
+import { Camera, FileText, Loader2, PenLine } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type {
@@ -10,6 +10,14 @@ import type {
 } from "@/features/protocol-wizard/types";
 import { BackButton } from "@/shared/components/back-button";
 import { Button } from "@/shared/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/shared/components/ui/dialog";
 import { FileDropzone } from "./file-dropzone";
 import { useUploadStep } from "./use-upload-step";
 
@@ -25,12 +33,14 @@ export function UploadStep({ supplements, timeBlocks, activeProtocols }: UploadS
 		cameraInputRef,
 		isParsing,
 		fileName,
-		errorKey,
+		pendingFile,
 		userInstructions,
 		setUserInstructions,
-		isInstructionsOpen,
-		toggleInstructions,
-		parseFile,
+		errorKey,
+		selectFile,
+		confirmUpload,
+		skipUpload,
+		cancelUpload,
 		handleCameraChange,
 		openCamera,
 	} = useUploadStep({ supplements, timeBlocks, activeProtocols });
@@ -46,30 +56,6 @@ export function UploadStep({ supplements, timeBlocks, activeProtocols }: UploadS
 			</div>
 
 			<div className="flex flex-col gap-md">
-				<button
-					type="button"
-					onClick={toggleInstructions}
-					className="flex items-center gap-xs text-sm text-content-muted self-start"
-				>
-					{isInstructionsOpen ? (
-						<ChevronUp className="size-4" />
-					) : (
-						<ChevronDown className="size-4" />
-					)}
-					{t("protocolWizard.userInstructionsToggle")}
-				</button>
-
-				{isInstructionsOpen && (
-					<textarea
-						value={userInstructions}
-						onChange={(e) => setUserInstructions(e.target.value)}
-						maxLength={1000}
-						rows={3}
-						placeholder={t("protocolWizard.userInstructionsPlaceholder")}
-						className="w-full rounded-xl border border-edge bg-surface-raised p-md text-sm text-content placeholder:text-content-faint resize-none focus:outline-none focus:ring-2 focus:ring-brand-300"
-					/>
-				)}
-
 				{isParsing ? (
 					<div className="flex flex-col items-center gap-md rounded-xl border-2 border-dashed border-brand-300 bg-brand-50/50 p-xl">
 						<Loader2 className="size-10 text-brand-500 animate-spin" />
@@ -87,7 +73,7 @@ export function UploadStep({ supplements, timeBlocks, activeProtocols }: UploadS
 					</div>
 				) : (
 					<FileDropzone
-						onFile={parseFile}
+						onFile={selectFile}
 						disabled={isParsing}
 						accept=".pdf,.xlsx,.xls,.docx,.txt,.jpg,.jpeg,.png,.webp"
 						label={t("protocolWizard.dropzoneLabel")}
@@ -146,6 +132,33 @@ export function UploadStep({ supplements, timeBlocks, activeProtocols }: UploadS
 					{t(errorKey as Parameters<typeof t>[0], undefined) ?? t("errors.generic")}
 				</p>
 			)}
+
+			<Dialog open={!!pendingFile} onOpenChange={(open) => !open && cancelUpload()}>
+				<DialogContent showCloseButton={false}>
+					<DialogHeader>
+						<DialogTitle>{t("protocolWizard.instructionsDialogTitle")}</DialogTitle>
+						<DialogDescription>
+							{t("protocolWizard.instructionsDialogDescription")}
+						</DialogDescription>
+					</DialogHeader>
+					<textarea
+						value={userInstructions}
+						onChange={(e) => setUserInstructions(e.target.value)}
+						maxLength={1000}
+						rows={3}
+						placeholder={t("protocolWizard.userInstructionsPlaceholder")}
+						className="w-full rounded-xl border border-edge bg-surface-raised p-md text-sm text-content placeholder:text-content-faint resize-none focus:outline-none focus:ring-2 focus:ring-brand-300"
+					/>
+					<DialogFooter>
+						<Button variant="outline" onClick={skipUpload}>
+							{t("protocolWizard.instructionsSkip")}
+						</Button>
+						<Button onClick={confirmUpload} disabled={!userInstructions.trim()}>
+							{t("protocolWizard.instructionsSend")}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }

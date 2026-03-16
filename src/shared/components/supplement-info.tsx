@@ -15,6 +15,7 @@ type SupplementInfoProps = {
 	notes?: string | null;
 	nameClassName?: string;
 	badges?: ReactNode;
+	warning?: ReactNode;
 	notesPopoverSide?: "top" | "bottom";
 };
 
@@ -25,6 +26,7 @@ export function SupplementInfo({
 	notes,
 	nameClassName,
 	badges,
+	warning,
 	notesPopoverSide = "bottom",
 }: SupplementInfoProps) {
 	const t = useTranslations("dashboard");
@@ -51,6 +53,7 @@ export function SupplementInfo({
 				{badges && <div className="flex items-center gap-xs shrink-0">{badges}</div>}
 			</div>
 			{notes && <TruncatedNote text={notes} popoverSide={notesPopoverSide} />}
+			{warning}
 		</div>
 	);
 }

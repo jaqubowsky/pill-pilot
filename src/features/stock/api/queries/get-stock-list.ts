@@ -1,12 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/shared/db/client";
-import {
-	ProtocolStatus,
-	protocolSupplements,
-	protocols,
-	supplementSchedules,
-	supplements,
-} from "@/shared/db/schema";
+import { ProtocolStatus, protocols, supplementSchedules, supplements } from "@/shared/db/schema";
 
 export type StockListItem = {
 	id: string;
@@ -35,26 +29,22 @@ export async function getStockList(userId: string): Promise<StockList> {
 			category: supplements.category,
 			stockUnit: supplements.stockUnit,
 			isCritical: sql<boolean>`COALESCE(BOOL_OR(
-        CASE WHEN ${protocolSupplements.active} = true AND ${protocols.status} = ${ProtocolStatus.active}
-        THEN ${protocolSupplements.isCritical}
+        CASE WHEN ${supplementSchedules.active} = true AND ${protocols.status} = ${ProtocolStatus.active}
+        THEN ${supplementSchedules.isCritical}
         ELSE false END
       ), false)`,
 			currentStock: supplements.currentStock,
 			packageSize: supplements.packageSize,
 			packagePrice: supplements.packagePrice,
 			dailyUsage: sql<number>`COALESCE(SUM(
-        CASE WHEN ${protocolSupplements.active} = true AND ${protocols.status} = ${ProtocolStatus.active}
+        CASE WHEN ${supplementSchedules.active} = true AND ${protocols.status} = ${ProtocolStatus.active}
         THEN CAST(${supplementSchedules.dosageAmount} AS numeric)
         ELSE 0 END
       ), 0)`,
 		})
 		.from(supplements)
-		.leftJoin(protocolSupplements, eq(protocolSupplements.supplementId, supplements.id))
-		.leftJoin(
-			supplementSchedules,
-			eq(supplementSchedules.protocolSupplementId, protocolSupplements.id),
-		)
-		.leftJoin(protocols, eq(protocolSupplements.protocolId, protocols.id))
+		.leftJoin(supplementSchedules, eq(supplementSchedules.supplementId, supplements.id))
+		.leftJoin(protocols, eq(supplementSchedules.protocolId, protocols.id))
 		.where(and(eq(supplements.userId, userId), eq(supplements.active, true)))
 		.groupBy(supplements.id);
 

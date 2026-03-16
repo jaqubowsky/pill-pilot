@@ -5,7 +5,7 @@ import { z } from "zod";
 import { ProtocolStatus } from "@/shared/db/schema";
 import { authActionClient } from "@/shared/lib/safe-action";
 import { protocolRepository } from "@/shared/repositories/protocol-repository";
-import { protocolSupplementRepository } from "@/shared/repositories/protocol-supplement-repository";
+import { supplementScheduleRepository } from "@/shared/repositories/supplement-schedule-repository";
 
 const schema = z.object({
 	protocolId: z.string(),
@@ -17,7 +17,7 @@ export const reactivateProtocol = authActionClient
 		await protocolRepository.findByIdAndUserId(protocolId, userId);
 
 		await protocolRepository.updateStatus(protocolId, ProtocolStatus.active);
-		await protocolSupplementRepository.reactivateByProtocolId(protocolId);
+		await supplementScheduleRepository.reactivateByProtocolId(protocolId);
 
 		revalidatePath("/settings");
 		revalidatePath("/dashboard");

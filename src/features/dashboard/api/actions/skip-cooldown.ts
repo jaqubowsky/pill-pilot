@@ -4,29 +4,32 @@ import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/shared/db/client";
-import { dailyLogs, protocolSupplements, protocols, supplementSchedules } from "@/shared/db/schema";
+import { dailyLogs, protocols, supplementSchedules } from "@/shared/db/schema";
 import { authActionClient } from "@/shared/lib/safe-action";
 
 const schema = z.object({
-	protocolSupplementId: z.string(),
+	protocolId: z.string(),
+	supplementId: z.string(),
 	date: z.iso.date(),
 });
 
 export const skipCooldown = authActionClient
 	.inputSchema(schema)
-	.action(async ({ parsedInput: { protocolSupplementId, date }, ctx }) => {
+	.action(async ({ parsedInput: { protocolId, supplementId, date }, ctx }) => {
 		await db
-			.select({ id: protocolSupplements.id })
-			.from(protocolSupplements)
-			.innerJoin(protocols, eq(protocolSupplements.protocolId, protocols.id))
-			.where(
-				and(eq(protocolSupplements.id, protocolSupplementId), eq(protocols.userId, ctx.userId)),
-			);
+			.select({ id: protocols.id })
+			.from(protocols)
+			.where(and(eq(protocols.id, protocolId), eq(protocols.userId, ctx.userId)));
 
 		const siblingSchedules = await db
 			.select({ id: supplementSchedules.id })
 			.from(supplementSchedules)
-			.where(eq(supplementSchedules.protocolSupplementId, protocolSupplementId));
+			.where(
+				and(
+					eq(supplementSchedules.protocolId, protocolId),
+					eq(supplementSchedules.supplementId, supplementId),
+				),
+			);
 
 		const siblingIds = siblingSchedules.map((s) => s.id);
 		if (siblingIds.length === 0) return;

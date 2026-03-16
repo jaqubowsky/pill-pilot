@@ -20,7 +20,6 @@ type ScheduleRow = {
 	cycleDaysOff: number | null;
 	startDayOffset: number;
 	durationDays: number | null;
-	protocolSupplementId: string;
 	protocolStartDate: string | null;
 	protocolId: string;
 	blockId: string;
@@ -105,7 +104,6 @@ export function buildScheduleEntry(
 			logId: log?.id ?? null,
 			takenAt: log?.takenAt ?? null,
 			protocolId: row.protocolId,
-			protocolSupplementId: row.protocolSupplementId,
 			cycling: cycleStatus.isCycling
 				? { isOnPhase: cycleStatus.isOnPhase, daysRemaining: cycleStatus.daysRemaining }
 				: null,
@@ -133,7 +131,8 @@ function computeCooldown(
 ): { remainingMs: number; logId: string } | null {
 	if (!row.dosageIntervalMinutes || log) return null;
 
-	const sibling = ctx.siblingTakenAtMap.get(row.protocolSupplementId);
+	const key = `${row.protocolId}:${row.supplementId}`;
+	const sibling = ctx.siblingTakenAtMap.get(key);
 	if (!sibling || sibling.cooldownSkipped) return null;
 
 	const intervalMs = row.dosageIntervalMinutes * 60 * 1000;

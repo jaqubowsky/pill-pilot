@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/shared/db/client";
-import { protocolSupplements, supplements as supplementsTable } from "@/shared/db/schema";
+import { supplementSchedules, supplements as supplementsTable } from "@/shared/db/schema";
 import { protocolRepository } from "@/shared/repositories/protocol-repository";
 import { supplementRepository } from "@/shared/repositories/supplement-repository";
 import { timeBlockRepository } from "@/shared/repositories/time-block-repository";
@@ -17,10 +17,10 @@ export async function ProtocolUploadPage({ userId }: { userId: string }) {
 	const activeProtocolSummaries: ActiveProtocolSummary[] = await Promise.all(
 		activeProtocols.map(async (protocol) => {
 			const rows = await db
-				.select({ name: supplementsTable.name })
-				.from(protocolSupplements)
-				.innerJoin(supplementsTable, eq(protocolSupplements.supplementId, supplementsTable.id))
-				.where(eq(protocolSupplements.protocolId, protocol.id));
+				.selectDistinct({ name: supplementsTable.name })
+				.from(supplementSchedules)
+				.innerJoin(supplementsTable, eq(supplementSchedules.supplementId, supplementsTable.id))
+				.where(eq(supplementSchedules.protocolId, protocol.id));
 
 			return {
 				name: protocol.name,

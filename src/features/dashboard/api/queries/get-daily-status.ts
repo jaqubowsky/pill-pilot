@@ -7,7 +7,6 @@ import {
 	type DosageUnit,
 	dailyLogs,
 	ProtocolStatus,
-	protocolSupplements,
 	protocols,
 	supplementSchedules,
 	supplements,
@@ -44,7 +43,6 @@ export type ScheduleEntry = {
 	isExpired: boolean;
 	notStartedDays: number | null;
 	protocolId: string;
-	protocolSupplementId: string;
 	dosageIntervalMinutes: number | null;
 	waitAfterTakingMinutes: number | null;
 	cooldown: { remainingMs: number; logId: string } | null;
@@ -75,13 +73,13 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 			scheduleId: supplementSchedules.id,
 			dosageAmount: supplementSchedules.dosageAmount,
 			dosageUnit: supplementSchedules.dosageUnit,
-			notes: protocolSupplements.notes,
-			sortOrder: protocolSupplements.sortOrder,
+			notes: supplementSchedules.notes,
+			sortOrder: supplementSchedules.sortOrder,
 			supplementId: supplements.id,
 			supplementName: supplements.name,
 			supplementBrandName: supplements.brandName,
 			supplementCategory: supplements.category,
-			isCritical: protocolSupplements.isCritical,
+			isCritical: supplementSchedules.isCritical,
 			currentStock: supplements.currentStock,
 			stockUnit: supplements.stockUnit,
 			blockId: timeBlocks.id,
@@ -89,29 +87,24 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 			blockIcon: timeBlocks.icon,
 			startTime: timeBlocks.startTime,
 			blockSortOrder: timeBlocks.startTime,
-			cycleDaysOn: protocolSupplements.cycleDaysOn,
-			cycleDaysOff: protocolSupplements.cycleDaysOff,
-			startDayOffset: protocolSupplements.startDayOffset,
-			durationDays: protocolSupplements.durationDays,
-			protocolSupplementId: protocolSupplements.id,
+			cycleDaysOn: supplementSchedules.cycleDaysOn,
+			cycleDaysOff: supplementSchedules.cycleDaysOff,
+			startDayOffset: supplementSchedules.startDayOffset,
+			durationDays: supplementSchedules.durationDays,
 			protocolStartDate: protocols.startDate,
 			protocolId: protocols.id,
-			dosageIntervalMinutes: protocolSupplements.dosageIntervalMinutes,
-			waitAfterTakingMinutes: protocolSupplements.waitAfterTakingMinutes,
+			dosageIntervalMinutes: supplementSchedules.dosageIntervalMinutes,
+			waitAfterTakingMinutes: supplementSchedules.waitAfterTakingMinutes,
 		})
 		.from(supplementSchedules)
-		.innerJoin(
-			protocolSupplements,
-			eq(supplementSchedules.protocolSupplementId, protocolSupplements.id),
-		)
-		.innerJoin(supplements, eq(protocolSupplements.supplementId, supplements.id))
-		.innerJoin(protocols, eq(protocolSupplements.protocolId, protocols.id))
+		.innerJoin(supplements, eq(supplementSchedules.supplementId, supplements.id))
+		.innerJoin(protocols, eq(supplementSchedules.protocolId, protocols.id))
 		.innerJoin(timeBlocks, eq(supplementSchedules.timeBlockId, timeBlocks.id))
 		.where(
 			and(
 				eq(protocols.userId, userId),
 				eq(protocols.status, ProtocolStatus.active),
-				eq(protocolSupplements.active, true),
+				eq(supplementSchedules.active, true),
 				eq(supplements.active, true),
 				eq(timeBlocks.active, true),
 			),
@@ -145,9 +138,10 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 		if (!row.dosageIntervalMinutes) continue;
 		const log = logMap.get(row.scheduleId);
 		if (!log) continue;
-		const existing = siblingTakenAtMap.get(row.protocolSupplementId);
+		const key = `${row.protocolId}:${row.supplementId}`;
+		const existing = siblingTakenAtMap.get(key);
 		if (!existing || log.takenAt > existing.takenAt) {
-			siblingTakenAtMap.set(row.protocolSupplementId, {
+			siblingTakenAtMap.set(key, {
 				logId: log.id,
 				takenAt: log.takenAt,
 				adjustmentMinutes: log.timerAdjustmentMinutes ?? 0,

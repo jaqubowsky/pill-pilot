@@ -43,11 +43,9 @@ export function BottomSheet({
 				<div className="mx-auto mb-md h-1 w-10 rounded-full bg-edge-subtle shrink-0" />
 				<SheetHeader className="p-0 mb-lg shrink-0">
 					<SheetTitle className="text-lg font-semibold text-content">{title}</SheetTitle>
-					{description && (
-						<SheetDescription className="text-sm text-content-muted">
-							{description}
-						</SheetDescription>
-					)}
+					<SheetDescription className={cn("text-sm text-content-muted", !description && "hidden")}>
+						{description}
+					</SheetDescription>
 				</SheetHeader>
 				{scrollable ? (
 					<div className="overflow-y-auto overflow-x-hidden min-h-0 min-w-0 flex-1 pr-xs">

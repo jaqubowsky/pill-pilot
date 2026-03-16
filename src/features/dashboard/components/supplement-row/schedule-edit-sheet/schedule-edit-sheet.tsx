@@ -6,6 +6,7 @@ import type { PreviewSupplementSheetValues } from "@/features/protocol-wizard/co
 import { PreviewSupplementSheetFields } from "@/features/protocol-wizard/components/parsed-preview/preview-supplement-sheet/preview-supplement-sheet-fields";
 import { BottomSheet } from "@/shared/components/bottom-sheet";
 import { Button } from "@/shared/components/ui/button";
+import { cn } from "@/shared/lib/utils";
 import { useScheduleEditSheet } from "./use-schedule-edit-sheet";
 
 type ScheduleEditSheetProps = {
@@ -29,34 +30,100 @@ export function ScheduleEditSheet({
 }: ScheduleEditSheetProps) {
 	const t = useTranslations();
 
-	const { methods, handleSubmit, isPending } = useScheduleEditSheet({
+	const {
+		methods,
+		handleSubmit,
+		isPending,
+		showSiblings,
+		siblings,
+		changedFields,
+		handleApplyToAll,
+		handleSkipSiblings,
+	} = useScheduleEditSheet({
 		scheduleId,
 		defaultValues,
 		onClose: () => onOpenChange(false),
 	});
 
+	const sheetOpen = open || showSiblings;
+	const hideForm = showSiblings;
+
 	return (
 		<BottomSheet
-			open={open}
-			onOpenChange={onOpenChange}
-			title={supplementName}
+			open={sheetOpen}
+			onOpenChange={(v) => {
+				if (!v && showSiblings) return;
+				onOpenChange(v);
+			}}
+			title={showSiblings ? t("schedule.updateSiblingsTitle") : supplementName}
+			description={
+				showSiblings ? t("schedule.updateSiblingsDescription", { name: supplementName }) : undefined
+			}
 			scrollable
 			footer={
-				<Button
-					type="submit"
-					form={FORM_ID}
-					disabled={isPending}
-					className="w-full bg-brand-500 text-content-inverse rounded-lg px-lg py-sm text-sm font-medium"
-				>
-					{t("common.saveChanges")}
-				</Button>
+				showSiblings ? (
+					<div className="flex gap-sm">
+						<Button variant="outline" className="flex-1" onClick={handleSkipSiblings}>
+							{t("schedule.updateSiblingsSkip")}
+						</Button>
+						<Button
+							className="flex-1 bg-brand-500 text-content-inverse"
+							onClick={handleApplyToAll}
+							disabled={isPending}
+						>
+							{t("schedule.updateSiblingsApply")}
+						</Button>
+					</div>
+				) : (
+					<Button
+						type="submit"
+						form={FORM_ID}
+						disabled={isPending}
+						className="w-full bg-brand-500 text-content-inverse rounded-lg px-lg py-sm text-sm font-medium"
+					>
+						{t("common.saveChanges")}
+					</Button>
+				)
 			}
 		>
-			<FormProvider {...methods}>
-				<form id={FORM_ID} onSubmit={handleSubmit}>
-					<PreviewSupplementSheetFields timeBlocks={timeBlocks} />
-				</form>
-			</FormProvider>
+			<div className={cn(hideForm && "hidden")}>
+				<FormProvider {...methods}>
+					<form id={FORM_ID} onSubmit={handleSubmit}>
+						<PreviewSupplementSheetFields timeBlocks={timeBlocks} />
+					</form>
+				</FormProvider>
+			</div>
+
+			<div className={cn(!showSiblings && "hidden", "flex flex-col gap-md")}>
+				{changedFields && changedFields.length > 0 && (
+					<div className="flex flex-col gap-xs">
+						<span className="text-sm font-medium text-content">
+							{t("schedule.updateSiblingsChangedFields")}
+						</span>
+						<ul className="flex flex-col gap-xs">
+							{changedFields.map((field) => (
+								<li key={field} className="text-sm text-content-muted">
+									• {t(`schedule.fieldLabels.${field}`)}
+								</li>
+							))}
+						</ul>
+					</div>
+				)}
+				{siblings && (
+					<div className="flex flex-col gap-xs">
+						<span className="text-sm font-medium text-content">
+							{t("schedule.updateSiblingsAffected")}
+						</span>
+						<ul className="flex flex-col gap-xs">
+							{siblings.map((s) => (
+								<li key={s.timeBlockName} className="text-sm text-content-muted">
+									• {supplementName} — {s.timeBlockName}
+								</li>
+							))}
+						</ul>
+					</div>
+				)}
+			</div>
 		</BottomSheet>
 	);
 }

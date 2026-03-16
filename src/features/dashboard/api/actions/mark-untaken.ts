@@ -15,10 +15,7 @@ const schema = z.object({
 export const markUntaken = authActionClient
 	.inputSchema(schema)
 	.action(async ({ parsedInput: { scheduleId, date }, ctx }) => {
-		const schedule = await supplementScheduleRepository.findOwnedWithContext(
-			scheduleId,
-			ctx.userId,
-		);
+		const schedule = await supplementScheduleRepository.findOwned(scheduleId, ctx.userId);
 
 		const existing = await dailyLogRepository.findByScheduleAndDate(scheduleId, date);
 

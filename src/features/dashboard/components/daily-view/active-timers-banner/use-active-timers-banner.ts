@@ -10,7 +10,8 @@ export type ActiveTimer = {
 	type: "cooldown" | "wait";
 	remainingMs: number;
 	logId: string | null;
-	protocolSupplementId: string | null;
+	protocolId: string | null;
+	supplementId: string | null;
 };
 
 function collectTimers(entries: ScheduleEntry[]): ActiveTimer[] {
@@ -18,16 +19,18 @@ function collectTimers(entries: ScheduleEntry[]): ActiveTimer[] {
 	const seenCooldowns = new Set<string>();
 
 	for (const entry of entries) {
-		if (entry.cooldown && entry.cooldown.remainingMs > 0 && entry.protocolSupplementId) {
-			if (seenCooldowns.has(entry.protocolSupplementId)) continue;
-			seenCooldowns.add(entry.protocolSupplementId);
+		if (entry.cooldown && entry.cooldown.remainingMs > 0) {
+			const key = `${entry.protocolId}:${entry.supplementId}`;
+			if (seenCooldowns.has(key)) continue;
+			seenCooldowns.add(key);
 			timers.push({
 				scheduleId: entry.scheduleId,
 				supplementName: entry.supplementName,
 				type: "cooldown",
 				remainingMs: entry.cooldown.remainingMs,
 				logId: entry.cooldown.logId,
-				protocolSupplementId: entry.protocolSupplementId,
+				protocolId: entry.protocolId,
+				supplementId: entry.supplementId,
 			});
 		}
 		if (entry.waitTimer && entry.waitTimer.remainingMs > 0) {
@@ -37,7 +40,8 @@ function collectTimers(entries: ScheduleEntry[]): ActiveTimer[] {
 				type: "wait",
 				remainingMs: entry.waitTimer.remainingMs,
 				logId: entry.logId,
-				protocolSupplementId: null,
+				protocolId: null,
+				supplementId: null,
 			});
 		}
 	}

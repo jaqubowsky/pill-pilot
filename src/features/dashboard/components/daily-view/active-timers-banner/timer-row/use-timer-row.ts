@@ -31,8 +31,8 @@ export function useTimerRow({ timer, date }: Params) {
 	}
 
 	function handleSkip() {
-		if (timer.type === "cooldown" && timer.protocolSupplementId) {
-			executeSkipCooldown({ protocolSupplementId: timer.protocolSupplementId, date });
+		if (timer.type === "cooldown" && timer.protocolId && timer.supplementId) {
+			executeSkipCooldown({ protocolId: timer.protocolId, supplementId: timer.supplementId, date });
 		} else if (timer.type === "wait" && timer.logId) {
 			executeSkipWait({ logId: timer.logId });
 		}

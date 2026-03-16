@@ -5,7 +5,6 @@ import { db } from "@/shared/db/client";
 import {
 	dailyLogs,
 	ProtocolStatus,
-	protocolSupplements,
 	protocols,
 	supplementSchedules,
 	supplements,
@@ -53,25 +52,21 @@ export async function getWeeklyStatus(userId: string, startDate: string): Promis
 			blockName: timeBlocks.name,
 			blockIcon: timeBlocks.icon,
 			startTime: timeBlocks.startTime,
-			cycleDaysOn: protocolSupplements.cycleDaysOn,
-			cycleDaysOff: protocolSupplements.cycleDaysOff,
-			startDayOffset: protocolSupplements.startDayOffset,
-			durationDays: protocolSupplements.durationDays,
+			cycleDaysOn: supplementSchedules.cycleDaysOn,
+			cycleDaysOff: supplementSchedules.cycleDaysOff,
+			startDayOffset: supplementSchedules.startDayOffset,
+			durationDays: supplementSchedules.durationDays,
 			protocolStartDate: protocols.startDate,
 		})
 		.from(supplementSchedules)
-		.innerJoin(
-			protocolSupplements,
-			eq(supplementSchedules.protocolSupplementId, protocolSupplements.id),
-		)
-		.innerJoin(supplements, eq(protocolSupplements.supplementId, supplements.id))
-		.innerJoin(protocols, eq(protocolSupplements.protocolId, protocols.id))
+		.innerJoin(supplements, eq(supplementSchedules.supplementId, supplements.id))
+		.innerJoin(protocols, eq(supplementSchedules.protocolId, protocols.id))
 		.innerJoin(timeBlocks, eq(supplementSchedules.timeBlockId, timeBlocks.id))
 		.where(
 			and(
 				eq(protocols.userId, userId),
 				eq(protocols.status, ProtocolStatus.active),
-				eq(protocolSupplements.active, true),
+				eq(supplementSchedules.active, true),
 				eq(supplements.active, true),
 				eq(timeBlocks.active, true),
 			),

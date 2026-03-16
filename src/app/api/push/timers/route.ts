@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { db } from "@/shared/db/client";
 import {
 	dailyLogs,
-	protocolSupplements,
 	protocols,
 	pushSubscriptions,
 	supplementSchedules,
@@ -28,24 +27,20 @@ export async function POST(request: Request) {
 			takenAt: dailyLogs.takenAt,
 			timerAdjustmentMinutes: dailyLogs.timerAdjustmentMinutes,
 			timerNotifiedAt: dailyLogs.timerNotifiedAt,
-			dosageIntervalMinutes: protocolSupplements.dosageIntervalMinutes,
-			waitAfterTakingMinutes: protocolSupplements.waitAfterTakingMinutes,
+			dosageIntervalMinutes: supplementSchedules.dosageIntervalMinutes,
+			waitAfterTakingMinutes: supplementSchedules.waitAfterTakingMinutes,
 			supplementName: supplements.name,
 			userId: protocols.userId,
 		})
 		.from(dailyLogs)
 		.innerJoin(supplementSchedules, eq(dailyLogs.scheduleId, supplementSchedules.id))
-		.innerJoin(
-			protocolSupplements,
-			eq(supplementSchedules.protocolSupplementId, protocolSupplements.id),
-		)
-		.innerJoin(supplements, eq(protocolSupplements.supplementId, supplements.id))
-		.innerJoin(protocols, eq(protocolSupplements.protocolId, protocols.id))
+		.innerJoin(supplements, eq(supplementSchedules.supplementId, supplements.id))
+		.innerJoin(protocols, eq(supplementSchedules.protocolId, protocols.id))
 		.where(
 			and(
 				eq(dailyLogs.date, today),
 				isNull(dailyLogs.timerNotifiedAt),
-				sql`(${protocolSupplements.dosageIntervalMinutes} IS NOT NULL OR ${protocolSupplements.waitAfterTakingMinutes} IS NOT NULL)`,
+				sql`(${supplementSchedules.dosageIntervalMinutes} IS NOT NULL OR ${supplementSchedules.waitAfterTakingMinutes} IS NOT NULL)`,
 			),
 		);
 

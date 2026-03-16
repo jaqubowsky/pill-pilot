@@ -4,7 +4,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/shared/db/client";
-import { dailyLogs, protocolSupplements, supplementSchedules } from "@/shared/db/schema";
+import { dailyLogs, supplementSchedules } from "@/shared/db/schema";
 import { ActionError, ActionErrorCode, authActionClient } from "@/shared/lib/safe-action";
 import { dailyLogRepository } from "@/shared/repositories/daily-log-repository";
 import { supplementRepository } from "@/shared/repositories/supplement-repository";
@@ -25,10 +25,7 @@ export const markTaken = authActionClient
 			return { logId: existing.id };
 		}
 
-		const schedule = await supplementScheduleRepository.findOwnedWithContext(
-			scheduleId,
-			ctx.userId,
-		);
+		const schedule = await supplementScheduleRepository.findOwned(scheduleId, ctx.userId);
 
 		const supplement = await supplementRepository.findByIdAndUserId(
 			schedule.supplementId,
@@ -38,7 +35,7 @@ export const markTaken = authActionClient
 			throw new ActionError(ActionErrorCode.OUT_OF_STOCK);
 		}
 
-		await enforceCooldown(schedule.protocolSupplementId, date);
+		await enforceCooldown(schedule.protocolId, schedule.supplementId, date);
 
 		const now = new Date();
 		const log = await dailyLogRepository.create({
@@ -55,18 +52,28 @@ export const markTaken = authActionClient
 		return { logId: log.id };
 	});
 
-async function enforceCooldown(protocolSupplementId: string, date: string) {
-	const [ps] = await db
-		.select({ dosageIntervalMinutes: protocolSupplements.dosageIntervalMinutes })
-		.from(protocolSupplements)
-		.where(eq(protocolSupplements.id, protocolSupplementId));
+async function enforceCooldown(protocolId: string, supplementId: string, date: string) {
+	const [first] = await db
+		.select({ dosageIntervalMinutes: supplementSchedules.dosageIntervalMinutes })
+		.from(supplementSchedules)
+		.where(
+			and(
+				eq(supplementSchedules.protocolId, protocolId),
+				eq(supplementSchedules.supplementId, supplementId),
+			),
+		);
 
-	if (!ps?.dosageIntervalMinutes) return;
+	if (!first?.dosageIntervalMinutes) return;
 
 	const siblingScheduleIds = await db
 		.select({ id: supplementSchedules.id })
 		.from(supplementSchedules)
-		.where(eq(supplementSchedules.protocolSupplementId, protocolSupplementId));
+		.where(
+			and(
+				eq(supplementSchedules.protocolId, protocolId),
+				eq(supplementSchedules.supplementId, supplementId),
+			),
+		);
 
 	const ids = siblingScheduleIds.map((s) => s.id);
 	if (ids.length === 0) return;
@@ -88,7 +95,7 @@ async function enforceCooldown(protocolSupplementId: string, date: string) {
 
 	if (mostRecent.cooldownSkippedAt) return;
 
-	const intervalMs = ps.dosageIntervalMinutes * 60 * 1000;
+	const intervalMs = first.dosageIntervalMinutes * 60 * 1000;
 	const adjustmentMs = (mostRecent.timerAdjustmentMinutes ?? 0) * 60 * 1000;
 	const expiresAt = mostRecent.takenAt.getTime() + intervalMs + adjustmentMs;
 

@@ -6,11 +6,22 @@ export const PROTOCOL_BORDER_COLORS = [
 	"#A67C5B",
 ] as const;
 
+function hashToIndex(id: string): number {
+	let hash = 0;
+	for (let i = 0; i < id.length; i++) {
+		hash = (hash * 31 + id.charCodeAt(i)) | 0;
+	}
+	return (
+		((hash % PROTOCOL_BORDER_COLORS.length) + PROTOCOL_BORDER_COLORS.length) %
+		PROTOCOL_BORDER_COLORS.length
+	);
+}
+
 export function assignProtocolColors(protocolIds: string[]): Record<string, number> {
-	const sorted = [...new Set(protocolIds)].sort();
+	const unique = [...new Set(protocolIds)];
 	const map: Record<string, number> = {};
-	for (let i = 0; i < sorted.length; i++) {
-		map[sorted[i]] = i % PROTOCOL_BORDER_COLORS.length;
+	for (const id of unique) {
+		map[id] = hashToIndex(id);
 	}
 	return map;
 }

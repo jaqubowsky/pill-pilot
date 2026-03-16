@@ -39,7 +39,8 @@ export function forecastDaysInStock(
 	schedules: ScheduleConsumption[],
 	today: string,
 ): number {
-	if (currentStock <= 0 || schedules.length === 0) return 0;
+	if (currentStock <= 0) return 0;
+	if (schedules.length === 0) return Number.POSITIVE_INFINITY;
 
 	const todayMs = new Date(today).getTime();
 	let stock = currentStock;
@@ -72,4 +73,35 @@ export function forecastDaysInStock(
 	if (lastConsumptionDay === -1) return Number.POSITIVE_INFINITY;
 
 	return MAX_FORECAST_DAYS;
+}
+
+export function calculateConsumedUnits(
+	schedules: ScheduleConsumption[],
+	daysAgo: number,
+	today: string,
+): number {
+	if (schedules.length === 0 || daysAgo <= 0) return 0;
+
+	const todayMs = new Date(today).getTime();
+	const startMs = todayMs - daysAgo * MS_PER_DAY;
+	let consumed = 0;
+
+	for (let day = 0; day < daysAgo; day++) {
+		const targetMs = startMs + day * MS_PER_DAY;
+
+		for (const schedule of schedules) {
+			if (schedule.protocolStartDate === null) {
+				consumed += schedule.dosageAmount;
+				continue;
+			}
+
+			const protocolStartMs = new Date(schedule.protocolStartDate).getTime();
+
+			if (isConsumedOnDay(schedule, protocolStartMs, targetMs)) {
+				consumed += schedule.dosageAmount;
+			}
+		}
+	}
+
+	return consumed;
 }

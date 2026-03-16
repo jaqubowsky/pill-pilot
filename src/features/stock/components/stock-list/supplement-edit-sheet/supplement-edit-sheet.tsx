@@ -54,7 +54,7 @@ export function SupplementEditSheet({ supplement, open, onOpenChange }: Suppleme
 					defaultValues={defaultValues}
 					onSubmit={handleSubmit}
 					formId={FORM_ID}
-					readOnlyUnit={!isNew}
+					supplementId={supplement?.id}
 				/>
 
 				<div className="flex flex-col gap-sm mt-lg">

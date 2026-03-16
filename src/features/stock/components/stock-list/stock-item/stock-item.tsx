@@ -94,6 +94,7 @@ export function StockItem({ item }: StockItemProps) {
 				supplementId={item.id}
 				supplementName={item.name}
 				currentStock={item.currentStock}
+				stockUnit={item.stockUnit}
 				open={adjustOpen}
 				onOpenChange={setAdjustOpen}
 			/>

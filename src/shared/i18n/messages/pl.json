@@ -129,7 +129,16 @@
 			"title": "Kup wkrótce",
 			"critical": "Pilne",
 			"low": "Niski stan"
-		}
+		},
+		"calculatorTitle": "Oblicz na podstawie zużycia",
+		"calculatorDescription": "Oblicz ile zostało na podstawie wielkości opakowania i czasu brania.",
+		"calculatorPackageSize": "Ile było w opakowaniu?",
+		"calculatorStartDate": "Kiedy zacząłeś brać?",
+		"calculatorCalculate": "Oblicz",
+		"calculatorCalculating": "Obliczam...",
+		"calculatorConsumed": "Zużyto (szacunkowo)",
+		"calculatorRemaining": "Pozostało",
+		"calculatorApply": "Zastosuj"
 	},
 	"settings": {
 		"title": "Ustawienia",

@@ -89,7 +89,7 @@ export function ScheduleEditSheet({
 			<div className={cn(hideForm && "hidden")}>
 				<FormProvider {...methods}>
 					<form id={FORM_ID} onSubmit={handleSubmit}>
-						<PreviewSupplementSheetFields timeBlocks={timeBlocks} />
+						<PreviewSupplementSheetFields timeBlocks={timeBlocks} readOnlyDosageUnit />
 					</form>
 				</FormProvider>
 			</div>

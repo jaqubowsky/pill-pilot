@@ -24,9 +24,13 @@ import type { PreviewSupplementSheetValues } from "./preview-supplement-sheet.sc
 
 type PreviewSupplementSheetFieldsProps = {
 	timeBlocks: TimeBlockSummary[];
+	readOnlyDosageUnit?: boolean;
 };
 
-export function PreviewSupplementSheetFields({ timeBlocks }: PreviewSupplementSheetFieldsProps) {
+export function PreviewSupplementSheetFields({
+	timeBlocks,
+	readOnlyDosageUnit,
+}: PreviewSupplementSheetFieldsProps) {
 	const t = useTranslations();
 
 	const {
@@ -94,23 +98,29 @@ export function PreviewSupplementSheetFields({ timeBlocks }: PreviewSupplementSh
 						{...register("dosageAmount", { valueAsNumber: true })}
 						className="w-20 shrink-0 bg-surface-sunken border-edge rounded-lg px-md py-sm text-base"
 					/>
-					<Select
-						value={dosageUnit}
-						onValueChange={(v) =>
-							setValue("dosageUnit", v as PreviewSupplementSheetValues["dosageUnit"])
-						}
-					>
-						<SelectTrigger className="flex-1 min-w-0 bg-surface-sunken border-edge rounded-lg">
-							<SelectValue>{dosageUnit ? t(`schedule.units.${dosageUnit}`) : ""}</SelectValue>
-						</SelectTrigger>
-						<SelectContent>
-							{DOSAGE_UNITS.map((u) => (
-								<SelectItem key={u} value={u}>
-									{t(`schedule.units.${u}`)}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
+					{readOnlyDosageUnit ? (
+						<span className="text-sm text-content-muted self-center">
+							{dosageUnit ? t(`schedule.units.${dosageUnit}`) : ""}
+						</span>
+					) : (
+						<Select
+							value={dosageUnit}
+							onValueChange={(v) =>
+								setValue("dosageUnit", v as PreviewSupplementSheetValues["dosageUnit"])
+							}
+						>
+							<SelectTrigger className="flex-1 min-w-0 bg-surface-sunken border-edge rounded-lg">
+								<SelectValue>{dosageUnit ? t(`schedule.units.${dosageUnit}`) : ""}</SelectValue>
+							</SelectTrigger>
+							<SelectContent>
+								{DOSAGE_UNITS.map((u) => (
+									<SelectItem key={u} value={u}>
+										{t(`schedule.units.${u}`)}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					)}
 				</div>
 			</div>
 

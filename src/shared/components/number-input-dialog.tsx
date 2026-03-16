@@ -12,6 +12,7 @@ type NumberInputDialogProps = {
 	hint: string;
 	inputMin?: number;
 	placeholder?: string;
+	unitLabel?: string;
 	cancelLabel: string;
 	submitLabel: string;
 	isPending: boolean;
@@ -35,6 +36,7 @@ export function NumberInputDialog({
 	onValueChange,
 	onSubmit,
 	inputRef,
+	unitLabel,
 }: NumberInputDialogProps) {
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
@@ -48,16 +50,21 @@ export function NumberInputDialog({
 				<form onSubmit={onSubmit} className="flex flex-col gap-md">
 					<div className="flex flex-col gap-xs">
 						<p className="text-sm text-content-muted">{hint}</p>
-						<Input
-							ref={inputRef}
-							type="number"
-							min={inputMin}
-							step={1}
-							value={value}
-							onChange={(e) => onValueChange(e.target.value)}
-							className="bg-surface-sunken border-edge rounded-lg px-md py-sm text-base placeholder:text-content-faint focus-visible:border-brand-400 focus-visible:ring-focus-ring"
-							placeholder={placeholder}
-						/>
+						<div className="flex items-center gap-sm">
+							<Input
+								ref={inputRef}
+								type="number"
+								min={inputMin}
+								step={1}
+								value={value}
+								onChange={(e) => onValueChange(e.target.value)}
+								className="flex-1 bg-surface-sunken border-edge rounded-lg px-md py-sm text-base placeholder:text-content-faint focus-visible:border-brand-400 focus-visible:ring-focus-ring"
+								placeholder={placeholder}
+							/>
+							{unitLabel && (
+								<span className="text-sm text-content-muted shrink-0">{unitLabel}</span>
+							)}
+						</div>
 					</div>
 					<div className="flex gap-sm justify-end">
 						<Button

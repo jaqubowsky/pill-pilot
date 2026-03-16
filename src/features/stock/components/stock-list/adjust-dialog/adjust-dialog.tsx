@@ -8,6 +8,7 @@ type AdjustDialogProps = {
 	supplementId: string;
 	supplementName: string;
 	currentStock: string | null;
+	stockUnit: string;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 };
@@ -16,6 +17,7 @@ export function AdjustDialog({
 	supplementId,
 	supplementName,
 	currentStock,
+	stockUnit,
 	open,
 	onOpenChange,
 }: AdjustDialogProps) {
@@ -36,6 +38,7 @@ export function AdjustDialog({
 			hint={t("stock.howManyLeft")}
 			inputMin={0}
 			placeholder="0"
+			unitLabel={t(`schedule.units.${stockUnit}`)}
 			cancelLabel={t("common.cancel")}
 			submitLabel={t("common.save")}
 			isPending={isPending}

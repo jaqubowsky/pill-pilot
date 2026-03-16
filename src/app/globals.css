@@ -226,9 +226,7 @@
 ::view-transition-old(sheet-overlay),
 ::view-transition-new(sheet-overlay),
 ::view-transition-old(sheet-content),
-::view-transition-new(sheet-content) {
-  animation: none;
-}
+::view-transition-new(sheet-content),
 
 html:has([data-slot="sheet-overlay"]) {
   &::view-transition-old(main-content),

@@ -37,6 +37,7 @@ export function RestockDialog({
 			hint={t("stock.howManyBoughtUnit", { unit: unitLabel })}
 			inputMin={1}
 			placeholder="90"
+			unitLabel={unitLabel}
 			cancelLabel={t("common.cancel")}
 			submitLabel={t("common.add")}
 			isPending={isPending}

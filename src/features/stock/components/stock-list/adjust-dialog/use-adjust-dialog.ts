@@ -12,13 +12,19 @@ type UseAdjustDialogParams = {
 	onOpenChange: (open: boolean) => void;
 };
 
+function formatStock(value: string | null): string {
+	if (value === null) return "";
+	const num = parseFloat(value);
+	return Number.isNaN(num) ? "" : String(num);
+}
+
 export function useAdjustDialog({
 	supplementId,
 	currentStock,
 	open,
 	onOpenChange,
 }: UseAdjustDialogParams) {
-	const [value, setValue] = useState(currentStock ?? "");
+	const [value, setValue] = useState(() => formatStock(currentStock));
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	const { execute, isPending } = useAction(updateStock, {
@@ -30,7 +36,7 @@ export function useAdjustDialog({
 
 	useEffect(() => {
 		if (open) {
-			setValue(currentStock ?? "");
+			setValue(formatStock(currentStock));
 			setTimeout(() => inputRef.current?.focus(), 100);
 		}
 	}, [open, currentStock]);

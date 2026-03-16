@@ -25,9 +25,7 @@ export function SupplementBadges({ supplement, schedule, finishPackage }: Supple
 
 	return (
 		<>
-			{finishPackage && (
-				<IconBadge icon={PackageCheck} label={t("finishPackageBadge")} />
-			)}
+			{finishPackage && <IconBadge icon={PackageCheck} label={t("finishPackageBadge")} />}
 			{cycleDaysOn && cycleDaysOff ? (
 				<IconBadge
 					icon={Repeat}

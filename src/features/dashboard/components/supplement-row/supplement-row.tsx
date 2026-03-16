@@ -164,9 +164,7 @@ export function SupplementRow({
 							{isCritical && (
 								<IconBadge icon={ShieldAlert} variant="danger" label={t("critical")} />
 							)}
-							{finishPackage && (
-								<IconBadge icon={PackageCheck} label={t("finishPackage")} />
-							)}
+							{finishPackage && <IconBadge icon={PackageCheck} label={t("finishPackage")} />}
 							{cycling && !cycling.isOnPhase && (
 								<IconBadge
 									icon={Repeat}

@@ -138,9 +138,7 @@ export function PriceList({ items, shopOptions, filterIds, recentScans }: PriceL
 								className={`flex items-center justify-between gap-sm px-md py-xs min-h-11 ${idx < groupRows.length - 1 ? "border-b border-edge-subtle" : ""}`}
 							>
 								<div className="flex flex-col min-w-0 flex-1">
-									<span className="text-sm font-medium text-content truncate">
-										{row.name}
-									</span>
+									<span className="text-sm font-medium text-content truncate">{row.name}</span>
 									{(row.brandName || row.packageSize) && (
 										<span className="text-xs text-content-faint truncate">
 											{[

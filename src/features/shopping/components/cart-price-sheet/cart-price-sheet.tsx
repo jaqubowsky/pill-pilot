@@ -4,6 +4,7 @@ import {
 	AlertTriangle,
 	CheckCircle,
 	ChevronDown,
+	Clock,
 	Loader2,
 	Pencil,
 	Plus,
@@ -338,6 +339,7 @@ export function CartPriceSheet({
 		unverifiedCount,
 		canSave,
 		closeSheet,
+		loadScan,
 		handleFileUpload,
 		handleMatchChange,
 		handleVerify,
@@ -383,6 +385,40 @@ export function CartPriceSheet({
 					<ShoppingCart className="size-4" />
 					{t("scanCart")}
 				</Button>
+			)}
+
+			{recentScans && recentScans.length > 0 && (
+				<div className="flex flex-col gap-sm">
+					<div className="flex items-center gap-xs">
+						<Clock size={14} className="text-content-faint stroke-[1.5]" />
+						<span className="text-xs font-semibold uppercase tracking-wide text-content-faint">
+							{t("recentScans")}
+						</span>
+					</div>
+					<div className="flex gap-sm overflow-x-auto pb-xs -mx-md px-md scrollbar-none">
+						{recentScans.map((scan) => (
+							<button
+								key={scan.id}
+								type="button"
+								onClick={() => loadScan({ shopName: scan.shopName, items: scan.items })}
+								className="flex flex-col gap-xs rounded-xl border border-edge-subtle bg-surface-raised p-sm min-w-[140px] max-w-[160px] shrink-0 text-left active:scale-[0.98] transition-transform shadow-sm"
+							>
+								<span className="text-sm font-medium text-content truncate w-full">
+									{scan.shopName ?? t("selectShop")}
+								</span>
+								<span className="text-xs text-content-faint">
+									{t("items", { count: scan.items.length })}
+								</span>
+								<span className="text-xs text-content-faint">
+									{scan.createdAt.toLocaleDateString("pl-PL", {
+										day: "numeric",
+										month: "short",
+									})}
+								</span>
+							</button>
+						))}
+					</div>
+				</div>
 			)}
 
 			<Sheet

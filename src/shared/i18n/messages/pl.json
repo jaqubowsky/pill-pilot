@@ -443,7 +443,9 @@
 			"savePrices": "Zapisz ceny",
 			"saving": "Zapisywanie...",
 			"cancel": "Anuluj",
-			"scanCart": "Skanuj koszyk"
+			"scanCart": "Skanuj koszyk",
+			"recentScans": "Ostatnie skany",
+			"items": "{count, plural, one {# pozycja} few {# pozycje} other {# pozycji}}"
 		},
 		"priceSheet": {
 			"title": "Ustaw ceny suplementów",

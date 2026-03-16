@@ -33,7 +33,7 @@ export function ShoppingList({ groups }: ShoppingListProps) {
 
 	return (
 		<div className="flex flex-col gap-lg">
-			{orders.map((order) => {
+			{orders.filter((o) => o.mustBuy.length > 0 || o.suggestAdd.length > 0).map((order) => {
 				const shopName = order.shop?.name ?? t("noShop");
 
 				return (

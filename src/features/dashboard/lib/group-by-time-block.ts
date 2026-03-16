@@ -10,7 +10,8 @@ type BlockInfo = {
 
 function isActionable(entry: ScheduleEntry): boolean {
 	if (entry.isExpired) return false;
-	if (entry.dependency && !entry.dependency.isUnlocked) return false;
+	if (entry.notStartedDays !== null && entry.notStartedDays > 0) return false;
+	if (entry.phase && !entry.phase.isUnlocked) return false;
 	if (entry.cycling && !entry.cycling.isOnPhase) return false;
 	if (entry.cooldown && entry.cooldown.remainingMs > 0) return false;
 	return true;

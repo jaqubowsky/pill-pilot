@@ -40,7 +40,7 @@ export type ScheduleEntry = {
 	logId: string | null;
 	takenAt: Date | null;
 	cycling: { isOnPhase: boolean; daysRemaining: number } | null;
-	dependency: { isUnlocked: boolean; daysRemaining: number } | null;
+	phase: { isUnlocked: boolean; daysRemaining: number } | null;
 	isExpired: boolean;
 	notStartedDays: number | null;
 	protocolId: string;
@@ -200,7 +200,7 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 	const actionable = grouped.filter((row) => {
 		const e = row.entry;
 		if (e.isExpired) return false;
-		if (e.dependency && !e.dependency.isUnlocked) return false;
+		if (e.phase && !e.phase.isUnlocked) return false;
 		if (e.cycling && !e.cycling.isOnPhase) return false;
 		return true;
 	});

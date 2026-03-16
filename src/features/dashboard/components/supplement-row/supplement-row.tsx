@@ -57,7 +57,7 @@ export function SupplementRow({
 		notes,
 		isCritical,
 		cycling,
-		dependency,
+		phase,
 		isExpired,
 		notStartedDays,
 		stockStatus,
@@ -81,7 +81,7 @@ export function SupplementRow({
 	const [editOpen, setEditOpen] = useState(false);
 
 	const isNotStarted = notStartedDays !== null && notStartedDays > 0;
-	const isLocked = dependency !== null && !dependency.isUnlocked;
+	const isLocked = phase !== null && !phase.isUnlocked;
 	const isOutOfStock = stockStatus !== null && stockStatus.currentStock === 0;
 	const isLowStock =
 		stockStatus !== null && stockStatus.currentStock > 0 && stockStatus.daysRemaining < 7;
@@ -130,7 +130,7 @@ export function SupplementRow({
 									label={
 										isNotStarted
 											? t("notStarted", { count: notStartedDays })
-											: t("dependencyLocked", { count: dependency!.daysRemaining })
+											: t("phaseLocked", { count: phase!.daysRemaining })
 									}
 								/>
 							)}

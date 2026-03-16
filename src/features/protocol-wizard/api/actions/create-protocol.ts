@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { returnValidationErrors } from "next-safe-action";
 import { z } from "zod";
+import { resolveScheduleFields } from "@/features/protocol-wizard/lib/resolve-schedule-fields";
 import {
 	CONFIDENCE_THRESHOLD,
 	parsedProtocolSchema,
@@ -67,9 +68,7 @@ export const createProtocol = authActionClient
 					throw new ActionError(ActionErrorCode.TIME_BLOCK_NOT_FOUND);
 				}
 
-				const cycleDaysOn = schedule.cycleDaysOn ?? item.cycleDaysOn ?? null;
-				const cycleDaysOff = schedule.cycleDaysOff ?? item.cycleDaysOff ?? null;
-				const hasCycling = cycleDaysOn !== null && cycleDaysOff !== null;
+				const resolved = resolveScheduleFields(schedule, item);
 
 				await supplementScheduleRepository.create({
 					protocolId,
@@ -77,15 +76,8 @@ export const createProtocol = authActionClient
 					timeBlockId: schedule.timeBlockId,
 					dosageAmount: String(schedule.dosageAmount),
 					dosageUnit: schedule.dosageUnit,
-					notes: schedule.notes ?? item.notes ?? null,
-					isCritical: schedule.isCritical ?? item.isCritical,
 					sortOrder: sortOrder++,
-					startDayOffset: schedule.startDayOffset ?? item.startDayOffset ?? 0,
-					durationDays: schedule.durationDays ?? item.durationDays ?? null,
-					dosageIntervalMinutes: item.dosageIntervalMinutes ?? null,
-					waitAfterTakingMinutes:
-						schedule.waitAfterTakingMinutes ?? item.waitAfterTakingMinutes ?? null,
-					...(hasCycling ? { cycleDaysOn, cycleDaysOff } : {}),
+					...resolved,
 				});
 			}
 		}

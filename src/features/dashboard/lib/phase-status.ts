@@ -1,16 +1,16 @@
-type DependencyStatus =
-	| { isDependent: false; isExpired: false }
-	| { isDependent: true; isUnlocked: boolean; daysRemaining: number; isExpired: false }
-	| { isDependent: false; isExpired: true };
+type PhaseStatus =
+	| { isPhased: false; isExpired: false }
+	| { isPhased: true; isUnlocked: boolean; daysRemaining: number; isExpired: false }
+	| { isPhased: false; isExpired: true };
 
-export function getDependencyStatus(
+export function getPhaseStatus(
 	startDayOffset: number,
 	durationDays: number | null,
 	protocolStartDate: string | null,
 	currentDate: string,
-): DependencyStatus {
+): PhaseStatus {
 	if (protocolStartDate === null) {
-		return { isDependent: false, isExpired: false };
+		return { isPhased: false, isExpired: false };
 	}
 
 	const start = new Date(protocolStartDate);
@@ -21,18 +21,18 @@ export function getDependencyStatus(
 	if (durationDays !== null) {
 		const endDay = startDayOffset + durationDays;
 		if (daysElapsed >= endDay) {
-			return { isDependent: false, isExpired: true };
+			return { isPhased: false, isExpired: true };
 		}
 	}
 
 	if (startDayOffset === 0) {
-		return { isDependent: false, isExpired: false };
+		return { isPhased: false, isExpired: false };
 	}
 
 	const remaining = Math.max(0, startDayOffset - daysElapsed);
 
 	return {
-		isDependent: true,
+		isPhased: true,
 		isUnlocked: daysElapsed >= startDayOffset,
 		daysRemaining: remaining,
 		isExpired: false,

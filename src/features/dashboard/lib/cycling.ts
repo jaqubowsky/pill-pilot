@@ -13,6 +13,10 @@ export function getCycleStatus(
 		return { isCycling: false };
 	}
 
+	if (cycleDaysOn + cycleDaysOff === 0) {
+		return { isCycling: false };
+	}
+
 	const start = new Date(protocolStartDate);
 	const current = new Date(currentDate);
 	const diffMs = current.getTime() - start.getTime();

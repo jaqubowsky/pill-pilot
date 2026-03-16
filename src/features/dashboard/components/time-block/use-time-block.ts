@@ -14,7 +14,7 @@ export function useTimeBlock({ block, defaultOpen }: Params) {
 	const checkableEntries = block.entries.filter((e) => {
 		if (e.isExpired) return false;
 		if (e.notStartedDays !== null && e.notStartedDays > 0) return false;
-		if (e.dependency !== null && !e.dependency.isUnlocked) return false;
+		if (e.phase !== null && !e.phase.isUnlocked) return false;
 		if (e.cycling !== null && !e.cycling.isOnPhase) return false;
 		if (e.stockStatus !== null && e.stockStatus.currentStock === 0) return false;
 		if (e.cooldown !== null && e.cooldown.remainingMs > 0) return false;

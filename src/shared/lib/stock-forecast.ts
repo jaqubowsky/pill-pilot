@@ -25,8 +25,9 @@ function isConsumedOnDay(
 	}
 
 	if (schedule.cycleDaysOn !== null && schedule.cycleDaysOff !== null) {
-		const daysSinceScheduleStart = Math.floor((targetMs - scheduleStartMs) / MS_PER_DAY);
 		const cyclePeriod = schedule.cycleDaysOn + schedule.cycleDaysOff;
+		if (cyclePeriod === 0) return false;
+		const daysSinceScheduleStart = Math.floor((targetMs - scheduleStartMs) / MS_PER_DAY);
 		const dayInCycle = daysSinceScheduleStart % cyclePeriod;
 		if (dayInCycle >= schedule.cycleDaysOn) return false;
 	}

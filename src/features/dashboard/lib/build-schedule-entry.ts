@@ -1,7 +1,7 @@
 import type { DosageUnit, supplementSchedules } from "@/shared/db/schema";
 import type { ScheduleEntry, StockStatus } from "../api/queries/get-daily-status";
 import { getCycleStatus } from "./cycling";
-import { getDependencyStatus } from "./dependency";
+import { getPhaseStatus } from "./phase-status";
 
 type ScheduleRow = Pick<
 	typeof supplementSchedules.$inferSelect,
@@ -60,7 +60,7 @@ export function buildScheduleEntry(
 		row.startDayOffset,
 	);
 
-	const depStatus = getDependencyStatus(
+	const depStatus = getPhaseStatus(
 		row.startDayOffset,
 		row.durationDays,
 		row.protocolStartDate,
@@ -109,7 +109,7 @@ export function buildScheduleEntry(
 			cycling: cycleStatus.isCycling
 				? { isOnPhase: cycleStatus.isOnPhase, daysRemaining: cycleStatus.daysRemaining }
 				: null,
-			dependency: depStatus.isDependent
+			phase: depStatus.isPhased
 				? {
 						isUnlocked: depStatus.isUnlocked,
 						daysRemaining: depStatus.daysRemaining,

@@ -3,6 +3,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { isCooldownActive } from "@/features/dashboard/lib/cooldown";
 import { db } from "@/shared/db/client";
 import { dailyLogs, supplementSchedules } from "@/shared/db/schema";
 import { ActionError, ActionErrorCode, authActionClient } from "@/shared/lib/safe-action";
@@ -89,17 +90,7 @@ async function enforceCooldown(protocolId: string, supplementId: string, date: s
 
 	if (siblingLogs.length === 0) return;
 
-	const mostRecent = siblingLogs.reduce((latest, log) =>
-		log.takenAt > latest.takenAt ? log : latest,
-	);
-
-	if (mostRecent.cooldownSkippedAt) return;
-
-	const intervalMs = first.dosageIntervalMinutes * 60 * 1000;
-	const adjustmentMs = (mostRecent.timerAdjustmentMinutes ?? 0) * 60 * 1000;
-	const expiresAt = mostRecent.takenAt.getTime() + intervalMs + adjustmentMs;
-
-	if (expiresAt > Date.now()) {
+	if (isCooldownActive(siblingLogs, first.dosageIntervalMinutes, Date.now())) {
 		throw new ActionError(ActionErrorCode.COOLDOWN_ACTIVE);
 	}
 }

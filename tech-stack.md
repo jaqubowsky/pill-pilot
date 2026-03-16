@@ -16,8 +16,9 @@ Related documents:
 - **Forms:** react-hook-form + zod
 - **Server Actions:** next-safe-action
 - **i18n:** next-intl with useTranslations() - single locale (pl)
-- **AI:** Vercel AI SDK (ai) with Anthropic provider
-- **PWA:** Service Worker + static asset cache (offline queue → WEEK 1, push → WEEK 1)
+- **AI:** Vercel AI SDK (ai) with Anthropic provider — two-step parsing (extraction via Haiku, enrichment via Sonnet)
+- **File parsing:** exceljs (Excel), mammoth (DOCX), sharp (image compression)
+- **PWA:** Service Worker + static asset cache + web-push notifications
 - **Deployment:** Hetzner VPS + Dokploy (Docker)
 
 ## Conventions
@@ -29,7 +30,7 @@ Related documents:
 ### Co-location: THREE levels
 
 **Level 1 - Component-local:** Used by ONE component? Next to it.
-**Level 2 - Feature-shared:** Used by 2+ components in feature? Feature api/, schemas/, hooks/.
+**Level 2 - Feature-shared:** Used by 2+ components in feature? Feature api/, schemas/, hooks/, lib/.
 **Level 3 - App-shared:** Used by 2+ features? shared/.
 
 Start Level 1. Promote only when second consumer appears.
@@ -49,39 +50,38 @@ Start Level 1. Promote only when second consumer appears.
               date-navigator.tsx
               use-date-navigator.ts
               index.ts
+        lib/                      # Feature-shared utilities
 
-### Data model: Supplement (inventory) + Schedule (protocol)
+### Data model: Supplement (inventory) + SupplementSchedule (protocol link)
 
 Full schema with field types → `technical-requirements.md` > Data Model.
 
     Supplement = user's inventory item (a box in the cabinet)
       - Lives on User, NOT on Protocol
       - One per product (NAC = one Supplement regardless of protocols)
-      - Owns stock (currentStock)
+      - Owns stock (currentStock), stockUnit
       - Optional: packageSize, packagePrice (for cost calculation)
+      - stockWarningThreshold for low-stock alerts
 
-    ProtocolSupplement = link between Protocol and Supplement
-      - Holds notes, cycling config (cycleStartDate, cycleDaysOn, cycleDaysOff), sortOrder, active
-      - unique: (protocolId, supplementId)
-
-    SupplementSchedule = when and how much (per protocol supplement)
-      - Links ProtocolSupplement <-> TimeBlock
-      - "NAC 2 caps morning" + "NAC 2 caps evening" = two schedules, one protocolSupplement, one supplement
+    SupplementSchedule = the core join table: links Protocol ↔ Supplement ↔ TimeBlock
+      - "NAC 2 caps morning" + "NAC 2 caps evening" = two schedules, one supplement
+      - Holds ALL per-schedule fields: dosageAmount, dosageUnit, notes, isCritical,
+        cycleDaysOn/Off, startDayOffset, durationDays, dosageIntervalMinutes,
+        waitAfterTakingMinutes, sortOrder, active
 
     DailyLog = check mark (per schedule per day)
+      - timerNotifiedAt, timerAdjustmentMinutes, cooldownSkippedAt for timer tracking
 
     Stock decrementation: supplement.currentStock -= schedule.dosageAmount (currentStock is decimal)
     Daily usage: SUM(schedule.dosageAmount) all active schedules per supplement
 
+    There is NO ProtocolSupplement table — SupplementSchedule is the direct link.
+
 ### AI linking to inventory
 
-When parsing new protocol, AI receives full user context: existing Supplements (id + name + brand) and TimeBlocks (id + name + startTime). AI links schedule entries to existing inventory and time blocks by ID. Creates new Supplements for unknown items. Confidence 0-1. Output schema → `technical-requirements.md` > AI Parsing.
+When parsing new protocol, AI receives full user context: existing Supplements (id + name) and TimeBlocks (id + name). AI links schedule entries to existing inventory and time blocks by ID. Creates new Supplements for unknown items. Confidence 0-1. Output schema → `technical-requirements.md` > AI Parsing.
 
-### Onboarding state machine
-
-    upload -> preview -> complete
-
-Persisted in user.onboardingStep. Parsed data in protocol.parsedData (status: draft).
+Two-step process: raw extraction (Haiku) → structured enrichment (Sonnet). Supports PDF, Excel, DOCX, images (with sharp compression), and plain text. Uses `after()` for background processing — protocol status goes through processing → draft/failed.
 
 ### Tracking: no auto-skip
 
@@ -102,7 +102,7 @@ Interface + implementation in one file. No global types.
     capsule, tablet, ml, drops, g, mg, scoop, sachet, spray, portion
 
 ### AI parsing
-Vercel AI SDK generateObject() with zod schema. Available in onboarding + adding new protocol. Confidence float 0-1, threshold in code.
+Vercel AI SDK generateText() + Output.object() with zod schema. Available when adding a new protocol from Settings. Confidence float 0-1, threshold in code. Two-step: extraction → enrichment.
 
 ### Component folder convention
 
@@ -122,21 +122,31 @@ Example — `stock-list/` has sub-components with hooks, each gets a subfolder:
         restock-dialog.tsx
         use-restock-dialog.ts
         index.ts
+      stock-calculator/
+        stock-calculator.tsx
+        use-stock-calculator.ts
+        index.ts
       stock-item/
         stock-item.tsx
+        stock-quantity.tsx
         use-stock-item.ts
         index.ts
+      supplement-edit-sheet/
+        supplement-edit-sheet.tsx
+        use-supplement-edit-sheet.ts
+        index.ts
       stock-list.tsx            ← root component, no hook → stays flat
+      use-stock-list.ts
+      stock-progress-bar.tsx
       index.ts                  ← exports only StockListView
 
 ### Feature public API
 
-Each feature has a root `index.ts` that exports only its page-level component. App routes import from the barrel (`@/features/dashboard`), not deep paths. Data fetching lives inside the feature's RSC wrapper — app routes only do auth + render.
+Each feature has a root `index.ts` that exports only its page-level component(s). App routes import from the barrel (`@/features/dashboard`), not deep paths. Data fetching lives inside the feature's RSC wrapper — app routes only do auth + render.
 
 Exceptions (the 1%):
-- **Cross-feature reuse:** `onboarding` exports `UploadStep` + `ParsedPreview` (used by both `onboarding/` and `protocol/new/`)
-- **Cross-feature actions:** `supplements` exports CRUD actions + form types (consumed by `stock`)
-- **API route schemas:** `onboarding` exports `parsedProtocolSchema` (consumed by `app/api/protocol/parse/`)
+- **Cross-feature schemas:** `protocol-wizard` exports `parsedProtocolSchema`, `rawExtractionSchema`, `CONFIDENCE_THRESHOLD` (consumed by `app/api/protocol/parse/`)
+- **Cross-feature reuse:** `supplements` exports `SupplementForm`, CRUD actions (`addSupplement`, `deleteSupplement`, `updateSupplement`), and `SupplementFormValues` type (consumed by `stock`)
 
 ## Folder Structure
 
@@ -146,42 +156,52 @@ Exceptions (the 1%):
           login/
             page.tsx
         (app)/
-          onboarding/
-            page.tsx                         # step=upload → upload UI, step=preview → redirect
-            preview/
-              page.tsx
-            stock-setup/                     # [WEEK 1]
-              page.tsx
-            notifications/                   # [WEEK 1]
-              page.tsx
           (main)/                            # Bottom nav layout
             dashboard/
               page.tsx
+              weekly/
+                page.tsx
+              monthly/
+                page.tsx
             stock/
               page.tsx
             settings/
               page.tsx
             protocol/
               new/
-                page.tsx                     # reuse onboarding components, for existing users
+                page.tsx                     # Upload UI
                 preview/
-                  page.tsx
+                  page.tsx                   # Preview without protocol ID
+                  [id]/
+                    page.tsx                 # Preview with protocol ID
+                manual/
+                  page.tsx                   # Manual protocol form
+              edit/
+                [id]/
+                  page.tsx                   # Edit existing protocol
             layout.tsx                       # Bottom nav: Today | Stock | Settings
           layout.tsx                         # Auth guard
         api/
           auth/
             [...all]/
               route.ts
-          push/                              # [WEEK 1]
+          push/
             subscribe/
               route.ts
             send/
               route.ts
+            timers/
+              route.ts
           protocol/
             parse/
               route.ts
+        error.tsx
+        not-found.tsx
+        page.tsx                             # Root redirect
         layout.tsx
         manifest.ts
+        robots.ts
+        sitemap.ts
 
       features/
         auth/
@@ -189,6 +209,7 @@ Exceptions (the 1%):
             login-page/
               login-page.tsx
               use-login.ts
+              google-icon.tsx
               index.ts
           index.ts
 
@@ -198,14 +219,27 @@ Exceptions (the 1%):
               mark-taken.ts
               mark-untaken.ts
               mark-block-taken.ts
-              get-daily-status-action.ts
+              update-schedule.ts
+              adjust-timer.ts
+              skip-cooldown.ts
+              skip-wait-timer.ts
             queries/
               get-daily-status.ts
+              get-weekly-status.ts
+              get-monthly-status.ts
           components/
             daily-view/
               daily-view.tsx
               use-daily-view.ts
               dashboard-empty-state.tsx
+              active-timers-banner/
+                active-timers-banner.tsx
+                use-active-timers-banner.ts
+                timer-row/
+                  timer-row.tsx
+                  use-timer-row.ts
+                  index.ts
+                index.ts
               date-navigator/
                 date-navigator.tsx
                 use-date-navigator.ts
@@ -215,6 +249,16 @@ Exceptions (the 1%):
                 use-progress-ring.ts
                 progress-ring-icon.tsx
                 index.ts
+              index.ts
+            weekly-view/
+              weekly-view.tsx
+              use-weekly-view.ts
+              week-day-cell.tsx
+              index.ts
+            monthly-view/
+              monthly-view.tsx
+              use-monthly-view.ts
+              calendar-day.tsx
               index.ts
             time-block/
               time-block.tsx
@@ -228,23 +272,37 @@ Exceptions (the 1%):
               use-check-supplement.ts
               supplement-checkbox.tsx
               check-icon.tsx
-              stock-warning-badge.tsx         # [WEEK 1]
+              schedule-edit-sheet/
+                schedule-edit-sheet.tsx
+                use-schedule-edit-sheet.ts
+                index.ts
               index.ts
             check-all-button/
               check-all-button.tsx
               use-check-all.ts
               index.ts
+            view-switcher.tsx
           lib/
+            build-schedule-entry.ts
             cycling.ts
+            dependency.ts
+            format-remaining-time.ts
+            group-by-time-block.ts
+            protocol-colors.ts
+          dashboard-page.tsx
+          weekly-dashboard-page.tsx
+          monthly-dashboard-page.tsx
           index.ts
 
-        onboarding/
+        protocol-wizard/
           api/
             actions/
               create-protocol.ts
+              create-draft-protocol.ts
               save-draft-protocol.ts
+              delete-draft-protocol.ts
             queries/
-              get-draft-protocol.ts
+              get-protocol-for-preview.ts
           components/
             upload-step/
               upload-step.tsx
@@ -264,6 +322,7 @@ Exceptions (the 1%):
                 preview-supplement-row.tsx
                 confidence-badge.tsx
                 supplement-link-badge.tsx
+                supplement-badges.tsx
                 index.ts
               preview-supplement-sheet/
                 preview-supplement-sheet.tsx
@@ -272,18 +331,19 @@ Exceptions (the 1%):
                 use-preview-supplement-sheet.ts
                 index.ts
               index.ts
-            stock-setup/                     # [WEEK 1]
-              stock-setup.tsx
-              stock-input-row.tsx
-              index.ts
-            notification-setup/              # [WEEK 1]
-              notification-setup.tsx
-              notification-setup.schema.ts
-              block-time-row.tsx
+            manual-protocol-form/
+              manual-protocol-form.tsx
+              use-manual-protocol-form.ts
+              existing-supplement-picker.tsx
+              supplement-row.tsx
               index.ts
           schemas/
             parsed-protocol-schema.ts
           types.ts
+          protocol-upload-page.tsx
+          protocol-preview-page.tsx
+          protocol-edit-page.tsx
+          protocol-manual-page.tsx
           index.ts
 
         stock/
@@ -291,16 +351,18 @@ Exceptions (the 1%):
             actions/
               update-stock.ts
               replenish-stock.ts
+              calculate-remaining-stock.ts
             queries/
               get-stock-list.ts
-              get-low-stock.ts               # [WEEK 1]
-              get-monthly-cost.ts            # [V2]
+              get-low-stock.ts
           components/
             stock-list/
               stock-list.tsx
               use-stock-list.ts
+              stock-progress-bar.tsx
               stock-item/
                 stock-item.tsx
+                stock-quantity.tsx
                 use-stock-item.ts
                 index.ts
               adjust-dialog/
@@ -311,61 +373,43 @@ Exceptions (the 1%):
                 restock-dialog.tsx
                 use-restock-dialog.ts
                 index.ts
+              stock-calculator/
+                stock-calculator.tsx
+                use-stock-calculator.ts
+                index.ts
               supplement-edit-sheet/
                 supplement-edit-sheet.tsx
                 use-supplement-edit-sheet.ts
                 index.ts
-              stock-progress-bar.tsx          # [WEEK 1]
               index.ts
-            buy-soon/                        # [WEEK 1]
+            buy-soon/
               buy-soon-list.tsx
               buy-soon-item.tsx
               index.ts
-            cost-summary/                    # [V2]
-              cost-summary.tsx
-              cost-per-supplement.tsx
-              index.ts
+          stock-page.tsx
           index.ts
 
         supplements/
           api/
             actions/
               add-supplement.ts
-              add-schedule.ts
               update-supplement.ts
-              update-schedule.ts
-              toggle-schedule.ts
               delete-supplement.ts
-              bulk-delete-supplements.ts      # [WEEK 1]
-            queries/
-              get-user-supplements.ts
           components/
             supplement-form/
               supplement-form.tsx
               supplement-form.schema.ts
               use-supplement-form.ts
               use-supplement-fields.ts
-              index.ts
-            schedule-form/
-              schedule-form.tsx
-              schedule-form.schema.ts
-              use-schedule-form.ts
-              use-schedule-fields.ts
+              supplement-fields.tsx
               index.ts
           index.ts
 
-        notifications/                       # [WEEK 1]
+        notifications/
           api/
             actions/
               update-notification-settings.ts
-          components/
-            notification-settings/
-              notification-settings.tsx
-              use-notification-settings.ts
-              notification-settings.schema.ts
-              block-notification-toggle.tsx
-              time-picker-row.tsx
-              index.ts
+              send-test-notification.ts
           hooks/
             use-push-subscription.ts
 
@@ -374,14 +418,16 @@ Exceptions (the 1%):
             actions/
               archive-protocol.ts
               reactivate-protocol.ts
-              set-protocol-status.ts
+              delete-protocol.ts
+              update-protocol.ts
               add-time-block.ts
               update-time-block.ts
               delete-time-block.ts
-              reorder-time-blocks.ts
             queries/
               get-user-protocols.ts
               get-user-time-blocks.ts
+              get-notification-settings.ts
+              get-protocol-as-parsed.ts
           components/
             settings-page/
               settings-page.tsx
@@ -392,14 +438,7 @@ Exceptions (the 1%):
                 protocol-card/
                   protocol-card.tsx
                   use-protocol-card.ts
-                  index.ts
-                schedule-edit-sheet/
-                  schedule-edit-sheet.tsx
-                  use-schedule-edit-sheet.ts
-                  index.ts
-                add-dose-sheet/
-                  add-dose-sheet.tsx
-                  use-add-dose-sheet.ts
+                  processing-phrase.tsx
                   index.ts
                 index.ts
               time-blocks-section/
@@ -415,25 +454,47 @@ Exceptions (the 1%):
                   index.ts
                 icon-picker.tsx
                 index.ts
-              notification-section/              # [WEEK 1]
+              notification-section/
                 notification-section.tsx
+                use-notification-section.ts
                 index.ts
               account-section/
                 account-section.tsx
                 use-account-section.ts
                 index.ts
+          settings-page-wrapper.tsx
           index.ts
 
       shared/
         components/
-          ui/                                # shadcn/ui primitives
+          ui/                                # shadcn/ui primitives (base-ui based)
+            alert-dialog.tsx
+            badge.tsx
+            button.tsx
+            dialog.tsx
+            input.tsx
+            label.tsx
+            popover.tsx
+            select.tsx
+            separator.tsx
+            sheet.tsx
+            switch.tsx
+          back-button.tsx
           bottom-sheet.tsx
-          critical-badge.tsx
+          icon-badge.tsx
+          info-hint.tsx
           labeled-input.tsx
           labeled-select.tsx
           number-input-dialog.tsx
+          pill-bottle-icon.tsx
           service-worker-registrar.tsx
+          supplement-info.tsx
+          time-duration-input/
+            time-duration-input.tsx
+            use-time-duration-input.ts
+            index.ts
           toggle-row.tsx
+          truncated-note.tsx
         db/
           schema.ts
           client.ts
@@ -441,45 +502,47 @@ Exceptions (the 1%):
         repositories/
           time-block-repository.ts
           protocol-repository.ts
-          protocol-supplement-repository.ts
           supplement-repository.ts
           supplement-schedule-repository.ts
-          user-repository.ts
           daily-log-repository.ts
-          notification-repository.ts         # [WEEK 1]
+          notification-repository.ts
         lib/
           auth.ts
           auth-client.ts
           ai.ts
           safe-action.ts
+          date.ts
           format.ts
+          format-minutes.ts
+          stock-forecast.ts
           time-block-icons.ts
           utils.ts
-          offline-queue.ts                   # [WEEK 1]
-          web-push.ts                        # [WEEK 1]
-        hooks/
-          use-current-user.ts
-          use-offline-sync.ts                # [WEEK 1]
+          web-push.ts
         i18n/
           messages/
             pl.json
           config.ts
           request.ts
 
+      instrumentation-client.ts
+      proxy.ts
+
 ## Dependencies
 
-    next ^16.0.0, pg, drizzle-orm, drizzle-kit (dev), better-auth,
+    next ^16.1.6, react ^19.2.4, react-dom ^19.2.4,
+    pg, drizzle-orm, drizzle-kit (dev), better-auth,
     next-safe-action, ai, @ai-sdk/anthropic, next-intl, react-hook-form,
-    @hookform/resolvers, zod, tailwindcss ^4.0.0, @base-ui/react,
+    @hookform/resolvers, zod, tailwindcss ^4.2.1, @base-ui/react,
     @dnd-kit/core + @dnd-kit/sortable + @dnd-kit/modifiers + @dnd-kit/utilities,
     class-variance-authority, clsx, tailwind-merge, lucide-react,
-    sonner, next-themes, xlsx, @paralleldrive/cuid2, shadcn,
-    @biomejs/biome (dev)
-    idb [WEEK 1], web-push [WEEK 1]
+    sonner, exceljs, mammoth, sharp, tw-animate-css,
+    @paralleldrive/cuid2, shadcn, web-push,
+    @biomejs/biome (dev), postcss (dev), @tailwindcss/postcss (dev),
+    typescript (dev)
 
 ## Environment Variables
 
     DATABASE_URL,
     BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
     ANTHROPIC_API_KEY, NEXT_PUBLIC_APP_URL,
-    VAPID_PUBLIC_KEY [WEEK 1], VAPID_PRIVATE_KEY [WEEK 1], VAPID_EMAIL [WEEK 1]
+    VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_EMAIL

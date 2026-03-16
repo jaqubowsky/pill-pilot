@@ -3,6 +3,10 @@
 import { and, eq, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import {
+	buildSyncPayload,
+	detectChangedFields,
+} from "@/features/dashboard/lib/detect-changed-fields";
 import { db } from "@/shared/db/client";
 import {
 	DOSAGE_UNITS,
@@ -101,14 +105,7 @@ export const updateSchedule = authActionClient
 		}
 
 		if (parsedInput.updateSiblings && parsedInput.changedFields) {
-			const fieldsToSync: Partial<ScheduleRow> = {};
-			for (const field of parsedInput.changedFields) {
-				if (field in sharedData) {
-					fieldsToSync[field as keyof typeof sharedData] = sharedData[
-						field as keyof typeof sharedData
-					] as never;
-				}
-			}
+			const fieldsToSync = buildSyncPayload(parsedInput.changedFields, sharedData);
 			if (Object.keys(fieldsToSync).length > 0) {
 				await supplementScheduleRepository.updateSiblings(
 					schedule.protocolId,
@@ -121,11 +118,11 @@ export const updateSchedule = authActionClient
 			return { siblings: null, changedFields: null };
 		}
 
-		const changedFields = SHARED_FIELDS.filter((field) => {
-			const oldVal = schedule[field];
-			const newVal = sharedData[field as keyof typeof sharedData];
-			return oldVal !== newVal;
-		});
+		const changedFields = detectChangedFields(
+			Object.fromEntries(SHARED_FIELDS.map((f) => [f, schedule[f]])),
+			sharedData,
+			SHARED_FIELDS.map((f) => f as string),
+		) as SharedField[];
 
 		if (changedFields.length === 0) {
 			revalidatePath("/dashboard");

@@ -1,6 +1,6 @@
 import { and, eq, gte, inArray, lte } from "drizzle-orm";
 import { getCycleStatus } from "@/features/dashboard/lib/cycling";
-import { getDependencyStatus } from "@/features/dashboard/lib/dependency";
+import { getPhaseStatus } from "@/features/dashboard/lib/phase-status";
 import { db } from "@/shared/db/client";
 import {
 	dailyLogs,
@@ -123,14 +123,14 @@ function isActionable(
 	},
 	date: string,
 ): boolean {
-	const dep = getDependencyStatus(
+	const dep = getPhaseStatus(
 		schedule.startDayOffset,
 		schedule.durationDays,
 		schedule.protocolStartDate,
 		date,
 	);
 	if (dep.isExpired) return false;
-	if (dep.isDependent && !dep.isUnlocked) return false;
+	if (dep.isPhased && !dep.isUnlocked) return false;
 
 	const cycle = getCycleStatus(
 		schedule.protocolStartDate,

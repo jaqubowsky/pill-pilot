@@ -2,7 +2,7 @@
 
 ## Overview
 
-PillPilot is a PWA for tracking supplementation and medications. The user uploads a treatment protocol (PDF/Excel), AI parses it, links it to existing inventory or creates new items, and guides the user through the daily plan.
+PillPilot is a PWA for tracking supplementation and medications. The user uploads a treatment protocol (PDF/Excel/DOCX/image/text), AI parses it, links it to existing inventory or creates new items, and guides the user through the daily plan.
 
 **Key principle: ZERO manual data entry.** AI does 95% of the work.
 
@@ -18,10 +18,9 @@ Related documents:
 
 | Phase | What | When |
 |-------|------|------|
-| **MVP** | Auth (Google) + AI import (PDF/Excel) + Dashboard + Checking off + Stock (view, replenish, adjust) + Manual supplement addition + Time blocks (management) + Edit/delete + Settings + Basic PWA | Day 1 |
-| **WEEK 1** | Offline queue + Stock setup in onboarding + Bulk delete + "Add manually" + Stock forecast/alerts + Push notifications + Integration tests | Week after MVP |
+| **MVP** | Auth (Google) + AI import (PDF/Excel/DOCX/image/text) + Dashboard (daily/weekly/monthly) + Checking off + Stock (view, replenish, adjust, forecast) + Manual supplement addition + Manual protocol creation + Time blocks (management) + Edit/delete + Settings + Basic PWA + Push notifications | Day 1 |
 | **V2** | Cost summary + purchase forecast + skip with reason + critical reminders + animations | Later |
-| **LATER** | Weekly/monthly views + export | Someday |
+| **LATER** | Export | Someday |
 
 ---
 
@@ -35,7 +34,7 @@ Each supplement can optionally have: package price and package size. Based on th
 
 ### Protocol = dosage plan
 
-A Protocol creates SupplementSchedule entries that link to your Supplements. "NAC 2 caps morning and 2 caps evening" = two schedule entries linking to one Supplement.
+A Protocol creates SupplementSchedule entries that link directly to Supplements and TimeBlocks. "NAC 2 caps morning and 2 caps evening" = two schedule entries linking to one Supplement.
 
 ### AI linking
 
@@ -55,9 +54,9 @@ Defaults: Fasting, Breakfast, Lunch, Dinner, Before bed. The user can add, edit,
 
 No auto-skip. Unchecked = unchecked. Stats: marked vs total per day.
 
-### Onboarding
+### Protocol creation flow
 
-Step-by-step flow: upload -> preview/edit -> confirm. The user can close and return to the same step. State machine details → `technical-requirements.md` > Onboarding State Machine.
+Step-by-step flow: upload -> AI processes in background -> preview/edit -> confirm. Manual protocol creation also available (form-based, without AI). State machine details → `technical-requirements.md`.
 
 ---
 
@@ -65,33 +64,34 @@ Step-by-step flow: upload -> preview/edit -> confirm. The user can close and ret
 
 ### MVP
 
-#### US-1: Upload and parse protocol [MVP]
+#### US-1: Upload and parse protocol [MVP] ✅
 **As** a user,
-**I want** to upload a protocol (PDF/Excel),
+**I want** to upload a protocol (PDF/Excel/DOCX/image/text),
 **so that** AI recognizes supplements and links them with my inventory.
 
 **Acceptance Criteria:**
-- Available in: onboarding (first protocol) + adding a new protocol (settings/dashboard)
-- 2 options: "Upload PDF", "Upload Excel"
-- AI parses -> checks existing user Supplements -> links or creates new
+- Available from: Settings > "Add protocol"
+- Supported formats: PDF, Excel (.xlsx/.xls), DOCX, images (JPEG/PNG/WebP/GIF), plain text
+- AI parses in background (two-step: extraction via Haiku → enrichment via Sonnet) -> checks existing user Supplements -> links or creates new
+- Protocol status: processing → draft (on success) or failed (on error)
 - Preview: supplements grouped by blocks, marked:
   - ✅ Linked with existing stock (e.g., "NAC -> NAC (Apollo's Hegemony) - 87 pcs in stock")
   - 🆕 New supplement (will be added to inventory)
-  - ⚠️ Confidence < 0.7 (user must verify)
+  - ⚠️ Confidence < threshold (user must verify)
 - Confirmation -> creates schedule entries + new Supplements
-- State machine: user can close and return
+- User can provide custom instructions for AI parsing
 
-#### US-2: Edit parsed preview [MVP]
+#### US-2: Edit parsed preview [MVP] ✅
 **As** a user,
 **I want** to correct AI errors and change inventory links.
 
 **Acceptance Criteria:**
-- Inline editing: name, dose (amount + unit), block, notes, category, isCritical
+- Inline editing: name, dose (amount + unit), block, notes, category, isCritical, cycling, startDayOffset, durationDays, dosageIntervalMinutes, waitAfterTakingMinutes
 - Change linking: AI linked NAC to the wrong Supplement? Switch to another from the list
 - Deleting, adding, moving to another block
 - ⚠️ must be verified before confirmation
 
-#### US-3: Daily dashboard [MVP]
+#### US-3: Daily dashboard [MVP] ✅
 **As** a user,
 **I want** to see today's plan divided into blocks.
 
@@ -101,24 +101,34 @@ Step-by-step flow: upload -> preview/edit -> confirm. The user can close and ret
 - Critical items marked
 - Date navigation
 - Unchecked items remain unchecked
+- View switcher: daily / weekly / monthly
 
-#### US-4: Checking off [MVP]
+#### US-3b: Weekly dashboard [MVP] ✅
+**As** a user,
+**I want** to see a weekly summary of my supplement adherence.
+
+#### US-3c: Monthly dashboard [MVP] ✅
+**As** a user,
+**I want** to see a monthly calendar view of my supplement adherence.
+
+#### US-4: Checking off [MVP] ✅
 **Acceptance Criteria:**
 - Tap -> DailyLog with takenAt, decrements stock (if != null)
 - Second tap -> unchecks with confirmation
 - "Check off entire block" with confirmation
 - Optimistic UI
+- Timer support: dosageIntervalMinutes (cooldown between doses), waitAfterTakingMinutes (post-take wait timer with notifications)
+- Timer adjustment and skip actions
 
-#### US-5: Manual supplement addition [MVP]
+#### US-5: Manual supplement addition [MVP] ✅
 **As** a user,
-**I want** to add a supplement manually to inventory and/or to a protocol.
+**I want** to add a supplement manually to inventory.
 
 **Acceptance Criteria:**
-- Adding to inventory: name, brand (optional), category, isCritical, stock, package size (optional), package price (optional)
-- Adding schedule to protocol: select from inventory + dose + block
-- If supplement doesn't exist in inventory -> create + add schedule
+- Adding to inventory: name, brand (optional), category, stockUnit, stock, package size (optional), package price (optional)
+- If supplement doesn't exist in inventory -> create it
 
-#### US-5b: Time block management [MVP]
+#### US-5b: Time block management [MVP] ✅
 **As** a user,
 **I want** to customize time blocks to match my lifestyle.
 
@@ -126,66 +136,65 @@ Step-by-step flow: upload -> preview/edit -> confirm. The user can close and ret
 - Available from: Settings > Time blocks
 - Edit: name, icon (Lucide), start time
 - Adding a new block
-- Reordering
+- Reordering (drag and drop via @dnd-kit)
 - Deleting (blocked if block has active schedules)
 - Default 5 blocks created on registration
 
-#### US-6: Edit and delete [MVP]
+#### US-6: Edit and delete [MVP] ✅
 **Acceptance Criteria:**
-- Edit Supplement (name, brand, category, isCritical, package size, package price)
-- Edit Schedule (dose, block, notes)
+- Edit Supplement (name, brand, category, stockUnit, package size, package price) — from stock page
+- Edit Schedule (dose, block, notes, criticality, cycling, timing) — from dashboard supplement row
 - Deactivate schedule (disappears from dashboard)
 - Delete supplement (soft delete + cascading deactivation of related schedules)
 - Archive protocol (from Settings — deactivates all schedules, reversible)
+- Delete protocol (from Settings)
+- Edit protocol (re-open preview to modify and re-confirm)
 
-#### US-7: Basic PWA [MVP]
+#### US-7: Basic PWA [MVP] ✅
 **Acceptance Criteria:**
 - Manifest, standalone, service worker, static asset caching
 - Install prompt on mobile
 
-#### US-8: Stock basics [MVP]
+#### US-8: Stock basics [MVP] ✅
 **Acceptance Criteria:**
 - currentStock on Supplement (nullable, decimal — supports fractional units like ml, g)
 - Checking off decrements (currentStock -= dosageAmount)
 - "Inventory" view (list of boxes with stock)
 - Sorting: lowest on top
 
-#### US-9: Replenish [MVP]
+#### US-9: Replenish [MVP] ✅
 **Acceptance Criteria:**
 - "Replenish" -> input how much you bought -> ADDS to currentStock
 - "Set" (for supplements with stock = null) -> input how much you have -> SETS currentStock (activates tracking)
 
-#### US-10: Manual stock adjustment [MVP]
+#### US-10: Manual stock adjustment [MVP] ✅
 **Acceptance Criteria:**
 - "Adjust" -> overwrites currentStock
 
----
+#### US-14: Manual protocol creation [MVP] ✅
+**As** a user,
+**I want** to create a protocol manually without AI.
 
-### WEEK 1
+**Acceptance Criteria:**
+- Form for manual protocol creation (name, supplements with doses and blocks)
+- Can pick existing supplements from inventory or create new ones inline
 
-#### US-11: Stock setup in onboarding [WEEK 1]
-- Optional step after protocol confirmation: list of unique Supplements, input "How much do you have left?"
-- "Skip" -> stock = null
+#### US-15: Stock forecast/alerts [MVP] ✅
+**Acceptance Criteria:**
+- Depletion date forecast (day-by-day simulation respecting cycling, startDayOffset, durationDays)
+- Progress bar on stock items
+- Stock warning threshold per supplement
+- "Buy soon" list on stock page
+- Low-stock badge on dashboard
+- Stock calculator action
 
-#### US-12: Offline queue [WEEK 1]
-- IndexedDB queue + background sync
-- Checking off offline -> sync when back online
-
-#### US-13: Bulk delete [WEEK 1]
-- Select multiple supplements/schedules -> delete with one click
-
-#### US-14: "Add manually" protocol [WEEK 1]
-- Third upload option: form for manual protocol creation (without AI)
-
-#### US-15: Stock forecast/alerts [WEEK 1]
-- Depletion date forecast, progress bar, alert threshold (user chooses)
-- "To buy" view, badge on dashboard
-
-#### US-16: Push notifications [WEEK 1]
-- Per block, toggle on/off, reminder 30 min
-
-#### US-17: Integration tests [WEEK 1]
-- Core logic: parsing, linking to inventory, checking off, stock decrementation
+#### US-16: Push notifications [MVP] ✅
+**Acceptance Criteria:**
+- Per time block, toggle on/off
+- Notification settings in Settings
+- Push subscription management
+- Timer-based notifications for wait-after-taking supplements
+- Test notification support
 
 ---
 
@@ -199,8 +208,6 @@ Step-by-step flow: upload -> preview/edit -> confirm. The user can close and ret
 
 ### LATER
 
-- US-23: Weekly view
-- US-24: Monthly view
 - US-25: History export
 
 ---
@@ -209,7 +216,7 @@ Step-by-step flow: upload -> preview/edit -> confirm. The user can close and ret
 
 Wireframes and detailed visual description → `design.md` > Screens.
 
-MVP screens: Login, Onboarding (Upload, Preview), Dashboard, Inventory, Settings.
+Screens: Login, Protocol Upload, Protocol Preview, Protocol Manual Form, Protocol Edit, Dashboard (daily/weekly/monthly), Stock/Inventory, Settings.
 
 ---
 
@@ -232,19 +239,23 @@ A per-protocol view is not required in MVP — the dashboard is a flat list of b
 
 ## AI Parsing [MVP]
 
-- Available in: onboarding (first protocol) + adding a new protocol (Settings > "Add protocol")
-- Input: PDF (.pdf) or Excel (.xlsx)
+- Available from: Settings > "Add protocol"
+- Input: PDF (.pdf), Excel (.xlsx/.xls), DOCX (.docx), images (JPEG/PNG/WebP/GIF), plain text (.txt)
 - Max file size: 10 MB
 - File is ephemeral — sent to AI API, parsed, not persisted on the server
+- Two-step process: extraction (Haiku) → enrichment (Sonnet) with user context
 - AI checks existing user inventory and links to it (or creates new)
 - Prescription medications automatically marked as critical
 - Confidence 0-1 per supplement (linking/parsing certainty)
 - Same supplement in multiple blocks = one box, multiple doses
+- Protocol created with status "processing", updated to "draft" on success or "failed" on error (uses `after()` for background processing)
+- User can provide custom instructions to guide AI interpretation
+- Rate limited: 5 requests per minute per user
 
 **Error path:**
 - File unreadable / wrong format → error toast, user can retry
-- AI cannot parse (no supplements in file) → message "No supplements found" + suggestion to check the file
-- Timeout / API error → "Something went wrong, try again"
+- AI cannot parse (no supplements in file) → protocol status set to "failed"
+- Timeout / API error → protocol status set to "failed"
 
 Technical details (output schema, system prompt) → `technical-requirements.md` > AI Parsing.
 
@@ -254,31 +265,38 @@ Technical details (output schema, system prompt) → `technical-requirements.md`
 
 | Action | Available from |
 |--------|---------------|
-| Edit Supplement (name, brand, category, isCritical) | Stock page → tap on item → edit sheet |
-| Edit Schedule (dose, block, notes) | Settings > Protocol section → tap on schedule |
-| Deactivate schedule | Settings > Protocol section → toggle |
-| Delete supplement | Stock page → swipe or edit sheet → "Delete" |
+| Edit Supplement (name, brand, category, stockUnit, packageSize, packagePrice) | Stock page → tap on item → edit sheet |
+| Edit Schedule (dose, block, notes, criticality, cycling, timing) | Dashboard → tap on supplement row → edit sheet |
+| Delete supplement | Stock page → edit sheet → "Delete" |
 | Add supplement to inventory | Stock page → "Add supplement" button |
-| Add schedule to protocol | Settings > Protocol section → "Add dose" |
 | Add new protocol (AI) | Settings > "Add protocol" |
-| Archive protocol | Settings > Protocol section → "Archive" |
+| Add new protocol (manual) | Settings > "Add protocol" → manual option |
+| Archive/reactivate protocol | Settings > Protocol section → protocol card |
+| Delete protocol | Settings > Protocol section → protocol card |
+| Edit protocol | Settings > Protocol section → protocol card → edit button |
 | Edit/add/delete time block | Settings > Time blocks section |
+| Notification settings | Settings > Notification section |
 
 ---
 
 ## Settings
 
 ### Protocol section
-- List of active protocols with their schedules
-- Per protocol: name, status, schedule list (editable), "Archive"
-- "Add dose" (new schedule to existing protocol)
-- "Add new protocol" → trigger AI parsing flow (upload → preview → confirm)
+- List of active and archived protocols
+- Per protocol: name, status, supplement count, "Archive"/"Reactivate", "Delete", "Edit"
+- "Add new protocol" → trigger AI parsing flow or manual form
+- Processing protocols show animated status
 
 ### Time blocks section
-- Block list (sortable): name, icon, start time
+- Block list (sortable via drag-and-drop): name, icon, start time
 - Tap on block → edit sheet (name, icon, start time)
 - "Add block" → new block
 - Delete block (blocked if it has active schedules)
+
+### Notification section
+- Per time block notification toggle
+- Notification time configuration
+- Test notification button
 
 ### Account section
 - Email (read-only)

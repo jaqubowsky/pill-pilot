@@ -69,7 +69,7 @@
 		"checkAllTitle": "Zaznacz cały blok",
 		"checkAllDescription": "Zostanie zaznaczonych {count} suplementów.",
 		"checkAllConfirm": "Zaznacz wszystkie",
-		"dependencyLocked": "Rozpoczęcie za {count} dni",
+		"phaseLocked": "Rozpoczęcie za {count} dni",
 		"expired": "Zakończony",
 		"notStarted": "Rozpoczęcie za {count} dni",
 		"outOfStock": "Brak zapasu",

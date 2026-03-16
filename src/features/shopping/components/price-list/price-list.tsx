@@ -6,13 +6,6 @@ import type { PriceListItem, ShopOption } from "@/features/shopping/api/queries/
 import { ShopEditSheet } from "@/features/shopping/components/shop-edit-sheet";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/shared/components/ui/select";
 import { usePriceList } from "./use-price-list";
 
 type PriceListProps = {
@@ -21,8 +14,6 @@ type PriceListProps = {
 	filterIds?: string[];
 	onScanCart?: () => void;
 };
-
-const NO_SHOP_VALUE = "__none__";
 
 export function PriceList({ items, shopOptions, filterIds, onScanCart }: PriceListProps) {
 	const t = useTranslations();
@@ -33,7 +24,6 @@ export function PriceList({ items, shopOptions, filterIds, onScanCart }: PriceLi
 		updateRow,
 		handlePriceBlur,
 		handleSizeBlur,
-		handleShopChange,
 		openAddShop,
 		openEditShop,
 		closeShopEdit,
@@ -87,7 +77,7 @@ export function PriceList({ items, shopOptions, filterIds, onScanCart }: PriceLi
 			)}
 
 			{sortedGroups.map(({ shopId, shopName, rows: groupRows }) => (
-				<section key={shopId ?? NO_SHOP_VALUE} className="flex flex-col gap-sm">
+				<section key={shopId ?? "__none__"} className="flex flex-col gap-sm">
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-xs">
 							<Store size={16} strokeWidth={1.5} className="text-content-muted" />
@@ -107,10 +97,9 @@ export function PriceList({ items, shopOptions, filterIds, onScanCart }: PriceLi
 						{groupRows.map((row, idx) => (
 							<div
 								key={row.id}
-								className={`flex items-center gap-sm px-md py-sm ${idx < groupRows.length - 1 ? "border-b border-edge-subtle" : ""}`}
+								className={`flex items-center gap-sm px-md min-h-12 ${idx < groupRows.length - 1 ? "border-b border-edge-subtle" : ""}`}
 							>
 								<span className="flex-1 text-sm text-content truncate min-w-0">{row.name}</span>
-
 								<div className="flex items-center gap-xs shrink-0">
 									<Input
 										type="number"
@@ -121,10 +110,9 @@ export function PriceList({ items, shopOptions, filterIds, onScanCart }: PriceLi
 										value={row.localPrice}
 										onChange={(e) => updateRow(row.id, { localPrice: e.target.value })}
 										onBlur={(e) => handlePriceBlur(row.id, e.target.value)}
-										className="w-20 h-8 text-right text-sm px-sm bg-surface-sunken border-edge rounded-lg"
+										className="w-16 h-9 text-right text-sm px-sm bg-surface-sunken border-edge rounded-lg"
 									/>
-									<span className="text-xs text-content-faint">zł</span>
-
+									<span className="text-xs text-content-faint shrink-0">zł</span>
 									<Input
 										type="number"
 										inputMode="numeric"
@@ -134,33 +122,9 @@ export function PriceList({ items, shopOptions, filterIds, onScanCart }: PriceLi
 										value={row.localSize}
 										onChange={(e) => updateRow(row.id, { localSize: e.target.value })}
 										onBlur={(e) => handleSizeBlur(row.id, e.target.value)}
-										className="w-16 h-8 text-right text-sm px-sm bg-surface-sunken border-edge rounded-lg"
+										className="w-14 h-9 text-right text-sm px-sm bg-surface-sunken border-edge rounded-lg"
 									/>
-									<span className="text-xs text-content-faint">{t("stock.pieces")}</span>
-
-									{shopOptions.length > 0 && (
-										<Select
-											value={row.localShopId ?? NO_SHOP_VALUE}
-											onValueChange={(val) =>
-												handleShopChange(row.id, val === NO_SHOP_VALUE ? null : val)
-											}
-										>
-											<SelectTrigger
-												size="sm"
-												className="w-28 h-8 text-xs bg-surface-sunken border-edge rounded-lg"
-											>
-												<SelectValue placeholder={t("shopping.pickShop")} />
-											</SelectTrigger>
-											<SelectContent>
-												<SelectItem value={NO_SHOP_VALUE}>{t("shopping.noShop")}</SelectItem>
-												{shopOptions.map((shop) => (
-													<SelectItem key={shop.id} value={shop.id}>
-														{shop.name}
-													</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
-									)}
+									<span className="text-xs text-content-faint shrink-0">{t("stock.pieces")}</span>
 								</div>
 							</div>
 						))}

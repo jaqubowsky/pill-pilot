@@ -5,6 +5,7 @@ import {
 	CheckCircle,
 	ChevronDown,
 	Loader2,
+	Plus,
 	RotateCcw,
 	Search,
 	ShoppingCart,
@@ -36,15 +37,21 @@ function SupplementPicker({
 	supplements,
 	value,
 	onChange,
+	onCreateNew,
+	suggestedName,
 	placeholder,
 }: {
 	supplements: SupplementOption[];
 	value: string | null | undefined;
 	onChange: (id: string | null) => void;
+	onCreateNew?: (name: string) => Promise<string | null>;
+	suggestedName?: string;
 	placeholder: string;
 }) {
+	const [isCreating, setIsCreating] = useState(false);
 	const [open, setOpen] = useState(false);
 	const [query, setQuery] = useState("");
+	const searchRef = useRef<HTMLInputElement>(null);
 
 	const selected = value ? supplements.find((s) => s.id === value) : null;
 	const filtered = query
@@ -58,7 +65,10 @@ function SupplementPicker({
 		return (
 			<button
 				type="button"
-				onClick={() => setOpen(true)}
+				onClick={() => {
+					setOpen(true);
+					setTimeout(() => searchRef.current?.focus(), 0);
+				}}
 				className="flex-1 flex items-center justify-between min-h-11 px-sm text-sm bg-surface-sunken border border-edge rounded-lg text-left min-w-0"
 			>
 				<span className={`truncate ${selected ? "text-content" : "text-content-faint"}`}>
@@ -74,8 +84,8 @@ function SupplementPicker({
 			<div className="flex items-center gap-sm border border-edge rounded-lg px-sm py-xs bg-surface-sunken">
 				<Search className="size-4 text-content-faint shrink-0" />
 				<input
+					ref={searchRef}
 					type="text"
-					autoFocus
 					value={query}
 					onChange={(e) => setQuery(e.target.value)}
 					onBlur={() => setTimeout(() => setOpen(false), 200)}
@@ -84,7 +94,29 @@ function SupplementPicker({
 				/>
 			</div>
 			<div className="max-h-40 overflow-y-auto rounded-lg border border-edge-subtle bg-surface-raised">
-				{filtered.length === 0 ? (
+				{onCreateNew && (
+					<button
+						type="button"
+						disabled={isCreating}
+						onMouseDown={async (e) => {
+							e.preventDefault();
+							setIsCreating(true);
+							const name = query.trim() || suggestedName || "Nowy suplement";
+							const newId = await onCreateNew(name);
+							setIsCreating(false);
+							if (newId) {
+								onChange(newId);
+								setOpen(false);
+								setQuery("");
+							}
+						}}
+						className="w-full flex items-center gap-xs text-left px-sm py-sm text-sm text-brand-600 font-medium hover:bg-surface-sunken transition-colors border-b border-edge-subtle"
+					>
+						<Plus className="size-4 shrink-0" />
+						{isCreating ? "Tworzę..." : `Dodaj „${query.trim() || suggestedName || "nowy"}"`}
+					</button>
+				)}
+				{filtered.length === 0 && !onCreateNew ? (
 					<p className="text-xs text-content-faint text-center py-md">—</p>
 				) : (
 					filtered.map((s) => (
@@ -104,9 +136,7 @@ function SupplementPicker({
 							>
 								{s.name}
 							</span>
-							{s.brandName && (
-								<span className="text-xs text-content-faint">{s.brandName}</span>
-							)}
+							{s.brandName && <span className="text-xs text-content-faint">{s.brandName}</span>}
 						</button>
 					))
 				)}
@@ -123,6 +153,7 @@ function CartItemRow({
 	onVerify,
 	onSkip,
 	onUnskip,
+	onCreateNew,
 }: {
 	item: CartItemState;
 	supplements: SupplementOption[];
@@ -131,6 +162,7 @@ function CartItemRow({
 	onVerify: () => void;
 	onSkip: () => void;
 	onUnskip: () => void;
+	onCreateNew: (name: string) => Promise<string | null>;
 }) {
 	const t = useTranslations("shopping.cartPriceSheet");
 
@@ -205,6 +237,8 @@ function CartItemRow({
 					supplements={supplements}
 					value={item.matchedSupplementId}
 					onChange={onMatch}
+					onCreateNew={onCreateNew}
+					suggestedName={item.productName}
 					placeholder={t("selectSupplement")}
 				/>
 				{!item.verified && (
@@ -226,6 +260,7 @@ function CartItemRow({
 export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPriceSheetProps) {
 	const t = useTranslations("shopping.cartPriceSheet");
 	const fileInputRef = useRef<HTMLInputElement>(null);
+	const fileInputId = "cart-file-input";
 
 	const {
 		isOpen,
@@ -233,10 +268,16 @@ export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPri
 		isSaving,
 		error,
 		items,
+		localSupplements,
+		handleCreateSupplement,
 		shopName,
 		setShopName,
 		selectedShopId,
 		setSelectedShopId,
+		shopDeliveryCost,
+		setShopDeliveryCost,
+		shopFreeThreshold,
+		setShopFreeThreshold,
 		unverifiedCount,
 		canSave,
 		closeSheet,
@@ -268,6 +309,7 @@ export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPri
 	return (
 		<>
 			<input
+				id={fileInputId}
 				ref={fileInputRef}
 				type="file"
 				accept="image/*"
@@ -276,17 +318,9 @@ export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPri
 			/>
 
 			{trigger ? (
-				<div
-					role="button"
-					tabIndex={0}
-					onClick={handleTriggerClick}
-					onKeyDown={(e) => {
-						if (e.key === "Enter" || e.key === " ") handleTriggerClick();
-					}}
-					className="contents"
-				>
+				<label htmlFor={fileInputId} className="contents cursor-pointer">
 					{trigger}
-				</div>
+				</label>
 			) : (
 				<Button variant="outline" onClick={handleTriggerClick} className="gap-xs">
 					<ShoppingCart className="size-4" />
@@ -332,9 +366,7 @@ export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPri
 					) : (
 						<div className="flex flex-col gap-md overflow-y-auto flex-1 px-md pb-sm">
 							<div className="flex flex-col gap-xs">
-								<label className="text-xs font-medium text-content-muted">
-									{t("shopLabel")}
-								</label>
+								<label className="text-xs font-medium text-content-muted">{t("shopLabel")}</label>
 								<div className="flex gap-sm items-center">
 									<Input
 										value={shopName}
@@ -359,6 +391,43 @@ export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPri
 										</button>
 									))}
 								</div>
+
+								{shopName.trim() && !selectedShopId && (
+									<div className="flex gap-sm">
+										<div className="flex-1 flex flex-col gap-xs">
+											<label className="text-xs text-content-faint">{t("deliveryCost")}</label>
+											<div className="flex items-center gap-xs">
+												<Input
+													type="number"
+													inputMode="decimal"
+													min={0}
+													step={0.01}
+													value={shopDeliveryCost}
+													onChange={(e) => setShopDeliveryCost(e.target.value)}
+													placeholder="0.00"
+													className="flex-1 h-9 bg-surface-sunken border-edge rounded-lg text-sm"
+												/>
+												<span className="text-xs text-content-faint">zł</span>
+											</div>
+										</div>
+										<div className="flex-1 flex flex-col gap-xs">
+											<label className="text-xs text-content-faint">{t("freeThreshold")}</label>
+											<div className="flex items-center gap-xs">
+												<Input
+													type="number"
+													inputMode="decimal"
+													min={0}
+													step={0.01}
+													value={shopFreeThreshold}
+													onChange={(e) => setShopFreeThreshold(e.target.value)}
+													placeholder="0.00"
+													className="flex-1 h-9 bg-surface-sunken border-edge rounded-lg text-sm"
+												/>
+												<span className="text-xs text-content-faint">zł</span>
+											</div>
+										</div>
+									</div>
+								)}
 							</div>
 
 							{unverifiedCount > 0 && (
@@ -377,12 +446,13 @@ export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPri
 									>
 										<CartItemRow
 											item={item}
-											supplements={supplements}
+											supplements={localSupplements}
 											confidenceThreshold={CART_CONFIDENCE_THRESHOLD}
 											onMatch={(id) => handleMatchChange(item._id, id)}
 											onVerify={() => handleVerify(item._id)}
 											onSkip={() => handleSkip(item._id)}
 											onUnskip={() => handleUnskip(item._id)}
+											onCreateNew={handleCreateSupplement}
 										/>
 									</div>
 								))}
@@ -391,11 +461,7 @@ export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPri
 					)}
 
 					<SheetFooter className="flex flex-col gap-sm px-md">
-						<Button
-							onClick={handleSave}
-							disabled={!canSave || isSaving}
-							className="w-full"
-						>
+						<Button onClick={handleSave} disabled={!canSave || isSaving} className="w-full">
 							{isSaving ? t("saving") : t("savePrices")}
 						</Button>
 						<Button variant="outline" onClick={closeSheet} className="w-full">

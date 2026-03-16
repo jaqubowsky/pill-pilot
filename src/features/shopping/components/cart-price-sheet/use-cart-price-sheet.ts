@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { createShop } from "@/features/shopping/api/actions/manage-shop";
 import { updateSupplementPrices } from "@/features/shopping/api/actions/update-supplement-prices";
 import type { CartItem } from "@/features/shopping/schemas/cart-parse-schema";
+import { addSupplement } from "@/features/supplements";
 
 const CART_CONFIDENCE_THRESHOLD = 0.8;
 
@@ -37,9 +38,12 @@ export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceS
 	const [isSaving, setIsSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [items, setItems] = useState<CartItemState[]>([]);
+	const [localSupplements, setLocalSupplements] = useState<SupplementOption[]>(supplements);
 	const [detectedShopName, setDetectedShopName] = useState<string>("");
 	const [shopName, setShopName] = useState<string>("");
 	const [selectedShopId, setSelectedShopId] = useState<string | null>(null);
+	const [shopDeliveryCost, setShopDeliveryCost] = useState<string>("");
+	const [shopFreeThreshold, setShopFreeThreshold] = useState<string>("");
 
 	function openSheet() {
 		setIsOpen(true);
@@ -52,6 +56,8 @@ export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceS
 		setDetectedShopName("");
 		setShopName("");
 		setSelectedShopId(null);
+		setShopDeliveryCost("");
+		setShopFreeThreshold("");
 	}
 
 	async function handleFileUpload(file: File) {
@@ -141,6 +147,21 @@ export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceS
 		);
 	}
 
+	async function handleCreateSupplement(name: string): Promise<string | null> {
+		const result = await addSupplement({
+			name,
+			category: "supplement",
+			stockUnit: "capsule",
+		});
+		if (result?.data?.supplementId) {
+			const newId = result.data.supplementId;
+			setLocalSupplements((prev) => [...prev, { id: newId, name }]);
+			return newId;
+		}
+		toast.error("Nie udało się utworzyć suplementu.");
+		return null;
+	}
+
 	const unverifiedCount = items.filter((i) => !i.verified && !i.skipped).length;
 	const canSave = unverifiedCount === 0 && items.length > 0;
 
@@ -153,7 +174,13 @@ export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceS
 			let shopId = selectedShopId;
 
 			if (shopName.trim() && !shopId) {
-				const result = await createShop({ name: shopName.trim() });
+				const deliveryCost = shopDeliveryCost ? parseFloat(shopDeliveryCost) : undefined;
+				const freeDeliveryThreshold = shopFreeThreshold ? parseFloat(shopFreeThreshold) : undefined;
+				const result = await createShop({
+					name: shopName.trim(),
+					...(deliveryCost && deliveryCost > 0 ? { deliveryCost } : {}),
+					...(freeDeliveryThreshold && freeDeliveryThreshold > 0 ? { freeDeliveryThreshold } : {}),
+				});
 				if (result?.data?.shop) {
 					shopId = result.data.shop.id;
 				}
@@ -186,11 +213,17 @@ export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceS
 		isSaving,
 		error,
 		items,
+		localSupplements,
+		handleCreateSupplement,
 		detectedShopName,
 		shopName,
 		setShopName,
 		selectedShopId,
 		setSelectedShopId,
+		shopDeliveryCost,
+		setShopDeliveryCost,
+		shopFreeThreshold,
+		setShopFreeThreshold,
 		unverifiedCount,
 		canSave,
 		openSheet,

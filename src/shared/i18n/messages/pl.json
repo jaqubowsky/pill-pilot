@@ -426,7 +426,9 @@
 			"missingPrices": "Pominięto {count} suplementów bez ceny lub rozmiaru opakowania"
 		},
 		"cartPriceSheet": {
-			"title": "Skanuj koszyk",
+			"title": "Wyniki skanu",
+			"deliveryCost": "Koszt dostawy",
+			"freeThreshold": "Darmowa od",
 			"analysing": "Analizuję zrzut ekranu...",
 			"shopLabel": "Sklep",
 			"shopPlaceholder": "np. iHerb, Allegro",

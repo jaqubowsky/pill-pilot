@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getPriceList } from "@/features/shopping/api/queries/get-price-list";
 import { supplementRepository } from "@/shared/repositories/supplement-repository";
 import { timeBlockRepository } from "@/shared/repositories/time-block-repository";
 import { getProtocolForPreview } from "./api/queries/get-protocol-for-preview";
@@ -16,9 +17,10 @@ export async function ProtocolPreviewPage({ userId, protocolId }: Props) {
 		redirect("/settings");
 	}
 
-	const [timeBlocks, supplements] = await Promise.all([
+	const [timeBlocks, supplements, priceListData] = await Promise.all([
 		timeBlockRepository.findByUserId(userId),
 		supplementRepository.findByUserId(userId),
+		getPriceList(userId),
 	]);
 
 	return (
@@ -35,6 +37,8 @@ export async function ProtocolPreviewPage({ userId, protocolId }: Props) {
 				name: s.name,
 				brandName: s.brandName,
 			}))}
+			priceListItems={priceListData.items}
+			priceListShopOptions={priceListData.shopOptions}
 		/>
 	);
 }

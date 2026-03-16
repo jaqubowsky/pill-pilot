@@ -14,6 +14,8 @@ import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useTranslations } from "next-intl";
 import type { ParsedProtocol } from "@/features/protocol-wizard/schemas/parsed-protocol-schema";
 import type { ExistingSupplementSummary, TimeBlockSummary } from "@/features/protocol-wizard/types";
+import type { PriceListItem, ShopOption } from "@/features/shopping/api/queries/get-price-list";
+import { PriceSheet } from "@/features/shopping/components/price-sheet";
 import { BackButton } from "@/shared/components/back-button";
 import { LabeledInput } from "@/shared/components/labeled-input";
 import {
@@ -37,6 +39,8 @@ type ParsedPreviewProps = {
 	existingSupplements?: ExistingSupplementSummary[];
 	mode?: PreviewMode;
 	initialStartDate?: string;
+	priceListItems?: PriceListItem[];
+	priceListShopOptions?: ShopOption[];
 };
 
 const MODIFIERS = [restrictToVerticalAxis];
@@ -48,6 +52,8 @@ export function ParsedPreview({
 	existingSupplements = [],
 	mode = PreviewMode.create,
 	initialStartDate,
+	priceListItems = [],
+	priceListShopOptions = [],
 }: ParsedPreviewProps) {
 	const t = useTranslations();
 	const {
@@ -71,6 +77,9 @@ export function ParsedPreview({
 		handleDiscard,
 		handleDragEnd,
 		handleMoveToBlock,
+		priceSheetOpen,
+		newSupplementIds,
+		handlePriceSheetClose,
 	} = useParsedPreview({
 		protocolId,
 		initialParsed,
@@ -186,6 +195,16 @@ export function ParsedPreview({
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
+
+			{mode === PreviewMode.create && (
+				<PriceSheet
+					open={priceSheetOpen}
+					supplementIds={newSupplementIds}
+					items={priceListItems}
+					shopOptions={priceListShopOptions}
+					onClose={handlePriceSheetClose}
+				/>
+			)}
 		</>
 	);
 }

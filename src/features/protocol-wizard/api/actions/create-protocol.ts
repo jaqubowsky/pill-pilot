@@ -1,6 +1,5 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { returnValidationErrors } from "next-safe-action";
 import { z } from "zod";
 import { resolveScheduleFields } from "@/features/protocol-wizard/lib/resolve-schedule-fields";
@@ -42,6 +41,7 @@ export const createProtocol = authActionClient
 		const validTimeBlockIds = new Set(userTimeBlocks.map((tb) => tb.id));
 
 		const supplementIdMap: Record<string, string> = {};
+		const newSupplementIds: string[] = [];
 
 		for (const item of parsed.supplements) {
 			if (item.existingSupplementId) {
@@ -56,6 +56,7 @@ export const createProtocol = authActionClient
 					stockUnit: item.schedules[0]?.dosageUnit ?? "capsule",
 				});
 				supplementIdMap[item.name] = created.id;
+				newSupplementIds.push(created.id);
 			}
 		}
 
@@ -87,5 +88,5 @@ export const createProtocol = authActionClient
 			startDate,
 		});
 
-		redirect("/dashboard");
+		return { newSupplementIds };
 	});

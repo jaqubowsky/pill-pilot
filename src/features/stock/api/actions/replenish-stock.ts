@@ -8,6 +8,7 @@ import { supplementRepository } from "@/shared/repositories/supplement-repositor
 const schema = z.object({
 	supplementId: z.string().min(1),
 	amount: z.number().positive(),
+	packagePrice: z.number().positive().optional(),
 });
 
 export const replenishStock = authActionClient
@@ -19,6 +20,12 @@ export const replenishStock = authActionClient
 			parsedInput.supplementId,
 			parsedInput.amount.toString(),
 		);
+
+		if (parsedInput.packagePrice !== undefined) {
+			await supplementRepository.update(parsedInput.supplementId, {
+				packagePrice: parsedInput.packagePrice.toString(),
+			});
+		}
 
 		revalidatePath("/stock");
 	});

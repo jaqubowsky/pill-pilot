@@ -78,12 +78,24 @@ export function useParsedPreview({
 	const [protocolName] = useState(initialParsed.protocolName);
 	const [startDate, setStartDate] = useState(() => initialStartDate ?? toDateString(new Date()));
 	const [discardOpen, setDiscardOpen] = useState(false);
+	const [priceSheetOpen, setPriceSheetOpen] = useState(false);
+	const [newSupplementIds, setNewSupplementIds] = useState<string[]>([]);
 
 	const { execute: approveCreate, isPending: isCreating } = useAction(createProtocol, {
+		onSuccess: ({ data }) => {
+			const ids = data?.newSupplementIds ?? [];
+			if (ids.length > 0) {
+				setNewSupplementIds(ids);
+				setPriceSheetOpen(true);
+			} else {
+				router.push("/dashboard");
+			}
+		},
 		onError: ({ error }) => toast.error(error.serverError),
 	});
 
 	const { execute: approveUpdate, isPending: isUpdating } = useAction(updateProtocol, {
+		onSuccess: () => router.push("/dashboard"),
 		onError: ({ error }) => toast.error(error.serverError),
 	});
 
@@ -154,6 +166,11 @@ export function useParsedPreview({
 		} else {
 			approveCreate({ protocolId, parsedData: data, startDate });
 		}
+	}
+
+	function handlePriceSheetClose() {
+		setPriceSheetOpen(false);
+		router.push("/dashboard");
 	}
 
 	function handleMoveToBlock(supplementId: string, scheduleIndex: number, newBlockId: string) {
@@ -286,6 +303,8 @@ export function useParsedPreview({
 		isDiscarding,
 		blockMap,
 		orderedBlocks,
+		priceSheetOpen,
+		newSupplementIds,
 		handleUpdateSupplement,
 		handleAddSupplement,
 		handleDeleteSupplement,
@@ -295,5 +314,6 @@ export function useParsedPreview({
 		handleDiscard,
 		handleDragEnd,
 		handleMoveToBlock,
+		handlePriceSheetClose,
 	};
 }

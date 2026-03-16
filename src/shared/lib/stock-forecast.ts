@@ -1,6 +1,8 @@
 const MS_PER_DAY = 86_400_000;
 const MAX_FORECAST_DAYS = 730;
 
+export const DELIVERY_BUFFER_DAYS = 3;
+
 type ScheduleConsumption = {
 	dosageAmount: number;
 	cycleDaysOn: number | null;

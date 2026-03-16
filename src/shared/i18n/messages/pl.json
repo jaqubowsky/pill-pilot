@@ -139,7 +139,9 @@
 		"calculatorCalculating": "Obliczam...",
 		"calculatorConsumed": "Zużyto (szacunkowo)",
 		"calculatorRemaining": "Pozostało",
-		"calculatorApply": "Zastosuj"
+		"calculatorApply": "Zastosuj",
+		"restockPrice": "Cena opakowania (opcjonalnie)",
+		"restockPricePlaceholder": "np. 49.90"
 	},
 	"settings": {
 		"title": "Ustawienia",
@@ -386,7 +388,65 @@
 		"title": "Zakupy",
 		"emptyTitle": "Brak produktów do kupienia",
 		"emptyDescription": "Uzupełnij ceny i przypisz sklepy w cennikach.",
-		"noShop": "Bez sklepu"
+		"noShop": "Bez sklepu",
+		"noPrices": "Brak suplementów do wyświetlenia.",
+		"scanCart": "Skanuj koszyk",
+		"addShop": "Dodaj sklep",
+		"editShop": "Edytuj sklep",
+		"deleteShop": "Usuń sklep",
+		"deleteShopConfirmTitle": "Usunąć sklep?",
+		"deleteShopConfirmDescription": "Sklep zostanie trwale usunięty. Suplementy przypisane do tego sklepu zostaną odłączone.",
+		"shopName": "Nazwa sklepu",
+		"shopNamePlaceholder": "np. iHerb, Olimp, Apteka",
+		"deliveryCost": "Koszt dostawy (opcjonalnie)",
+		"freeDeliveryThreshold": "Próg darmowej dostawy (opcjonalnie)",
+		"pickShop": "Sklep",
+		"list": {
+			"mustBuy": "Do kupienia",
+			"suggestAdd": "Dorzuć?",
+			"suggestLabel": "dorzuć?",
+			"urgent": "Pilne",
+			"depletionDate": "Kończy się {date}",
+			"freeDelivery": "Darmowa dostawa",
+			"deliveryCost": "Dostawa: {cost} zł",
+			"subtotal": "Produkty",
+			"delivery": "Dostawa",
+			"grandTotal": "Łącznie",
+			"addForFreeDelivery": "Dorzuć za {amount} zł do darmowej dostawy"
+		},
+		"expenses": {
+			"title": "Wydatki na suplementy",
+			"noData": "Brak danych. Uzupełnij ceny opakowania.",
+			"currentMonth": "Ten miesiąc",
+			"previousMonths": "Poprzednie miesiące",
+			"week": "Tydzień {num}",
+			"total": "Łącznie",
+			"missingPrices": "Pominięto {count} suplementów bez ceny lub rozmiaru opakowania"
+		},
+		"cartPriceSheet": {
+			"title": "Skanuj koszyk",
+			"analysing": "Analizuję zrzut ekranu...",
+			"shopLabel": "Sklep",
+			"shopPlaceholder": "np. iHerb, Allegro",
+			"selectShop": "Wybierz sklep",
+			"requiresVerification": "{count} pozycja wymaga weryfikacji",
+			"selectSupplement": "Wybierz suplement",
+			"verify": "Zweryfikuj",
+			"unmatched": "Niedopasowany",
+			"ok": "OK",
+			"skip": "Pomiń",
+			"unskip": "Cofnij",
+			"savePrices": "Zapisz ceny",
+			"saving": "Zapisywanie...",
+			"cancel": "Anuluj",
+			"scanCart": "Skanuj koszyk"
+		},
+		"priceSheet": {
+			"title": "Ustaw ceny suplementów",
+			"description": "Uzupełnij ceny dla nowo dodanych suplementów. Możesz to zrobić później.",
+			"save": "Zapisz",
+			"later": "Później"
+		}
 	},
 	"errors": {
 		"generic": "Coś poszło nie tak. Spróbuj ponownie.",

@@ -14,4 +14,3 @@ export const cartParseSchema = z.object({
 });
 
 export type CartItem = z.infer<typeof cartItemSchema>;
-export type CartParse = z.infer<typeof cartParseSchema>;

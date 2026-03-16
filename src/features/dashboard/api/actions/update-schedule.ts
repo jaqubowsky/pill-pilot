@@ -34,6 +34,7 @@ const schema = z.object({
 	dosageAmount: z.number().positive(),
 	dosageUnit: z.enum(DOSAGE_UNITS),
 	timeBlockId: z.string().min(1),
+	finishPackage: z.boolean().optional(),
 	updateSiblings: z.boolean().optional(),
 	changedFields: z.array(z.string()).optional(),
 });
@@ -62,6 +63,7 @@ const SHARED_FIELDS: SharedField[] = [
 	"startDayOffset",
 	"durationDays",
 	"waitAfterTakingMinutes",
+	"finishPackage",
 ];
 
 export const updateSchedule = authActionClient
@@ -87,6 +89,7 @@ export const updateSchedule = authActionClient
 			durationDays: parsedInput.durationDays ?? null,
 			dosageIntervalMinutes: parsedInput.dosageIntervalMinutes ?? null,
 			waitAfterTakingMinutes: parsedInput.waitAfterTakingMinutes ?? null,
+			finishPackage: parsedInput.finishPackage ?? false,
 		};
 
 		await supplementScheduleRepository.update(schedule.id, {

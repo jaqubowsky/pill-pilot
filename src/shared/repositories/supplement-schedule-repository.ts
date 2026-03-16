@@ -17,6 +17,7 @@ interface ISupplementScheduleRepository {
 	deactivateByProtocolId(protocolId: string): Promise<void>;
 	reactivateByProtocolId(protocolId: string): Promise<void>;
 	deactivateBySupplementId(supplementId: string): Promise<void>;
+	deactivateFinishPackageBySupplementId(supplementId: string): Promise<void>;
 	updateSiblings(
 		protocolId: string,
 		supplementId: string,
@@ -47,6 +48,7 @@ class SupplementScheduleRepository implements ISupplementScheduleRepository {
 				durationDays: supplementSchedules.durationDays,
 				dosageIntervalMinutes: supplementSchedules.dosageIntervalMinutes,
 				waitAfterTakingMinutes: supplementSchedules.waitAfterTakingMinutes,
+				finishPackage: supplementSchedules.finishPackage,
 				sortOrder: supplementSchedules.sortOrder,
 				active: supplementSchedules.active,
 				createdAt: supplementSchedules.createdAt,
@@ -122,6 +124,18 @@ class SupplementScheduleRepository implements ISupplementScheduleRepository {
 			.update(supplementSchedules)
 			.set({ active: false })
 			.where(eq(supplementSchedules.supplementId, supplementId));
+	}
+
+	async deactivateFinishPackageBySupplementId(supplementId: string): Promise<void> {
+		await db
+			.update(supplementSchedules)
+			.set({ active: false })
+			.where(
+				and(
+					eq(supplementSchedules.supplementId, supplementId),
+					eq(supplementSchedules.finishPackage, true),
+				),
+			);
 	}
 
 	async updateSiblings(

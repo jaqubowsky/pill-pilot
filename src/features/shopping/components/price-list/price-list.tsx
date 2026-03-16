@@ -3,11 +3,12 @@
 import { ImageUp, Pencil, Store } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { PriceListItem, ShopOption } from "@/features/shopping/api/queries/get-price-list";
 import type { RecentScan } from "@/features/shopping/api/queries/get-recent-scans";
 import { CartPriceSheet } from "@/features/shopping/components/cart-price-sheet";
 import { ShopEditSheet } from "@/features/shopping/components/shop-edit-sheet";
+import { SupplementEditSheet } from "@/features/stock/components/stock-list/supplement-edit-sheet";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { usePriceList } from "./use-price-list";
@@ -24,6 +25,7 @@ const NO_SHOP_VALUE = "__none__";
 export function PriceList({ items, shopOptions, filterIds, recentScans }: PriceListProps) {
 	const t = useTranslations();
 	const router = useRouter();
+	const [editItem, setEditItem] = useState<PriceListItem | null>(null);
 
 	const hasProcessing = recentScans?.some((s) => s.status === "processing") ?? false;
 
@@ -75,12 +77,30 @@ export function PriceList({ items, shopOptions, filterIds, recentScans }: PriceL
 
 	const shopsForCart = shopOptions.map((s) => ({ id: s.id, name: s.name }));
 
+	const editSheetItem = editItem
+		? {
+				id: editItem.id,
+				name: editItem.name,
+				brandName: editItem.brandName,
+				shopId: editItem.shopId,
+				category: editItem.category,
+				stockUnit: editItem.stockUnit,
+				isCritical: false,
+				currentStock: editItem.currentStock,
+				packageSize: editItem.packageSize,
+				packagePrice: editItem.packagePrice,
+				dailyUsage: 0,
+				daysInStock: 0,
+			}
+		: null;
+
 	return (
 		<div className="flex flex-col gap-lg">
 			<CartPriceSheet
 				supplements={supplementsForCart}
 				shops={shopsForCart}
 				recentScans={recentScans}
+				onUploaded={() => router.refresh()}
 				trigger={
 					<div className="w-full flex flex-col items-center justify-center gap-sm rounded-xl border-2 border-dashed border-edge-strong bg-surface-sunken p-lg cursor-pointer active:scale-[0.98] transition-transform">
 						<ImageUp className="size-8 text-content-faint stroke-[1.5]" />
@@ -117,9 +137,23 @@ export function PriceList({ items, shopOptions, filterIds, recentScans }: PriceL
 								key={row.id}
 								className={`flex items-center justify-between gap-sm px-md py-xs min-h-11 ${idx < groupRows.length - 1 ? "border-b border-edge-subtle" : ""}`}
 							>
-								<span className="text-sm font-medium text-content truncate min-w-0 flex-1">
-									{row.name}
-								</span>
+								<div className="flex flex-col min-w-0 flex-1">
+									<span className="text-sm font-medium text-content truncate">
+										{row.name}
+									</span>
+									{(row.brandName || row.packageSize) && (
+										<span className="text-xs text-content-faint truncate">
+											{[
+												row.brandName,
+												row.packageSize
+													? `${row.packageSize} ${t(`schedule.units.${row.stockUnit}`)}`
+													: null,
+											]
+												.filter(Boolean)
+												.join(" \u00B7 ")}
+										</span>
+									)}
+								</div>
 
 								<div className="flex items-center shrink-0">
 									<Input
@@ -161,6 +195,14 @@ export function PriceList({ items, shopOptions, filterIds, recentScans }: PriceL
 											<option value="__new__">+ {t("shopping.addShop")}</option>
 										</select>
 									</div>
+									<Button
+										variant="ghost"
+										size="icon-sm"
+										onClick={() => setEditItem(items.find((i) => i.id === row.id) ?? null)}
+										className="ml-xs"
+									>
+										<Pencil className="size-3.5 text-content-faint stroke-[1.5]" />
+									</Button>
 								</div>
 							</div>
 						))}
@@ -174,6 +216,15 @@ export function PriceList({ items, shopOptions, filterIds, recentScans }: PriceL
 				onOpenChange={(open) => {
 					if (!open) closeShopEdit();
 				}}
+			/>
+
+			<SupplementEditSheet
+				supplement={editSheetItem}
+				open={editItem !== null}
+				onOpenChange={(open) => {
+					if (!open) setEditItem(null);
+				}}
+				shops={shopOptions.map((s) => ({ id: s.id, name: s.name }))}
 			/>
 		</div>
 	);

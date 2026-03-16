@@ -134,6 +134,13 @@
 			"when": 1774329600000,
 			"tag": "0018_cart_scan_status",
 			"breakpoints": true
+		},
+		{
+			"idx": 19,
+			"version": "7",
+			"when": 1774416000000,
+			"tag": "0019_finish_package",
+			"breakpoints": true
 		}
 	]
 }

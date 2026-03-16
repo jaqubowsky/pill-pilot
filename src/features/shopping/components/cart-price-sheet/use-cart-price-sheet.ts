@@ -36,9 +36,15 @@ type UseCartPriceSheetParams = {
 	supplements: SupplementOption[];
 	shops: ShopOption[];
 	onSaved: () => void;
+	onUploaded?: () => void;
 };
 
-export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceSheetParams) {
+export function useCartPriceSheet({
+	supplements,
+	shops,
+	onSaved,
+	onUploaded,
+}: UseCartPriceSheetParams) {
 	const [isOpen, setIsOpen] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -97,6 +103,8 @@ export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceS
 
 			if (!response.ok) {
 				toast.error("Nie udało się rozpocząć analizy. Spróbuj ponownie.");
+			} else {
+				onUploaded?.();
 			}
 		} catch {
 			toast.error("Nie udało się rozpocząć analizy. Spróbuj ponownie.");

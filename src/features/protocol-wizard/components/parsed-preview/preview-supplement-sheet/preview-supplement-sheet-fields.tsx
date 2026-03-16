@@ -49,6 +49,7 @@ export function PreviewSupplementSheetFields({
 	const timeBlockId = watch("timeBlockId");
 	const dosageIntervalMinutes = watch("dosageIntervalMinutes");
 	const waitAfterTakingMinutes = watch("waitAfterTakingMinutes");
+	const finishPackage = watch("finishPackage");
 
 	const isCycling = cycleDaysOn !== undefined;
 	const hasOffset = startDayOffset !== undefined && startDayOffset !== 0;
@@ -57,7 +58,13 @@ export function PreviewSupplementSheetFields({
 	const hasWaitAfter = waitAfterTakingMinutes !== undefined;
 
 	const hasAnyAdvanced =
-		isCritical || isCycling || hasOffset || hasDuration || hasInterval || hasWaitAfter;
+		isCritical ||
+		isCycling ||
+		hasOffset ||
+		hasDuration ||
+		hasInterval ||
+		hasWaitAfter ||
+		finishPackage;
 	const [advancedOpen, setAdvancedOpen] = useState(hasAnyAdvanced);
 
 	return (
@@ -286,6 +293,13 @@ export function PreviewSupplementSheetFields({
 						onChange={(v) => setValue("waitAfterTakingMinutes", v)}
 					/>
 				)}
+
+				<ToggleRow
+					label={t("schedule.finishPackageQuestion")}
+					hint={t("schedule.finishPackageHint")}
+					checked={finishPackage ?? false}
+					onCheckedChange={(v) => setValue("finishPackage", v)}
+				/>
 			</div>
 		</div>
 	);

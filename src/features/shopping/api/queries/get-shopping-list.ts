@@ -43,6 +43,7 @@ type ScheduleRow = {
 	startDayOffset: number;
 	durationDays: number | null;
 	protocolStartDate: string | null;
+	finishPackage: boolean;
 };
 
 const SUGGEST_ADD_DAYS = 30;
@@ -50,6 +51,11 @@ const SUGGEST_ADD_DAYS = 30;
 function isOneTimeSupplement(schedules: ScheduleRow[]): boolean {
 	if (schedules.length === 0) return false;
 	return schedules.every((s) => s.durationDays !== null);
+}
+
+function isFinishPackageOnly(schedules: ScheduleRow[]): boolean {
+	if (schedules.length === 0) return false;
+	return schedules.every((s) => s.finishPackage);
 }
 
 export async function getShoppingList(userId: string): Promise<ShoppingGroup[]> {
@@ -101,6 +107,7 @@ export async function getShoppingList(userId: string): Promise<ShoppingGroup[]> 
 			startDayOffset: supplementSchedules.startDayOffset,
 			durationDays: supplementSchedules.durationDays,
 			protocolStartDate: protocols.startDate,
+			finishPackage: supplementSchedules.finishPackage,
 		})
 		.from(supplementSchedules)
 		.innerJoin(protocols, eq(supplementSchedules.protocolId, protocols.id))
@@ -131,6 +138,7 @@ export async function getShoppingList(userId: string): Promise<ShoppingGroup[]> 
 		const schedules = schedulesPerSupplement.get(row.id) ?? [];
 
 		if (isOneTimeSupplement(schedules)) continue;
+		if (isFinishPackageOnly(schedules)) continue;
 
 		const stock = Number(row.currentStock);
 		const threshold = row.stockWarningThreshold ?? 7;

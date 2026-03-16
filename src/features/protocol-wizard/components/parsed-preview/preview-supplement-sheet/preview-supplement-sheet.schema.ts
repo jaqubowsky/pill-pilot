@@ -16,6 +16,7 @@ export const previewSupplementSheetSchema = z.object({
 	dosageAmount: z.number().positive(),
 	dosageUnit: z.enum(DOSAGE_UNITS),
 	timeBlockId: z.string().min(1),
+	finishPackage: z.boolean().optional(),
 });
 
 export type PreviewSupplementSheetValues = z.infer<typeof previewSupplementSheetSchema>;

@@ -48,6 +48,8 @@ export type ScheduleEntry = {
 	waitAfterTakingMinutes: number | null;
 	cooldown: { remainingMs: number; logId: string } | null;
 	waitTimer: { remainingMs: number } | null;
+	packageSize: number | null;
+	finishPackage: boolean;
 };
 
 export type TimeBlockStatus = {
@@ -83,6 +85,8 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 			isCritical: supplementSchedules.isCritical,
 			currentStock: supplements.currentStock,
 			stockUnit: supplements.stockUnit,
+			packageSize: supplements.packageSize,
+			finishPackage: supplementSchedules.finishPackage,
 			blockId: timeBlocks.id,
 			blockName: timeBlocks.name,
 			blockIcon: timeBlocks.icon,

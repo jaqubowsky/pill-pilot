@@ -34,13 +34,6 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/shared/components/ui/select";
-import {
 	Sheet,
 	SheetContent,
 	SheetFooter,
@@ -68,6 +61,7 @@ type CartPriceSheetProps = {
 	shops: ShopOption[];
 	recentScans?: RecentScanSummary[];
 	onSaved?: () => void;
+	onUploaded?: () => void;
 	trigger?: React.ReactNode;
 };
 
@@ -356,6 +350,7 @@ export function CartPriceSheet({
 	shops,
 	recentScans,
 	onSaved,
+	onUploaded,
 	trigger,
 }: CartPriceSheetProps) {
 	const t = useTranslations("shopping.cartPriceSheet");
@@ -391,6 +386,7 @@ export function CartPriceSheet({
 		supplements,
 		shops,
 		onSaved: onSaved ?? (() => {}),
+		onUploaded,
 	});
 
 	function handleTriggerClick() {
@@ -563,33 +559,37 @@ export function CartPriceSheet({
 										</div>
 									) : (
 										<>
-											<Select
-												value=""
-												onValueChange={(val) => {
-													setSelectedShopId(val || null);
-													const shop = shops.find((s) => s.id === val);
-													if (shop) setShopName(shop.name);
-												}}
-											>
-												<SelectTrigger className="w-full bg-surface-sunken border-edge rounded-lg">
-													<SelectValue>{t("selectShop")}</SelectValue>
-												</SelectTrigger>
-												<SelectContent>
-													{shops.map((shop) => (
-														<SelectItem key={shop.id} value={shop.id}>
-															{shop.name}
-														</SelectItem>
-													))}
-												</SelectContent>
-											</Select>
+											{shops.length > 0 && (
+												<>
+													<select
+														value=""
+														onChange={(e) => {
+															const val = e.target.value;
+															setSelectedShopId(val || null);
+															const shop = shops.find((s) => s.id === val);
+															if (shop) setShopName(shop.name);
+														}}
+														className="w-full min-h-11 px-sm text-sm bg-surface-sunken border border-edge rounded-lg text-content appearance-none"
+													>
+														<option value="" disabled>
+															{t("selectShop")}
+														</option>
+														{shops.map((shop) => (
+															<option key={shop.id} value={shop.id}>
+																{shop.name}
+															</option>
+														))}
+													</select>
 
-											<div className="flex items-center gap-md">
-												<div className="flex-1 border-t border-edge-subtle" />
-												<span className="text-xs font-semibold uppercase tracking-wide text-content-faint">
-													lub
-												</span>
-												<div className="flex-1 border-t border-edge-subtle" />
-											</div>
+													<div className="flex items-center gap-md">
+														<div className="flex-1 border-t border-edge-subtle" />
+														<span className="text-xs font-semibold uppercase tracking-wide text-content-faint">
+															lub
+														</span>
+														<div className="flex-1 border-t border-edge-subtle" />
+													</div>
+												</>
+											)}
 
 											<Button
 												variant="outline"

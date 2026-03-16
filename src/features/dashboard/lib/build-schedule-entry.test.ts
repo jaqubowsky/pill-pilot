@@ -22,6 +22,8 @@ const baseRow = {
 	supplementCategory: "vitamins",
 	currentStock: "100",
 	stockUnit: "capsule" as const,
+	packageSize: null,
+	finishPackage: false,
 	protocolStartDate: "2025-01-01",
 	protocolId: "p1",
 	blockId: "b1",
@@ -334,6 +336,26 @@ describe("buildScheduleEntry", () => {
 
 		const { entry } = buildScheduleEntry({ ...baseRow, waitAfterTakingMinutes: 20 }, ctx);
 		expect(entry.waitTimer).toBeNull();
+	});
+
+	it("passes through packageSize", () => {
+		const { entry } = buildScheduleEntry({ ...baseRow, packageSize: 90 }, baseCtx);
+		expect(entry.packageSize).toBe(90);
+	});
+
+	it("passes through null packageSize", () => {
+		const { entry } = buildScheduleEntry(baseRow, baseCtx);
+		expect(entry.packageSize).toBeNull();
+	});
+
+	it("passes through finishPackage flag", () => {
+		const { entry } = buildScheduleEntry({ ...baseRow, finishPackage: true }, baseCtx);
+		expect(entry.finishPackage).toBe(true);
+	});
+
+	it("defaults finishPackage to false", () => {
+		const { entry } = buildScheduleEntry(baseRow, baseCtx);
+		expect(entry.finishPackage).toBe(false);
 	});
 
 	it("applies timer adjustment to wait timer", () => {

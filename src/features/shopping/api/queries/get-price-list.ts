@@ -5,7 +5,10 @@ import { shops, supplements } from "@/shared/db/schema";
 export type PriceListItem = {
 	id: string;
 	name: string;
+	brandName: string | null;
+	category: string;
 	stockUnit: string;
+	currentStock: string | null;
 	packagePrice: string | null;
 	packageSize: number | null;
 	shopId: string | null;
@@ -29,7 +32,10 @@ export async function getPriceList(userId: string): Promise<PriceListData> {
 		.select({
 			id: supplements.id,
 			name: supplements.name,
+			brandName: supplements.brandName,
+			category: supplements.category,
 			stockUnit: supplements.stockUnit,
+			currentStock: supplements.currentStock,
 			packagePrice: supplements.packagePrice,
 			packageSize: supplements.packageSize,
 			shopId: supplements.shopId,

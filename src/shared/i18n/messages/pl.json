@@ -74,6 +74,7 @@
 		"expired": "Zakończony",
 		"notStarted": "Rozpoczęcie za {count} dni",
 		"outOfStock": "Brak zapasu",
+		"finishPackage": "Do końca",
 		"lowStock": "Niski zapas: {count} {unit}",
 		"lowStockBadge": "Niski stan",
 		"processingBanner": "Trwa analiza protokołu...",
@@ -326,6 +327,9 @@
 		"intervalTime": "Czas odstępu",
 		"dosageIntervalBadge": "co {time}",
 		"waitAfterTakingBadge": "{time} oczekiwania",
+		"finishPackageQuestion": "Do końca opakowania?",
+		"finishPackageHint": "Bierz do wyczerpania zapasu, potem automatycznie dezaktywuj. Nie pokazuje ostrzeżeń o niskim stanie.",
+		"finishPackageBadge": "Do końca",
 		"updateSiblingsTitle": "Zaktualizować pozostałe dawki?",
 		"updateSiblingsDescription": "Zmieniono ustawienia {name}. Czy chcesz zastosować te zmiany również do pozostałych dawek?",
 		"updateSiblingsChangedFields": "Zmienione pola:",
@@ -339,7 +343,8 @@
 			"cycleDaysOff": "Dni przerwy (cykl)",
 			"startDayOffset": "Opóźniony start",
 			"durationDays": "Ograniczony czas",
-			"waitAfterTakingMinutes": "Czas oczekiwania po przyjęciu"
+			"waitAfterTakingMinutes": "Czas oczekiwania po przyjęciu",
+			"finishPackage": "Do końca opakowania"
 		},
 		"units": {
 			"capsule": "kapsułki",

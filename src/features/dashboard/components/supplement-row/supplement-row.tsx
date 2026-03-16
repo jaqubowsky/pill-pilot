@@ -5,6 +5,7 @@ import {
 	CheckCircle,
 	Hourglass,
 	Lock,
+	PackageCheck,
 	Pencil,
 	Repeat,
 	ShieldAlert,
@@ -61,6 +62,7 @@ export function SupplementRow({
 		isExpired,
 		notStartedDays,
 		stockStatus,
+		finishPackage,
 	} = entry;
 	const t = useTranslations("dashboard");
 	const ts = useTranslations("schedule");
@@ -80,11 +82,22 @@ export function SupplementRow({
 
 	const [editOpen, setEditOpen] = useState(false);
 
+	const subtitle =
+		[
+			entry.supplementBrandName,
+			entry.packageSize ? `${entry.packageSize} ${t(`units.${entry.dosageUnit}`)}` : null,
+		]
+			.filter(Boolean)
+			.join(" \u00B7 ") || null;
+
 	const isNotStarted = notStartedDays !== null && notStartedDays > 0;
 	const isLocked = phase !== null && !phase.isUnlocked;
-	const isOutOfStock = stockStatus !== null && stockStatus.currentStock === 0;
+	const isOutOfStock = stockStatus !== null && stockStatus.currentStock === 0 && !finishPackage;
 	const isLowStock =
-		stockStatus !== null && stockStatus.currentStock > 0 && stockStatus.daysRemaining < 7;
+		stockStatus !== null &&
+		stockStatus.currentStock > 0 &&
+		stockStatus.daysRemaining < 7 &&
+		!finishPackage;
 	const isCooldownActive = entry.cooldown !== null && entry.cooldown.remainingMs > 0;
 	const hasWaitTimer = entry.waitTimer !== null && entry.waitTimer.remainingMs > 0;
 	const isDisabled =
@@ -114,6 +127,7 @@ export function SupplementRow({
 				/>
 				<SupplementInfo
 					name={supplementName}
+					subtitle={subtitle}
 					dosageAmount={dosageAmount}
 					dosageUnit={dosageUnit}
 					notes={notes}
@@ -149,6 +163,9 @@ export function SupplementRow({
 							)}
 							{isCritical && (
 								<IconBadge icon={ShieldAlert} variant="danger" label={t("critical")} />
+							)}
+							{finishPackage && (
+								<IconBadge icon={PackageCheck} label={t("finishPackage")} />
 							)}
 							{cycling && !cycling.isOnPhase && (
 								<IconBadge
@@ -230,6 +247,7 @@ export function SupplementRow({
 					dosageAmount: Number(entry.dosageAmount),
 					dosageUnit: entry.dosageUnit,
 					timeBlockId: entry.timeBlockId,
+					finishPackage: entry.finishPackage,
 				}}
 				timeBlocks={timeBlocks}
 				open={editOpen}

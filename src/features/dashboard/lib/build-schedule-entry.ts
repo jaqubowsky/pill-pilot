@@ -24,6 +24,8 @@ type ScheduleRow = Pick<
 	supplementCategory: string;
 	currentStock: string | null;
 	stockUnit: DosageUnit;
+	packageSize: number | null;
+	finishPackage: boolean;
 	protocolStartDate: string | null;
 	protocolId: string;
 	blockId: string;
@@ -121,6 +123,8 @@ export function buildScheduleEntry(
 			waitAfterTakingMinutes: row.waitAfterTakingMinutes,
 			cooldown,
 			waitTimer,
+			packageSize: row.packageSize,
+			finishPackage: row.finishPackage,
 		},
 		hasLog: !!log,
 	};

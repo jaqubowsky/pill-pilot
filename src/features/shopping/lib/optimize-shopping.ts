@@ -81,6 +81,8 @@ export function optimizeShopping(groups: ShoppingGroup[]): OptimizedShoppingList
 				? Math.max(0, freeThreshold - subtotal)
 				: null;
 
+		if (mustBuy.length === 0 && suggestAdd.length === 0) continue;
+
 		const orderTotal = subtotal + effectiveDeliveryCost;
 		grandTotal += orderTotal;
 

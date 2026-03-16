@@ -48,6 +48,15 @@ export const markTaken = authActionClient
 
 		await supplementRepository.decrementStock(schedule.supplementId, schedule.dosageAmount);
 
+		if (schedule.finishPackage) {
+			const updated = await supplementRepository.findById(schedule.supplementId);
+			if (updated && updated.currentStock !== null && parseFloat(updated.currentStock) <= 0) {
+				await supplementScheduleRepository.deactivateFinishPackageBySupplementId(
+					schedule.supplementId,
+				);
+			}
+		}
+
 		revalidatePath("/dashboard");
 
 		return { logId: log.id };

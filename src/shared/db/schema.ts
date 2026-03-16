@@ -195,6 +195,7 @@ export const supplementSchedules = pgTable("supplement_schedules", {
 	durationDays: integer("duration_days"),
 	dosageIntervalMinutes: integer("dosage_interval_minutes"),
 	waitAfterTakingMinutes: integer("wait_after_taking_minutes"),
+	finishPackage: boolean("finish_package").notNull().default(false),
 	sortOrder: integer("sort_order").notNull().default(0),
 	active: boolean("active").notNull().default(true),
 	createdAt: timestamp("created_at").notNull().defaultNow(),

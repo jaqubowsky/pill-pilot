@@ -1,6 +1,6 @@
 "use client";
 
-import { Hourglass, Lock, Repeat, Timer } from "lucide-react";
+import { Hourglass, Lock, PackageCheck, Repeat, Timer } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { EditedSupplement } from "@/features/protocol-wizard/components/parsed-preview/parsed-preview.schema";
 import { IconBadge } from "@/shared/components/icon-badge";
@@ -10,9 +10,10 @@ import type { IdentifiedSupplement } from "../use-parsed-preview";
 type SupplementBadgesProps = {
 	supplement: IdentifiedSupplement;
 	schedule?: EditedSupplement["schedules"][number];
+	finishPackage?: boolean;
 };
 
-export function SupplementBadges({ supplement, schedule }: SupplementBadgesProps) {
+export function SupplementBadges({ supplement, schedule, finishPackage }: SupplementBadgesProps) {
 	const t = useTranslations("schedule");
 
 	const cycleDaysOn = schedule?.cycleDaysOn ?? supplement.cycleDaysOn;
@@ -24,6 +25,9 @@ export function SupplementBadges({ supplement, schedule }: SupplementBadgesProps
 
 	return (
 		<>
+			{finishPackage && (
+				<IconBadge icon={PackageCheck} label={t("finishPackageBadge")} />
+			)}
 			{cycleDaysOn && cycleDaysOff ? (
 				<IconBadge
 					icon={Repeat}

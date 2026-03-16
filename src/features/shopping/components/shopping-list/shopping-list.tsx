@@ -122,7 +122,7 @@ export function ShoppingList({ groups }: ShoppingListProps) {
 							</div>
 						)}
 
-						{order.amountToFreeDelivery !== null && (
+						{order.amountToFreeDelivery !== null && order.suggestAdd.length > 0 && (
 							<div className="px-md py-xs">
 								<p className="text-xs text-warning font-medium">
 									{t("list.addForFreeDelivery", {

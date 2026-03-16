@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
+import { ShopEditSheet } from "@/features/shopping/components/shop-edit-sheet";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import {
@@ -284,6 +285,7 @@ export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPri
 	const t = useTranslations("shopping.cartPriceSheet");
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const fileInputId = "cart-file-input";
+	const [shopEditOpen, setShopEditOpen] = useState(false);
 
 	const {
 		isOpen,
@@ -387,84 +389,54 @@ export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPri
 							</div>
 						</div>
 					) : (
-						<div className="flex flex-col gap-md overflow-y-auto flex-1 px-md pb-sm">
+						<div className="flex flex-col gap-md overflow-y-auto flex-1 min-h-0 px-md pb-sm">
 							<div className="flex flex-col gap-sm">
-								<div className="flex flex-col gap-xs">
-									<label className="text-xs font-medium text-content-muted">{t("shopLabel")}</label>
-									<div className="flex gap-sm">
-										<Input
-											value={shopName}
-											onChange={(e) => {
-												setShopName(e.target.value);
-												setSelectedShopId(null);
+								<label className="text-xs font-medium text-content-muted">{t("shopLabel")}</label>
+								<Input
+									value={shopName}
+									onChange={(e) => {
+										setShopName(e.target.value);
+										setSelectedShopId(null);
+									}}
+									placeholder={t("shopPlaceholder")}
+									className="bg-surface-sunken border-edge rounded-lg"
+								/>
+								<div className="flex gap-sm">
+									{shops.length > 0 && (
+										<Select
+											value={selectedShopId ?? ""}
+											onValueChange={(val) => {
+												setSelectedShopId(val || null);
+												const shop = shops.find((s) => s.id === val);
+												if (shop) setShopName(shop.name);
 											}}
-											placeholder={t("shopPlaceholder")}
-											className="flex-1 bg-surface-sunken border-edge rounded-lg"
-										/>
-										{shops.length > 0 && (
-											<Select
-												value={selectedShopId ?? ""}
-												onValueChange={(val) => {
-													setSelectedShopId(val || null);
-													const shop = shops.find((s) => s.id === val);
-													if (shop) setShopName(shop.name);
-												}}
-											>
-												<SelectTrigger className="w-auto shrink-0 bg-surface-sunken border-edge rounded-lg">
-													<SelectValue>
-														{selectedShopId
-															? shops.find((s) => s.id === selectedShopId)?.name
-															: t("selectShop")}
-													</SelectValue>
-												</SelectTrigger>
-												<SelectContent>
-													{shops.map((shop) => (
-														<SelectItem key={shop.id} value={shop.id}>
-															{shop.name}
-														</SelectItem>
-													))}
-												</SelectContent>
-											</Select>
-										)}
-									</div>
+										>
+											<SelectTrigger className="flex-1 bg-surface-sunken border-edge rounded-lg">
+												<SelectValue>
+													{selectedShopId
+														? shops.find((s) => s.id === selectedShopId)?.name
+														: t("selectShop")}
+												</SelectValue>
+											</SelectTrigger>
+											<SelectContent>
+												{shops.map((shop) => (
+													<SelectItem key={shop.id} value={shop.id}>
+														{shop.name}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									)}
+									<Button
+										variant="outline"
+										size="sm"
+										className="flex-1"
+										onClick={() => setShopEditOpen(true)}
+									>
+										<Plus className="size-4" />
+										{t("addShop")}
+									</Button>
 								</div>
-
-								{shopName.trim() && !selectedShopId && (
-									<div className="flex gap-sm">
-										<div className="flex-1 flex flex-col gap-xs">
-											<label className="text-xs text-content-faint">{t("deliveryCost")}</label>
-											<div className="flex items-center gap-xs">
-												<Input
-													type="number"
-													inputMode="decimal"
-													min={0}
-													step={0.01}
-													value={shopDeliveryCost}
-													onChange={(e) => setShopDeliveryCost(e.target.value)}
-													placeholder="0.00"
-													className="flex-1 h-9 bg-surface-sunken border-edge rounded-lg text-sm"
-												/>
-												<span className="text-xs text-content-faint">zł</span>
-											</div>
-										</div>
-										<div className="flex-1 flex flex-col gap-xs">
-											<label className="text-xs text-content-faint">{t("freeThreshold")}</label>
-											<div className="flex items-center gap-xs">
-												<Input
-													type="number"
-													inputMode="decimal"
-													min={0}
-													step={0.01}
-													value={shopFreeThreshold}
-													onChange={(e) => setShopFreeThreshold(e.target.value)}
-													placeholder="0.00"
-													className="flex-1 h-9 bg-surface-sunken border-edge rounded-lg text-sm"
-												/>
-												<span className="text-xs text-content-faint">zł</span>
-											</div>
-										</div>
-									</div>
-								)}
 							</div>
 
 							{unverifiedCount > 0 && (
@@ -507,6 +479,8 @@ export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPri
 					</SheetFooter>
 				</SheetContent>
 			</Sheet>
+
+			<ShopEditSheet shop={null} open={shopEditOpen} onOpenChange={setShopEditOpen} />
 		</>
 	);
 }

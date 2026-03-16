@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, Pencil, Plus, Store } from "lucide-react";
+import { ImageUp, Pencil, Plus, Store } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { PriceListItem, ShopOption } from "@/features/shopping/api/queries/get-price-list";
 import { CartPriceSheet } from "@/features/shopping/components/cart-price-sheet";
@@ -73,24 +73,30 @@ export function PriceList({ items, shopOptions, filterIds }: PriceListProps) {
 				shops={shopsForCart}
 				trigger={
 					<div className="w-full flex flex-col items-center justify-center gap-sm rounded-xl border-2 border-dashed border-edge-strong bg-surface-sunken p-lg cursor-pointer active:scale-[0.98] transition-transform">
-						<Camera className="size-8 text-content-faint stroke-[1.5]" />
+						<ImageUp className="size-8 text-content-faint stroke-[1.5]" />
 						<p className="text-sm font-medium text-content-muted">{t("shopping.scanCart")}</p>
 						<p className="text-xs text-content-faint">{t("shopping.scanCartHint")}</p>
 					</div>
 				}
 			/>
 
-			<div className="flex items-center justify-end">
-				<Button
-					variant="ghost"
-					size="sm"
-					onClick={openAddShop}
-					className="flex items-center gap-xs text-brand-600"
-				>
-					<Plus className="size-4" />
-					{t("shopping.addShop")}
-				</Button>
+			<div className="flex items-center gap-md">
+				<div className="flex-1 border-t border-edge-subtle" />
+				<span className="text-xs font-semibold uppercase tracking-wide text-content-faint">
+					{t("shopping.or")}
+				</span>
+				<div className="flex-1 border-t border-edge-subtle" />
 			</div>
+
+			<Button
+				variant="outline"
+				size="lg"
+				onClick={openAddShop}
+				className="w-full flex items-center justify-center gap-sm rounded-xl bg-surface-raised border-edge-subtle shadow-sm"
+			>
+				<Plus className="size-5 text-brand-600" />
+				<span className="text-sm font-medium text-content">{t("shopping.addShop")}</span>
+			</Button>
 
 			{sortedGroups.length === 0 && (
 				<p className="text-sm text-content-muted text-center py-xl">{t("shopping.noPrices")}</p>

@@ -33,18 +33,9 @@ function isImage(file: File) {
 	return IMAGE_TYPES.includes(file.type);
 }
 
-async function compressImage(buffer: Buffer): Promise<{ data: Buffer; mediaType: string }> {
+async function compressImage(buffer: Buffer): Promise<Buffer> {
 	if (buffer.byteLength <= MAX_IMAGE_BYTES) {
-		const meta = await sharp(buffer).metadata();
-		const mediaType =
-			meta.format === "png"
-				? "image/png"
-				: meta.format === "webp"
-					? "image/webp"
-					: meta.format === "gif"
-						? "image/gif"
-						: "image/jpeg";
-		return { data: buffer, mediaType };
+		return buffer;
 	}
 
 	const image = sharp(buffer);
@@ -58,14 +49,13 @@ async function compressImage(buffer: Buffer): Promise<{ data: Buffer; mediaType:
 
 	const compressed = await pipeline.jpeg({ quality: 80 }).toBuffer();
 	if (compressed.byteLength <= MAX_IMAGE_BYTES) {
-		return { data: compressed, mediaType: "image/jpeg" };
+		return compressed;
 	}
 
-	const further = await sharp(buffer)
+	return sharp(buffer)
 		.resize(maxDim, maxDim, { fit: "inside", withoutEnlargement: true })
 		.jpeg({ quality: 50 })
 		.toBuffer();
-	return { data: further, mediaType: "image/jpeg" };
 }
 
 const supplementContextSchema = z.object({
@@ -141,11 +131,11 @@ export async function POST(request: NextRequest) {
 	}
 
 	const buffer = Buffer.from(await file.arrayBuffer());
-	const compressedImage = await compressImage(buffer);
+	const compressedData = await compressImage(buffer);
 
 	try {
 		const { object } = await generateObject({
-			model: anthropic("claude-haiku-4-5"),
+			model: anthropic("claude-haiku-4-5-20251001"),
 			schema: cartParseSchema,
 			messages: [
 				{
@@ -153,12 +143,7 @@ export async function POST(request: NextRequest) {
 					content: [
 						{
 							type: "image",
-							image: compressedImage.data,
-							mediaType: compressedImage.mediaType as
-								| "image/jpeg"
-								| "image/png"
-								| "image/webp"
-								| "image/gif",
+							image: compressedData,
 						},
 						{
 							type: "text",
@@ -170,7 +155,8 @@ export async function POST(request: NextRequest) {
 		});
 
 		return Response.json(object);
-	} catch {
+	} catch (e) {
+		console.error("[cart/parse] AI error:", e);
 		return Response.json({ error: "ai_error" }, { status: 500 });
 	}
 }

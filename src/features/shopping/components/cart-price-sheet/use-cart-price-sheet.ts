@@ -72,8 +72,8 @@ export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceS
 			});
 
 			if (!response.ok) {
-				const data = await response.json();
-				toast.error(data.error ?? "ai_error");
+				toast.error("Nie udało się przeanalizować zrzutu. Spróbuj ponownie.");
+				setIsUploading(false);
 				setIsOpen(false);
 				return;
 			}
@@ -101,7 +101,7 @@ export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceS
 				}
 			}
 		} catch {
-			toast.error("ai_error");
+			toast.error("Nie udało się przeanalizować zrzutu. Spróbuj ponownie.");
 			setIsOpen(false);
 		} finally {
 			setIsUploading(false);

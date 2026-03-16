@@ -35,6 +35,7 @@ export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceS
 	const [isOpen, setIsOpen] = useState(false);
 	const [isUploading, setIsUploading] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 	const [items, setItems] = useState<CartItemState[]>([]);
 	const [detectedShopName, setDetectedShopName] = useState<string>("");
 	const [shopName, setShopName] = useState<string>("");
@@ -47,6 +48,7 @@ export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceS
 	function closeSheet() {
 		setIsOpen(false);
 		setItems([]);
+		setError(null);
 		setDetectedShopName("");
 		setShopName("");
 		setSelectedShopId(null);
@@ -72,9 +74,7 @@ export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceS
 			});
 
 			if (!response.ok) {
-				toast.error("Nie udało się przeanalizować zrzutu. Spróbuj ponownie.");
-				setIsUploading(false);
-				setIsOpen(false);
+				setError("Nie udało się przeanalizować zrzutu. Spróbuj ponownie.");
 				return;
 			}
 
@@ -101,8 +101,7 @@ export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceS
 				}
 			}
 		} catch {
-			toast.error("Nie udało się przeanalizować zrzutu. Spróbuj ponownie.");
-			setIsOpen(false);
+			setError("Nie udało się przeanalizować zrzutu. Spróbuj ponownie.");
 		} finally {
 			setIsUploading(false);
 		}
@@ -185,6 +184,7 @@ export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceS
 		isOpen,
 		isUploading,
 		isSaving,
+		error,
 		items,
 		detectedShopName,
 		shopName,

@@ -37,6 +37,7 @@ export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPri
 		isOpen,
 		isUploading,
 		isSaving,
+		error,
 		items,
 		shopName,
 		setShopName,
@@ -115,6 +116,23 @@ export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPri
 							<div className="flex flex-col items-center gap-md text-content-muted">
 								<Loader2 className="size-8 animate-spin" />
 								<p className="text-sm">{t("analysing")}</p>
+							</div>
+						</div>
+					) : error ? (
+						<div className="flex flex-1 items-center justify-center py-xl">
+							<div className="flex flex-col items-center gap-md text-center px-md">
+								<AlertTriangle className="size-8 text-warning" />
+								<p className="text-sm text-content-muted">{error}</p>
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={() => {
+										closeSheet();
+										fileInputRef.current?.click();
+									}}
+								>
+									{t("scanCart")}
+								</Button>
 							</div>
 						</div>
 					) : (

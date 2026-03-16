@@ -48,16 +48,15 @@ export function ShoppingList({ groups }: ShoppingListProps) {
 									{shopName}
 								</span>
 							</div>
-							{order.shop?.deliveryCost !== null &&
-								order.shop?.deliveryCost !== undefined && (
-									<span className="text-xs text-content-faint">
-										{order.wouldReachFreeDelivery
-											? t("list.freeDelivery")
-											: t("list.deliveryCost", {
-													cost: formatAmount(parseFloat(order.shop.deliveryCost)),
-												})}
-									</span>
-								)}
+							{order.shop?.deliveryCost !== null && order.shop?.deliveryCost !== undefined && (
+								<span className="text-xs text-content-faint">
+									{order.wouldReachFreeDelivery
+										? t("list.freeDelivery")
+										: t("list.deliveryCost", {
+												cost: formatAmount(parseFloat(order.shop.deliveryCost)),
+											})}
+								</span>
+							)}
 						</div>
 
 						<div className="border-t border-dashed border-edge px-md">

@@ -34,6 +34,7 @@ export function useScheduleEditSheet({
 	const [siblings, setSiblings] = useState<Sibling[] | null>(null);
 	const lastValuesRef = useRef<PreviewSupplementSheetValues | null>(null);
 	const changedFieldsRef = useRef<string[] | null>(null);
+	const closingRef = useRef(false);
 
 	const { execute, isPending } = useAction(updateSchedule, {
 		onSuccess: ({ data }) => {
@@ -41,6 +42,7 @@ export function useScheduleEditSheet({
 				setSiblings(data.siblings);
 				changedFieldsRef.current = data.changedFields;
 			} else {
+				closingRef.current = true;
 				setSiblings(null);
 				changedFieldsRef.current = null;
 				onClose();
@@ -50,6 +52,7 @@ export function useScheduleEditSheet({
 	});
 
 	const handleSubmit = methods.handleSubmit((values) => {
+		closingRef.current = false;
 		lastValuesRef.current = values;
 		execute({ scheduleId, ...values });
 	});
@@ -65,6 +68,7 @@ export function useScheduleEditSheet({
 	}
 
 	function handleSkipSiblings() {
+		closingRef.current = true;
 		setSiblings(null);
 		changedFieldsRef.current = null;
 		onClose();
@@ -72,12 +76,14 @@ export function useScheduleEditSheet({
 	}
 
 	const showSiblings = siblings !== null;
+	const hideForm = showSiblings || closingRef.current;
 
 	return {
 		methods,
 		handleSubmit,
 		isPending,
 		showSiblings,
+		hideForm,
 		siblings,
 		changedFields: changedFieldsRef.current,
 		handleApplyToAll,

@@ -35,6 +35,7 @@ export function ScheduleEditSheet({
 		handleSubmit,
 		isPending,
 		showSiblings,
+		hideForm,
 		siblings,
 		changedFields,
 		handleApplyToAll,
@@ -46,7 +47,6 @@ export function ScheduleEditSheet({
 	});
 
 	const sheetOpen = open || showSiblings;
-	const hideForm = showSiblings;
 
 	return (
 		<BottomSheet

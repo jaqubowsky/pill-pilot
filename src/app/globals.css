@@ -223,6 +223,20 @@
   animation: none;
 }
 
+::view-transition-old(sheet-overlay),
+::view-transition-new(sheet-overlay),
+::view-transition-old(sheet-content),
+::view-transition-new(sheet-content) {
+  animation: none;
+}
+
+html:has([data-slot="sheet-overlay"]) {
+  &::view-transition-old(main-content),
+  &::view-transition-new(main-content) {
+    animation: none;
+  }
+}
+
 ::view-transition-old(main-content) {
   animation: 150ms ease-out both fade-out;
 }

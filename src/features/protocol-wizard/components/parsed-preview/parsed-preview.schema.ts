@@ -5,6 +5,13 @@ const editedScheduleSchema = z.object({
 	dosageAmount: z.number().positive(),
 	dosageUnit: z.enum(DOSAGE_UNITS),
 	timeBlockId: z.string().min(1),
+	notes: z.string().nullable().optional(),
+	waitAfterTakingMinutes: z.number().positive().nullable().optional(),
+	isCritical: z.boolean().optional(),
+	cycleDaysOn: z.number().nullable().optional(),
+	cycleDaysOff: z.number().nullable().optional(),
+	startDayOffset: z.number().min(0).optional(),
+	durationDays: z.number().positive().nullable().optional(),
 });
 
 export const editedSupplementSchema = z.object({

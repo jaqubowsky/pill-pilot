@@ -263,10 +263,12 @@ TIME BLOCK MATCHING:
 </categories>
 
 <critical_flag>
+isCritical: set PER SCHEDULE (on each schedule object).
 isCritical = true when skipping would have health consequences:
 - Prescription medications (thyroid, blood thinners, antibiotics, chronic conditions).
 - Supplements addressing diagnosed deficiencies.
 isCritical = false for general wellness supplements.
+When all schedules share the same criticality, set the same value on each.
 </critical_flag>
 
 <schedule_consolidation>
@@ -284,19 +286,22 @@ When confidence >= ${CONFIDENCE_THRESHOLD}, set uncertaintyReason to null.
 </confidence_and_uncertainty>
 
 <notes_rules>
-- Set at the SUPPLEMENT level (not per schedule).
+- Set PER SCHEDULE (on each schedule object), not at the supplement level.
 - MUST be in Polish.
 - Include medical intake instructions: "30 min przed jedzeniem", "z posiłkiem", "na pusty żołądek", "rozpuścić w wodzie", "2h odstępu od leków".
 - Include phase/sequencing info: "zacząć 2 tyg przed antybiotykiem", "brać w trakcie antybiotyku", "brać po zakończeniu antybiotyku".
 - Include duration/period info from rawNotes (e.g. "Okres: 2-3 msc", "Okres: Leczenie jelit", "Okres: Zużyć 2 opak."). Keep as-is in Polish.
 - EXCLUDE: discount codes, promo codes, shop names, URLs, prices, purchase info.
 - If no special instructions → null.
+- When different schedules share the same notes, set the same value on each schedule.
 </notes_rules>
 
 <cycling>
+cycleDaysOn / cycleDaysOff: set PER SCHEDULE (on each schedule object).
 If rawCycling mentions cycling ("30 dni brania, 30 dni przerwy", "1 miesiąc brania, 1 miesiąc przerwy"):
-- Set cycleDaysOn and cycleDaysOff. Convert months → 30 days.
+- Set cycleDaysOn and cycleDaysOff on each schedule. Convert months → 30 days.
 If no cycling pattern → both null.
+When all schedules share the same cycling, set the same values on each.
 </cycling>
 
 <dosage_interval>
@@ -311,7 +316,7 @@ If no explicit interval requirement → null.
 </dosage_interval>
 
 <wait_after_taking>
-waitAfterTakingMinutes: minutes to wait after taking before eating/other supplements.
+waitAfterTakingMinutes: set PER SCHEDULE (on each schedule object). Minutes to wait after taking before eating/other supplements.
 Derived from rawWaitAfter:
 - "30 min przed jedzeniem" → 30
 - "na czczo 45 min" → 45
@@ -319,10 +324,11 @@ Derived from rawWaitAfter:
 - "15 minut przed jedzeniem" → 15
 If no wait requirement → null.
 Typical for supplements taken on empty stomach (glutamine, thyroid meds).
+When all schedules share the same wait, set the same value on each.
 </wait_after_taking>
 
 <start_day_offset>
-startDayOffset: day number (from protocol start) when this supplement becomes active.
+startDayOffset: set PER SCHEDULE (on each schedule object). Day number (from protocol start) when this schedule becomes active.
 - 0 = starts immediately (day 0 of the protocol).
 - Use rawDependency and phase info to determine the offset.
 
@@ -346,7 +352,7 @@ Rules:
 </start_day_offset>
 
 <duration_days>
-durationDays: how many days to take this supplement. null = indefinitely/permanently.
+durationDays: set PER SCHEDULE (on each schedule object). How many days for this schedule. null = indefinitely/permanently.
 Derived from the "Okres" column or rawNotes duration info.
 
 Mapping:

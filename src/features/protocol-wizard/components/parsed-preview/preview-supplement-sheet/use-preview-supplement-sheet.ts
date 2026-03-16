@@ -35,14 +35,15 @@ export function usePreviewSupplementSheet({
 			name: supplement?.name ?? "",
 			brandName: supplement?.brandName ?? undefined,
 			category: supplement?.category ?? SupplementCategory.supplement,
-			isCritical: supplement?.isCritical ?? false,
-			notes: supplement?.notes ?? undefined,
-			cycleDaysOn: supplement?.cycleDaysOn ?? undefined,
-			cycleDaysOff: supplement?.cycleDaysOff ?? undefined,
-			startDayOffset: supplement?.startDayOffset ?? 0,
-			durationDays: supplement?.durationDays ?? undefined,
+			isCritical: schedule?.isCritical ?? supplement?.isCritical ?? false,
+			notes: schedule?.notes ?? supplement?.notes ?? undefined,
+			cycleDaysOn: schedule?.cycleDaysOn ?? supplement?.cycleDaysOn ?? undefined,
+			cycleDaysOff: schedule?.cycleDaysOff ?? supplement?.cycleDaysOff ?? undefined,
+			startDayOffset: schedule?.startDayOffset ?? supplement?.startDayOffset ?? 0,
+			durationDays: schedule?.durationDays ?? supplement?.durationDays ?? undefined,
 			dosageIntervalMinutes: supplement?.dosageIntervalMinutes ?? undefined,
-			waitAfterTakingMinutes: supplement?.waitAfterTakingMinutes ?? undefined,
+			waitAfterTakingMinutes:
+				schedule?.waitAfterTakingMinutes ?? supplement?.waitAfterTakingMinutes ?? undefined,
 			dosageAmount: schedule?.dosageAmount ?? 1,
 			dosageUnit: schedule?.dosageUnit ?? DosageUnit.capsule,
 			timeBlockId: schedule?.timeBlockId ?? defaultTimeBlockId ?? "",
@@ -54,28 +55,32 @@ export function usePreviewSupplementSheet({
 			name: supplement?.name ?? "",
 			brandName: supplement?.brandName ?? undefined,
 			category: supplement?.category ?? SupplementCategory.supplement,
-			isCritical: supplement?.isCritical ?? false,
-			notes: supplement?.notes ?? undefined,
-			cycleDaysOn: supplement?.cycleDaysOn ?? undefined,
-			cycleDaysOff: supplement?.cycleDaysOff ?? undefined,
-			startDayOffset: supplement?.startDayOffset ?? 0,
-			durationDays: supplement?.durationDays ?? undefined,
+			isCritical: schedule?.isCritical ?? supplement?.isCritical ?? false,
+			notes: schedule?.notes ?? supplement?.notes ?? undefined,
+			cycleDaysOn: schedule?.cycleDaysOn ?? supplement?.cycleDaysOn ?? undefined,
+			cycleDaysOff: schedule?.cycleDaysOff ?? supplement?.cycleDaysOff ?? undefined,
+			startDayOffset: schedule?.startDayOffset ?? supplement?.startDayOffset ?? 0,
+			durationDays: schedule?.durationDays ?? supplement?.durationDays ?? undefined,
 			dosageIntervalMinutes: supplement?.dosageIntervalMinutes ?? undefined,
-			waitAfterTakingMinutes: supplement?.waitAfterTakingMinutes ?? undefined,
+			waitAfterTakingMinutes:
+				schedule?.waitAfterTakingMinutes ?? supplement?.waitAfterTakingMinutes ?? undefined,
 			dosageAmount: schedule?.dosageAmount ?? 1,
 			dosageUnit: schedule?.dosageUnit ?? DosageUnit.capsule,
 			timeBlockId: schedule?.timeBlockId ?? defaultTimeBlockId ?? "",
 		});
-	}, [
-		supplement,
-		defaultTimeBlockId,
-		methods.reset,
-		schedule?.dosageAmount,
-		schedule?.dosageUnit,
-		schedule?.timeBlockId,
-	]);
+	}, [supplement, defaultTimeBlockId, methods.reset, schedule]);
 
 	function handleSubmit(values: PreviewSupplementSheetValues) {
+		const perScheduleFields = {
+			notes: values.notes ?? null,
+			isCritical: values.isCritical,
+			waitAfterTakingMinutes: values.waitAfterTakingMinutes ?? null,
+			cycleDaysOn: values.cycleDaysOn ?? null,
+			cycleDaysOff: values.cycleDaysOff ?? null,
+			startDayOffset: values.startDayOffset ?? 0,
+			durationDays: values.durationDays ?? null,
+		};
+
 		const editedSupplement: EditedSupplement = {
 			name: values.name,
 			existingSupplementId: supplement?.existingSupplementId ?? null,
@@ -97,6 +102,7 @@ export function usePreviewSupplementSheet({
 							dosageAmount: values.dosageAmount,
 							dosageUnit: values.dosageUnit,
 							timeBlockId: values.timeBlockId,
+							...perScheduleFields,
 						},
 					]
 				: supplement.schedules.map((s, i) =>
@@ -106,6 +112,7 @@ export function usePreviewSupplementSheet({
 									dosageAmount: values.dosageAmount,
 									dosageUnit: values.dosageUnit,
 									timeBlockId: values.timeBlockId,
+									...perScheduleFields,
 								}
 							: s,
 					),

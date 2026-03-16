@@ -27,6 +27,16 @@ function convertFromParsed(supplements: ParsedSupplement[]): IdentifiedSupplemen
 	return supplements.map((s, i) => ({
 		...s,
 		_id: `ps_${i}_${++idCounter}`,
+		schedules: s.schedules.map((sch) => ({
+			...sch,
+			notes: sch.notes ?? s.notes ?? null,
+			isCritical: sch.isCritical ?? s.isCritical,
+			waitAfterTakingMinutes: sch.waitAfterTakingMinutes ?? s.waitAfterTakingMinutes ?? null,
+			cycleDaysOn: sch.cycleDaysOn ?? s.cycleDaysOn ?? null,
+			cycleDaysOff: sch.cycleDaysOff ?? s.cycleDaysOff ?? null,
+			startDayOffset: sch.startDayOffset ?? s.startDayOffset ?? 0,
+			durationDays: sch.durationDays ?? s.durationDays ?? null,
+		})),
 	}));
 }
 

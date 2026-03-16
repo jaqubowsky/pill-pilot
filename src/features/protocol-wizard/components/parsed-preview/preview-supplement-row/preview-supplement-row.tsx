@@ -99,7 +99,7 @@ export function PreviewSupplementRow({
 				name={supplement.name}
 				dosageAmount={schedule.dosageAmount}
 				dosageUnit={schedule.dosageUnit}
-				notes={supplement.notes}
+				notes={schedule.notes ?? supplement.notes}
 				notesPopoverSide="top"
 				warning={
 					isLowConfidence ? (
@@ -113,10 +113,10 @@ export function PreviewSupplementRow({
 				badges={
 					<>
 						<SupplementLinkBadge existingSupplementId={supplement.existingSupplementId} />
-						{supplement.isCritical && (
+						{(schedule.isCritical ?? supplement.isCritical) && (
 							<IconBadge icon={ShieldAlert} variant="danger" label={t("dashboard.critical")} />
 						)}
-						<SupplementBadges supplement={supplement} />
+						<SupplementBadges supplement={supplement} schedule={schedule} />
 					</>
 				}
 			/>

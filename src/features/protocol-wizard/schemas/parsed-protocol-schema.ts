@@ -25,6 +25,50 @@ const parsedScheduleSchema = z.object({
 	dosageAmount: z.number().describe("Dosage amount, must be positive"),
 	dosageUnit: z.enum(DOSAGE_UNITS),
 	timeBlockId: z.string(),
+	notes: z
+		.string()
+		.nullable()
+		.optional()
+		.default(null)
+		.describe(
+			"Per-schedule notes in Polish (e.g. '30 min przed jedzeniem', 'z posiłkiem'). Use when the same supplement has different instructions per time block.",
+		),
+	waitAfterTakingMinutes: z
+		.number()
+		.nullable()
+		.optional()
+		.default(null)
+		.describe(
+			"Minutes to wait after taking before eating. Per-schedule override. null if no wait requirement.",
+		),
+	isCritical: z
+		.boolean()
+		.optional()
+		.default(false)
+		.describe("Per-schedule critical flag. true when skipping would have health consequences."),
+	cycleDaysOn: z
+		.number()
+		.nullable()
+		.optional()
+		.default(null)
+		.describe("Per-schedule cycling: days on. null if no cycling."),
+	cycleDaysOff: z
+		.number()
+		.nullable()
+		.optional()
+		.default(null)
+		.describe("Per-schedule cycling: days off. null if no cycling."),
+	startDayOffset: z
+		.number()
+		.optional()
+		.default(0)
+		.describe("Per-schedule day offset from protocol start. 0 = starts immediately."),
+	durationDays: z
+		.number()
+		.nullable()
+		.optional()
+		.default(null)
+		.describe("Per-schedule duration in days. null = indefinitely."),
 });
 
 export const parsedSupplementSchema = z.object({

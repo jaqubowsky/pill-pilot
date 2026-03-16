@@ -2,25 +2,34 @@
 
 import { Hourglass, Lock, Repeat, Timer } from "lucide-react";
 import { useTranslations } from "next-intl";
+import type { EditedSupplement } from "@/features/protocol-wizard/components/parsed-preview/parsed-preview.schema";
 import { IconBadge } from "@/shared/components/icon-badge";
 import { formatMinutes } from "@/shared/lib/format-minutes";
 import type { IdentifiedSupplement } from "../use-parsed-preview";
 
 type SupplementBadgesProps = {
 	supplement: IdentifiedSupplement;
+	schedule?: EditedSupplement["schedules"][number];
 };
 
-export function SupplementBadges({ supplement }: SupplementBadgesProps) {
+export function SupplementBadges({ supplement, schedule }: SupplementBadgesProps) {
 	const t = useTranslations("schedule");
+
+	const cycleDaysOn = schedule?.cycleDaysOn ?? supplement.cycleDaysOn;
+	const cycleDaysOff = schedule?.cycleDaysOff ?? supplement.cycleDaysOff;
+	const waitAfterTakingMinutes =
+		schedule?.waitAfterTakingMinutes ?? supplement.waitAfterTakingMinutes;
+	const startDayOffset = schedule?.startDayOffset ?? supplement.startDayOffset;
+	const durationDays = schedule?.durationDays ?? supplement.durationDays;
 
 	return (
 		<>
-			{supplement.cycleDaysOn && supplement.cycleDaysOff ? (
+			{cycleDaysOn && cycleDaysOff ? (
 				<IconBadge
 					icon={Repeat}
 					label={t("cyclingLabel", {
-						on: supplement.cycleDaysOn,
-						off: supplement.cycleDaysOff,
+						on: cycleDaysOn,
+						off: cycleDaysOff,
 					})}
 				/>
 			) : null}
@@ -33,28 +42,28 @@ export function SupplementBadges({ supplement }: SupplementBadgesProps) {
 					})}
 				/>
 			) : null}
-			{supplement.waitAfterTakingMinutes ? (
+			{waitAfterTakingMinutes ? (
 				<IconBadge
 					icon={Hourglass}
 					variant="amber"
 					label={t("waitAfterTakingBadge", {
-						time: formatMinutes(supplement.waitAfterTakingMinutes),
+						time: formatMinutes(waitAfterTakingMinutes),
 					})}
 				/>
 			) : null}
-			{(supplement.startDayOffset > 0 || supplement.durationDays) && (
+			{(startDayOffset > 0 || durationDays) && (
 				<IconBadge
 					icon={Lock}
 					variant="muted"
 					label={
-						supplement.startDayOffset > 0 && supplement.durationDays
+						startDayOffset > 0 && durationDays
 							? t("dayRangeBadge", {
-									from: supplement.startDayOffset,
-									to: supplement.startDayOffset + supplement.durationDays,
+									from: startDayOffset,
+									to: startDayOffset + durationDays,
 								})
-							: supplement.startDayOffset > 0
-								? t("startDayOffsetBadge", { count: supplement.startDayOffset })
-								: t("durationBadge", { count: supplement.durationDays! })
+							: startDayOffset > 0
+								? t("startDayOffsetBadge", { count: startDayOffset })
+								: t("durationBadge", { count: durationDays! })
 					}
 				/>
 			)}

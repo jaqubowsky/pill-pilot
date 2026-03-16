@@ -2,7 +2,6 @@ import { and, asc, eq } from "drizzle-orm";
 import type { ParsedProtocol } from "@/features/protocol-wizard/schemas/parsed-protocol-schema";
 import { db } from "@/shared/db/client";
 import {
-	type DosageUnit,
 	protocols,
 	type SupplementCategory,
 	supplementSchedules,
@@ -49,6 +48,19 @@ export async function getProtocolAsParsed(
 		.where(eq(supplementSchedules.protocolId, protocolId))
 		.orderBy(asc(supplementSchedules.sortOrder));
 
+	type ScheduleEntry = Pick<
+		typeof supplementSchedules.$inferSelect,
+		| "dosageUnit"
+		| "timeBlockId"
+		| "notes"
+		| "isCritical"
+		| "waitAfterTakingMinutes"
+		| "cycleDaysOn"
+		| "cycleDaysOff"
+		| "startDayOffset"
+		| "durationDays"
+	> & { dosageAmount: number };
+
 	type SupplementEntry = {
 		name: string;
 		existingSupplementId: string | null;
@@ -64,7 +76,7 @@ export async function getProtocolAsParsed(
 		waitAfterTakingMinutes: number | null;
 		confidence: number;
 		uncertaintyReason: string | null;
-		schedules: { dosageAmount: number; dosageUnit: DosageUnit; timeBlockId: string }[];
+		schedules: ScheduleEntry[];
 	};
 
 	const supplementMap = new Map<string, SupplementEntry>();
@@ -94,6 +106,13 @@ export async function getProtocolAsParsed(
 			dosageAmount: Number(row.dosageAmount),
 			dosageUnit: row.dosageUnit,
 			timeBlockId: row.timeBlockId,
+			notes: row.notes,
+			isCritical: row.isCritical,
+			waitAfterTakingMinutes: row.waitAfterTakingMinutes,
+			cycleDaysOn: row.cycleDaysOn,
+			cycleDaysOff: row.cycleDaysOff,
+			startDayOffset: row.startDayOffset,
+			durationDays: row.durationDays,
 		});
 	}
 

@@ -62,32 +62,30 @@ export const createProtocol = authActionClient
 		for (const item of parsed.supplements) {
 			const supplementId = supplementIdMap[item.name];
 
-			const hasCycling = item.cycleDaysOn !== null && item.cycleDaysOff !== null;
-			const cyclingFields = hasCycling
-				? {
-						cycleDaysOn: item.cycleDaysOn,
-						cycleDaysOff: item.cycleDaysOff,
-					}
-				: {};
-
 			for (const schedule of item.schedules) {
 				if (!validTimeBlockIds.has(schedule.timeBlockId)) {
 					throw new ActionError(ActionErrorCode.TIME_BLOCK_NOT_FOUND);
 				}
+
+				const cycleDaysOn = schedule.cycleDaysOn ?? item.cycleDaysOn ?? null;
+				const cycleDaysOff = schedule.cycleDaysOff ?? item.cycleDaysOff ?? null;
+				const hasCycling = cycleDaysOn !== null && cycleDaysOff !== null;
+
 				await supplementScheduleRepository.create({
 					protocolId,
 					supplementId,
 					timeBlockId: schedule.timeBlockId,
 					dosageAmount: String(schedule.dosageAmount),
 					dosageUnit: schedule.dosageUnit,
-					notes: item.notes ?? null,
-					isCritical: item.isCritical,
+					notes: schedule.notes ?? item.notes ?? null,
+					isCritical: schedule.isCritical ?? item.isCritical,
 					sortOrder: sortOrder++,
-					startDayOffset: item.startDayOffset ?? 0,
-					durationDays: item.durationDays ?? null,
+					startDayOffset: schedule.startDayOffset ?? item.startDayOffset ?? 0,
+					durationDays: schedule.durationDays ?? item.durationDays ?? null,
 					dosageIntervalMinutes: item.dosageIntervalMinutes ?? null,
-					waitAfterTakingMinutes: item.waitAfterTakingMinutes ?? null,
-					...cyclingFields,
+					waitAfterTakingMinutes:
+						schedule.waitAfterTakingMinutes ?? item.waitAfterTakingMinutes ?? null,
+					...(hasCycling ? { cycleDaysOn, cycleDaysOff } : {}),
 				});
 			}
 		}

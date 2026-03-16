@@ -44,6 +44,13 @@ function buildDefaultSupplement(timeBlockId: string): EditedSupplement {
 				dosageAmount: 1,
 				dosageUnit: DosageUnit.capsule,
 				timeBlockId,
+				notes: null,
+				isCritical: false,
+				waitAfterTakingMinutes: null,
+				cycleDaysOn: null,
+				cycleDaysOff: null,
+				startDayOffset: 0,
+				durationDays: null,
 			},
 		],
 	};
@@ -67,7 +74,18 @@ function toProtocolJson(protocolName: string, supplements: IdentifiedSupplement[
 			waitAfterTakingMinutes: s.waitAfterTakingMinutes ?? null,
 			confidence: s.confidence,
 			uncertaintyReason: s.uncertaintyReason,
-			schedules: s.schedules,
+			schedules: s.schedules.map((sch) => ({
+				dosageAmount: sch.dosageAmount,
+				dosageUnit: sch.dosageUnit,
+				timeBlockId: sch.timeBlockId,
+				notes: sch.notes ?? s.notes ?? null,
+				isCritical: sch.isCritical ?? s.isCritical,
+				waitAfterTakingMinutes: sch.waitAfterTakingMinutes ?? s.waitAfterTakingMinutes ?? null,
+				cycleDaysOn: sch.cycleDaysOn ?? s.cycleDaysOn ?? null,
+				cycleDaysOff: sch.cycleDaysOff ?? s.cycleDaysOff ?? null,
+				startDayOffset: sch.startDayOffset ?? s.startDayOffset ?? 0,
+				durationDays: sch.durationDays ?? s.durationDays ?? null,
+			})),
 		})),
 	};
 }

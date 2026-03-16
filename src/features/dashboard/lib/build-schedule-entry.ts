@@ -1,30 +1,32 @@
-import type { DosageUnit } from "@/shared/db/schema";
+import type { DosageUnit, supplementSchedules } from "@/shared/db/schema";
 import type { ScheduleEntry, StockStatus } from "../api/queries/get-daily-status";
 import { getCycleStatus } from "./cycling";
 import { getDependencyStatus } from "./dependency";
 
-type ScheduleRow = {
+type ScheduleRow = Pick<
+	typeof supplementSchedules.$inferSelect,
+	| "dosageAmount"
+	| "dosageUnit"
+	| "notes"
+	| "sortOrder"
+	| "isCritical"
+	| "cycleDaysOn"
+	| "cycleDaysOff"
+	| "startDayOffset"
+	| "durationDays"
+	| "dosageIntervalMinutes"
+	| "waitAfterTakingMinutes"
+> & {
 	scheduleId: string;
-	dosageAmount: string;
-	dosageUnit: DosageUnit;
-	notes: string | null;
-	sortOrder: number;
 	supplementId: string;
 	supplementName: string;
 	supplementBrandName: string | null;
 	supplementCategory: string;
-	isCritical: boolean;
 	currentStock: string | null;
 	stockUnit: DosageUnit;
-	cycleDaysOn: number | null;
-	cycleDaysOff: number | null;
-	startDayOffset: number;
-	durationDays: number | null;
 	protocolStartDate: string | null;
 	protocolId: string;
 	blockId: string;
-	dosageIntervalMinutes: number | null;
-	waitAfterTakingMinutes: number | null;
 };
 
 type Log = {

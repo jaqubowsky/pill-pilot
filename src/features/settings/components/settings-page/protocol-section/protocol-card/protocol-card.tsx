@@ -76,6 +76,15 @@ export function ProtocolCard({ protocol, borderColor }: ProtocolCardProps) {
 								<Button
 									variant="ghost"
 									size="icon-sm"
+									className="text-content-muted"
+									onClick={handleEdit}
+									aria-label={t("common.edit")}
+								>
+									<Pencil className="size-4 stroke-2" />
+								</Button>
+								<Button
+									variant="ghost"
+									size="icon-sm"
 									className="bg-brand-100 text-brand-700 hover:bg-brand-200"
 									onClick={handleReactivate}
 									disabled={isReactivating}

@@ -1,17 +1,20 @@
 "use client";
 
-import { AlertTriangle, CheckCircle, Loader2, ShoppingCart, XCircle } from "lucide-react";
+import {
+	AlertTriangle,
+	CheckCircle,
+	ChevronDown,
+	Loader2,
+	RotateCcw,
+	Search,
+	ShoppingCart,
+	Trash2,
+	XCircle,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/shared/components/ui/select";
 import {
 	Sheet,
 	SheetContent,
@@ -19,7 +22,7 @@ import {
 	SheetHeader,
 	SheetTitle,
 } from "@/shared/components/ui/sheet";
-import type { ShopOption, SupplementOption } from "./use-cart-price-sheet";
+import type { CartItemState, ShopOption, SupplementOption } from "./use-cart-price-sheet";
 import { useCartPriceSheet } from "./use-cart-price-sheet";
 
 type CartPriceSheetProps = {
@@ -28,6 +31,197 @@ type CartPriceSheetProps = {
 	onSaved?: () => void;
 	trigger?: React.ReactNode;
 };
+
+function SupplementPicker({
+	supplements,
+	value,
+	onChange,
+	placeholder,
+}: {
+	supplements: SupplementOption[];
+	value: string | null | undefined;
+	onChange: (id: string | null) => void;
+	placeholder: string;
+}) {
+	const [open, setOpen] = useState(false);
+	const [query, setQuery] = useState("");
+
+	const selected = value ? supplements.find((s) => s.id === value) : null;
+	const filtered = query
+		? supplements.filter((s) => {
+				const label = s.name + (s.brandName ?? "");
+				return label.toLowerCase().includes(query.toLowerCase());
+			})
+		: supplements;
+
+	if (!open) {
+		return (
+			<button
+				type="button"
+				onClick={() => setOpen(true)}
+				className="flex-1 flex items-center justify-between min-h-11 px-sm text-sm bg-surface-sunken border border-edge rounded-lg text-left min-w-0"
+			>
+				<span className={`truncate ${selected ? "text-content" : "text-content-faint"}`}>
+					{selected?.name ?? placeholder}
+				</span>
+				<ChevronDown className="size-3.5 text-content-faint shrink-0 ml-xs" />
+			</button>
+		);
+	}
+
+	return (
+		<div className="flex-1 flex flex-col gap-xs">
+			<div className="flex items-center gap-sm border border-edge rounded-lg px-sm py-xs bg-surface-sunken">
+				<Search className="size-4 text-content-faint shrink-0" />
+				<input
+					type="text"
+					autoFocus
+					value={query}
+					onChange={(e) => setQuery(e.target.value)}
+					onBlur={() => setTimeout(() => setOpen(false), 200)}
+					placeholder={placeholder}
+					className="flex-1 bg-transparent text-sm outline-none placeholder:text-content-faint py-xs"
+				/>
+			</div>
+			<div className="max-h-40 overflow-y-auto rounded-lg border border-edge-subtle bg-surface-raised">
+				{filtered.length === 0 ? (
+					<p className="text-xs text-content-faint text-center py-md">—</p>
+				) : (
+					filtered.map((s) => (
+						<button
+							key={s.id}
+							type="button"
+							onMouseDown={(e) => {
+								e.preventDefault();
+								onChange(s.id);
+								setOpen(false);
+								setQuery("");
+							}}
+							className={`flex flex-col gap-0.5 w-full text-left rounded-lg px-sm py-sm hover:bg-surface-sunken transition-colors ${s.id === value ? "text-brand-600" : ""}`}
+						>
+							<span
+								className={`text-sm ${s.id === value ? "font-medium text-brand-600" : "text-content"}`}
+							>
+								{s.name}
+							</span>
+							{s.brandName && (
+								<span className="text-xs text-content-faint">{s.brandName}</span>
+							)}
+						</button>
+					))
+				)}
+			</div>
+		</div>
+	);
+}
+
+function CartItemRow({
+	item,
+	supplements,
+	confidenceThreshold,
+	onMatch,
+	onVerify,
+	onSkip,
+	onUnskip,
+}: {
+	item: CartItemState;
+	supplements: SupplementOption[];
+	confidenceThreshold: number;
+	onMatch: (id: string | null) => void;
+	onVerify: () => void;
+	onSkip: () => void;
+	onUnskip: () => void;
+}) {
+	const t = useTranslations("shopping.cartPriceSheet");
+
+	if (item.skipped) {
+		return (
+			<div className="flex items-center justify-between py-xs opacity-40">
+				<span className="text-sm text-content-muted line-through truncate flex-1 min-w-0">
+					{item.productName}
+				</span>
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					onClick={onUnskip}
+					className="active:scale-[0.98] transition-transform"
+				>
+					<RotateCcw className="size-4 text-brand-600 stroke-[1.5]" />
+				</Button>
+			</div>
+		);
+	}
+
+	const isHighConfidence =
+		item.matchedSupplementId !== null &&
+		item.matchedSupplementId !== undefined &&
+		item.confidence >= confidenceThreshold;
+	const isLowConfidence =
+		item.matchedSupplementId !== null &&
+		item.matchedSupplementId !== undefined &&
+		item.confidence < confidenceThreshold;
+	const isUnmatched = !item.matchedSupplementId;
+
+	return (
+		<div className="flex flex-col gap-sm py-sm">
+			<div className="flex items-center justify-between gap-sm">
+				<div className="flex flex-col gap-0.5 flex-1 min-w-0">
+					<p className="text-sm font-bold text-content truncate">{item.productName}</p>
+					<p className="text-xs text-content-muted">{item.price.toFixed(2)} zł</p>
+				</div>
+
+				<div className="flex items-center shrink-0">
+					{isHighConfidence && item.verified && (
+						<span className="inline-flex items-center gap-xs rounded-lg px-sm py-xs text-xs font-semibold bg-success-bg text-brand-700">
+							<CheckCircle className="size-3.5" />
+							{t("ok")}
+						</span>
+					)}
+					{isLowConfidence && !item.verified && (
+						<span className="inline-flex items-center gap-xs rounded-lg px-sm py-xs text-xs font-semibold bg-warning-bg text-[#8B6914]">
+							<AlertTriangle className="size-3.5" />
+							{t("verify")}
+						</span>
+					)}
+					{isUnmatched && (
+						<span className="inline-flex items-center gap-xs rounded-lg px-sm py-xs text-xs font-semibold bg-danger-bg text-danger">
+							<XCircle className="size-3.5" />
+							{t("unmatched")}
+						</span>
+					)}
+					<Button
+						variant="ghost"
+						size="icon-sm"
+						onClick={onSkip}
+						className="active:scale-[0.98] transition-transform"
+					>
+						<Trash2 className="size-4 text-danger stroke-[1.5]" />
+					</Button>
+				</div>
+			</div>
+
+			<div className="flex gap-xs items-start">
+				<SupplementPicker
+					supplements={supplements}
+					value={item.matchedSupplementId}
+					onChange={onMatch}
+					placeholder={t("selectSupplement")}
+				/>
+				{!item.verified && (
+					<Button
+						variant="default"
+						size="sm"
+						onClick={onVerify}
+						disabled={!item.matchedSupplementId}
+						className="shrink-0 min-h-11 bg-brand-500 text-content-inverse"
+					>
+						{t("ok")}
+					</Button>
+				)}
+			</div>
+		</div>
+	);
+}
 
 export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPriceSheetProps) {
 	const t = useTranslations("shopping.cartPriceSheet");
@@ -136,10 +330,12 @@ export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPri
 							</div>
 						</div>
 					) : (
-						<div className="flex flex-col gap-md overflow-y-auto flex-1 px-4 pb-2">
+						<div className="flex flex-col gap-md overflow-y-auto flex-1 px-md pb-sm">
 							<div className="flex flex-col gap-xs">
-								<label className="text-xs font-medium text-content-muted">{t("shopLabel")}</label>
-								<div className="flex gap-xs">
+								<label className="text-xs font-medium text-content-muted">
+									{t("shopLabel")}
+								</label>
+								<div className="flex gap-sm items-center">
 									<Input
 										value={shopName}
 										onChange={(e) => {
@@ -147,29 +343,21 @@ export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPri
 											setSelectedShopId(null);
 										}}
 										placeholder={t("shopPlaceholder")}
-										className="flex-1"
+										className="flex-1 bg-surface-sunken border-edge rounded-lg"
 									/>
-									{shops.length > 0 && (
-										<Select
-											value={selectedShopId ?? ""}
-											onValueChange={(val) => {
-												setSelectedShopId(val || null);
-												const shop = shops.find((s) => s.id === val);
-												if (shop) setShopName(shop.name);
+									{shops.map((shop) => (
+										<button
+											key={shop.id}
+											type="button"
+											onClick={() => {
+												setSelectedShopId(shop.id);
+												setShopName(shop.name);
 											}}
+											className={`px-sm py-xs text-xs rounded-lg border shrink-0 transition-colors ${selectedShopId === shop.id ? "bg-brand-50 border-brand-400 text-brand-700" : "bg-surface-raised border-edge-subtle text-content-muted"}`}
 										>
-											<SelectTrigger className="w-40">
-												<SelectValue placeholder={t("selectShop")} />
-											</SelectTrigger>
-											<SelectContent>
-												{shops.map((shop) => (
-													<SelectItem key={shop.id} value={shop.id}>
-														{shop.name}
-													</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
-									)}
+											{shop.name}
+										</button>
+									))}
 								</div>
 							</div>
 
@@ -181,105 +369,33 @@ export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPri
 								</div>
 							)}
 
-							<div className="flex flex-col gap-sm">
-								{items.map((item) => {
-									const isHighConfidence =
-										item.matchedSupplementId !== null &&
-										item.matchedSupplementId !== undefined &&
-										item.confidence >= CART_CONFIDENCE_THRESHOLD;
-									const isLowConfidence =
-										item.matchedSupplementId !== null &&
-										item.matchedSupplementId !== undefined &&
-										item.confidence < CART_CONFIDENCE_THRESHOLD;
-									const isUnmatched = !item.matchedSupplementId;
-
-									return (
-										<div
-											key={item._id}
-											className="rounded-xl border border-border p-md flex flex-col gap-sm"
-										>
-											<div className="flex items-start justify-between gap-sm">
-												<div className="flex flex-col gap-xs flex-1 min-w-0">
-													<p className="text-sm font-medium text-content truncate">
-														{item.productName}
-													</p>
-													<p className="text-xs text-content-muted">
-														{item.price.toFixed(2)} zł
-														{item.quantity && item.quantity > 1 && <span> × {item.quantity}</span>}
-													</p>
-												</div>
-
-												<div className="flex items-center gap-xs shrink-0">
-													{item.skipped ? (
-														<button
-															type="button"
-															onClick={() => handleUnskip(item._id)}
-															className="text-xs text-content-muted underline"
-														>
-															{t("unskip")}
-														</button>
-													) : isHighConfidence && item.verified ? (
-														<CheckCircle className="size-4 text-success shrink-0" />
-													) : isLowConfidence && !item.verified ? (
-														<div className="flex items-center gap-xs">
-															<AlertTriangle className="size-3.5 text-[#8B6914] shrink-0" />
-															<span className="text-xs text-[#8B6914]">{t("verify")}</span>
-														</div>
-													) : isUnmatched ? (
-														<div className="flex items-center gap-xs">
-															<XCircle className="size-3.5 text-destructive shrink-0" />
-															<span className="text-xs text-destructive">{t("unmatched")}</span>
-														</div>
-													) : null}
-												</div>
-											</div>
-
-											<div className="flex gap-xs">
-												<Select
-													value={item.matchedSupplementId ?? ""}
-													onValueChange={(val) => handleMatchChange(item._id, val || null)}
-												>
-													<SelectTrigger className="flex-1 text-xs" size="sm">
-														<SelectValue placeholder={t("selectSupplement")} />
-													</SelectTrigger>
-													<SelectContent>
-														{supplements.map((s) => (
-															<SelectItem key={s.id} value={s.id}>
-																{s.name}
-																{s.brandName && (
-																	<span className="text-content-muted"> · {s.brandName}</span>
-																)}
-															</SelectItem>
-														))}
-													</SelectContent>
-												</Select>
-
-												{!item.skipped && !item.verified && (
-													<Button
-														variant="ghost"
-														size="sm"
-														onClick={() => handleVerify(item._id)}
-														disabled={!item.matchedSupplementId}
-													>
-														{t("ok")}
-													</Button>
-												)}
-
-												{!item.skipped && (
-													<Button variant="ghost" size="sm" onClick={() => handleSkip(item._id)}>
-														{t("skip")}
-													</Button>
-												)}
-											</div>
-										</div>
-									);
-								})}
+							<div className="bg-surface-raised border border-edge-subtle rounded-xl shadow-sm overflow-hidden px-md">
+								{items.map((item, idx) => (
+									<div
+										key={item._id}
+										className={idx < items.length - 1 ? "border-b border-edge-subtle" : ""}
+									>
+										<CartItemRow
+											item={item}
+											supplements={supplements}
+											confidenceThreshold={CART_CONFIDENCE_THRESHOLD}
+											onMatch={(id) => handleMatchChange(item._id, id)}
+											onVerify={() => handleVerify(item._id)}
+											onSkip={() => handleSkip(item._id)}
+											onUnskip={() => handleUnskip(item._id)}
+										/>
+									</div>
+								))}
 							</div>
 						</div>
 					)}
 
-					<SheetFooter>
-						<Button onClick={handleSave} disabled={!canSave || isSaving} className="w-full">
+					<SheetFooter className="flex flex-col gap-sm px-md">
+						<Button
+							onClick={handleSave}
+							disabled={!canSave || isSaving}
+							className="w-full"
+						>
 							{isSaving ? t("saving") : t("savePrices")}
 						</Button>
 						<Button variant="outline" onClick={closeSheet} className="w-full">

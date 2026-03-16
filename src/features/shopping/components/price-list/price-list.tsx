@@ -118,30 +118,28 @@ export function PriceList({ items, shopOptions, filterIds, recentScans }: PriceL
 						{groupRows.map((row, idx) => (
 							<div
 								key={row.id}
-								className={`flex items-center justify-between gap-sm px-md py-xs ${idx < groupRows.length - 1 ? "border-b border-edge-subtle" : ""}`}
+								className={`flex items-center justify-between gap-sm px-md py-xs min-h-11 ${idx < groupRows.length - 1 ? "border-b border-edge-subtle" : ""}`}
 							>
-								<div className="flex items-center gap-xs min-w-0 flex-1">
-									<span className="text-sm font-medium text-content truncate min-w-0 shrink">
-										{row.name}
-									</span>
-									<div className="flex items-center gap-xs shrink-0">
-										<Input
-											type="number"
-											inputMode="decimal"
-											min={0}
-											step={0.01}
-											placeholder="—"
-											value={row.localPrice}
-											onChange={(e) => updateRow(row.id, { localPrice: e.target.value })}
-											onBlur={(e) => handlePriceBlur(row.id, e.target.value)}
-											className="w-18 h-7 text-right text-xs px-xs bg-surface-sunken border-edge rounded-lg"
-										/>
-										<span className="text-xs text-content-faint whitespace-nowrap">zł/opak.</span>
-									</div>
-								</div>
+								<span className="text-sm font-medium text-content truncate min-w-0 flex-1">
+									{row.name}
+								</span>
+
 								<div className="flex items-center shrink-0">
+									<Input
+										type="number"
+										inputMode="decimal"
+										min={0}
+										step={0.01}
+										placeholder="—"
+										value={row.localPrice}
+										onChange={(e) => updateRow(row.id, { localPrice: e.target.value })}
+										onBlur={(e) => handlePriceBlur(row.id, e.target.value)}
+										className="w-20 h-8 text-right text-sm px-sm bg-surface-sunken border-edge rounded-lg"
+									/>
+									<span className="text-xs text-content-faint ml-xs whitespace-nowrap">zł</span>
+
 									{shopOptions.length > 0 && (
-										<div className="relative min-h-11 min-w-11 flex items-center justify-center rounded-lg hover:bg-surface-sunken active:scale-[0.98] transition-all">
+										<div className="relative min-h-11 min-w-11 flex items-center justify-center rounded-lg hover:bg-surface-sunken active:scale-[0.98] transition-all ml-xs">
 											<Store size={16} className="text-content-faint stroke-[1.5]" />
 											<select
 												value={row.localShopId ?? NO_SHOP_VALUE}

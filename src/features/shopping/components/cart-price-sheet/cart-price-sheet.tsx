@@ -187,10 +187,7 @@ function CartItemRow({
 	onUnskip: () => void;
 	onCreateNew: (name: string) => Promise<string | null>;
 }) {
-	const needsInput =
-		!item.matchedSupplementId ||
-		(item.matchedSupplementId && item.confidence < confidenceThreshold && !item.verified);
-	const [expanded, setExpanded] = useState(needsInput);
+	const [expanded, setExpanded] = useState(false);
 
 	if (item.skipped) {
 		return (
@@ -236,31 +233,19 @@ function CartItemRow({
 						{item.price.toFixed(2)} zł
 					</span>
 					{isVerified && !isLowConfidence && (
-						<button
-							type="button"
-							onClick={() => setExpanded(!expanded)}
-							className="relative rounded-lg p-xs bg-success-bg text-brand-700 after:absolute after:inset-1/2 after:min-h-11 after:min-w-11 after:-translate-1/2 shrink-0"
-						>
+						<span className="rounded-lg p-xs bg-success-bg text-brand-700 shrink-0">
 							<CheckCircle className="size-4 stroke-[1.5]" />
-						</button>
+						</span>
 					)}
 					{isLowConfidence && !isVerified && (
-						<button
-							type="button"
-							onClick={() => setExpanded(!expanded)}
-							className="relative rounded-lg p-xs bg-warning-bg text-[#8B6914] after:absolute after:inset-1/2 after:min-h-11 after:min-w-11 after:-translate-1/2 shrink-0"
-						>
+						<span className="rounded-lg p-xs bg-warning-bg text-[#8B6914] shrink-0">
 							<AlertTriangle className="size-4 stroke-[1.5]" />
-						</button>
+						</span>
 					)}
 					{!isMatched && (
-						<button
-							type="button"
-							onClick={() => setExpanded(!expanded)}
-							className="relative rounded-lg p-xs bg-danger-bg text-danger after:absolute after:inset-1/2 after:min-h-11 after:min-w-11 after:-translate-1/2 shrink-0"
-						>
+						<span className="rounded-lg p-xs bg-danger-bg text-danger shrink-0">
 							<XCircle className="size-4 stroke-[1.5]" />
-						</button>
+						</span>
 					)}
 				</div>
 				<div className="flex items-center shrink-0">
@@ -410,9 +395,11 @@ export function CartPriceSheet({
 									{t("items", { count: scan.items.length })}
 								</span>
 								<span className="text-xs text-content-faint">
-									{scan.createdAt.toLocaleDateString("pl-PL", {
+									{scan.createdAt.toLocaleString("pl-PL", {
 										day: "numeric",
 										month: "short",
+										hour: "2-digit",
+										minute: "2-digit",
 									})}
 								</span>
 							</button>

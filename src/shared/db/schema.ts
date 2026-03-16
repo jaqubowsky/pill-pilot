@@ -231,6 +231,10 @@ export const pushSubscriptions = pgTable("push_subscriptions", {
 	createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const cartScanStatusEnum = pgEnum("cart_scan_status", ["processing", "completed", "failed"]);
+export const CART_SCAN_STATUSES = cartScanStatusEnum.enumValues;
+export type CartScanStatus = (typeof CART_SCAN_STATUSES)[number];
+
 export const cartScans = pgTable("cart_scans", {
 	id: text("id")
 		.primaryKey()
@@ -238,8 +242,9 @@ export const cartScans = pgTable("cart_scans", {
 	userId: text("user_id")
 		.notNull()
 		.references(() => users.id, { onDelete: "cascade" }),
+	status: cartScanStatusEnum().notNull().default("processing"),
 	shopName: text("shop_name"),
-	items: json("items").notNull(),
+	items: json("items"),
 	createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

@@ -47,6 +47,7 @@ export function usePreviewSupplementSheet({
 			dosageAmount: schedule?.dosageAmount ?? 1,
 			dosageUnit: schedule?.dosageUnit ?? DosageUnit.capsule,
 			timeBlockId: schedule?.timeBlockId ?? defaultTimeBlockId ?? "",
+			finishPackage: schedule?.finishPackage ?? false,
 		},
 	});
 
@@ -67,6 +68,7 @@ export function usePreviewSupplementSheet({
 			dosageAmount: schedule?.dosageAmount ?? 1,
 			dosageUnit: schedule?.dosageUnit ?? DosageUnit.capsule,
 			timeBlockId: schedule?.timeBlockId ?? defaultTimeBlockId ?? "",
+			finishPackage: schedule?.finishPackage ?? false,
 		});
 	}, [supplement, defaultTimeBlockId, methods.reset, schedule]);
 
@@ -79,6 +81,7 @@ export function usePreviewSupplementSheet({
 			cycleDaysOff: values.cycleDaysOff ?? null,
 			startDayOffset: values.startDayOffset ?? 0,
 			durationDays: values.durationDays ?? null,
+			finishPackage: values.finishPackage ?? false,
 		};
 
 		const editedSupplement: EditedSupplement = {

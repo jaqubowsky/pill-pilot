@@ -164,7 +164,20 @@ export function SupplementRow({
 							{isCritical && (
 								<IconBadge icon={ShieldAlert} variant="danger" label={t("critical")} />
 							)}
-							{finishPackage && <IconBadge icon={PackageCheck} label={t("finishPackage")} />}
+							{finishPackage && (
+								<IconBadge
+									icon={PackageCheck}
+									label={
+										entry.durationDays && entry.packageSize && entry.totalDailyDosage > 0
+											? ts("finishPackageCountBadge", {
+													count: Math.round(
+														(entry.durationDays * entry.totalDailyDosage) / entry.packageSize,
+													),
+												})
+											: ts("finishPackageBadge")
+									}
+								/>
+							)}
 							{cycling && !cycling.isOnPhase && (
 								<IconBadge
 									icon={Repeat}
@@ -230,6 +243,8 @@ export function SupplementRow({
 				key={scheduleId}
 				scheduleId={scheduleId}
 				supplementName={supplementName}
+				packageSize={entry.packageSize}
+				totalDailyDosage={entry.totalDailyDosage}
 				defaultValues={{
 					name: entry.supplementName,
 					brandName: entry.supplementBrandName ?? undefined,

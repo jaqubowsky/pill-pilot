@@ -46,6 +46,7 @@ type Context = {
 		string,
 		{ logId: string; takenAt: Date; adjustmentMinutes: number; cooldownSkipped: boolean }
 	>;
+	totalDailyDosageMap?: Map<string, number>;
 };
 
 export function buildScheduleEntry(
@@ -125,6 +126,8 @@ export function buildScheduleEntry(
 			waitTimer,
 			packageSize: row.packageSize,
 			finishPackage: row.finishPackage,
+			totalDailyDosage:
+				ctx.totalDailyDosageMap?.get(row.supplementId) ?? parseFloat(row.dosageAmount),
 		},
 		hasLog: !!log,
 	};

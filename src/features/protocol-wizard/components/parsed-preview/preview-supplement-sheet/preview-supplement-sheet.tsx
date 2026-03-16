@@ -15,6 +15,8 @@ type PreviewSupplementSheetProps = {
 	scheduleIndex: number;
 	defaultTimeBlockId?: string;
 	timeBlocks: TimeBlockSummary[];
+	packageSize?: number | null;
+	totalDailyDosage?: number;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	onSave: (supplement: EditedSupplement) => void;
@@ -28,6 +30,8 @@ export function PreviewSupplementSheet({
 	scheduleIndex,
 	defaultTimeBlockId,
 	timeBlocks,
+	packageSize,
+	totalDailyDosage,
 	open,
 	onOpenChange,
 	onSave,
@@ -66,7 +70,11 @@ export function PreviewSupplementSheet({
 		>
 			<FormProvider {...methods}>
 				<form id={FORM_ID} onSubmit={handleSubmit}>
-					<PreviewSupplementSheetFields timeBlocks={timeBlocks} />
+					<PreviewSupplementSheetFields
+						timeBlocks={timeBlocks}
+						packageSize={packageSize}
+						totalDailyDosage={totalDailyDosage}
+					/>
 				</form>
 			</FormProvider>
 		</BottomSheet>

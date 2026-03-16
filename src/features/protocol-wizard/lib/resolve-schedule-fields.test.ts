@@ -89,4 +89,14 @@ describe("resolveScheduleFields", () => {
 		const result = resolveScheduleFields({}, { ...baseItem, dosageIntervalMinutes: undefined });
 		expect(result.dosageIntervalMinutes).toBeNull();
 	});
+
+	it("defaults finishPackage to false when absent", () => {
+		const result = resolveScheduleFields({}, baseItem);
+		expect(result.finishPackage).toBe(false);
+	});
+
+	it("passes through finishPackage from schedule level", () => {
+		const result = resolveScheduleFields({ finishPackage: true }, baseItem);
+		expect(result.finishPackage).toBe(true);
+	});
 });

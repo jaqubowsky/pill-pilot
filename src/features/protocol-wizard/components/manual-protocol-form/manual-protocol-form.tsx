@@ -142,6 +142,17 @@ export function ManualProtocolForm({ supplements, timeBlocks }: ManualProtocolFo
 				scheduleIndex={sheetState?.scheduleIndex ?? 0}
 				defaultTimeBlockId={sheetState?.defaultTimeBlockId}
 				timeBlocks={timeBlocks}
+				packageSize={
+					sheetState?.supplement?.existingSupplementId
+						? (supplements.find((s) => s.id === sheetState.supplement?.existingSupplementId)
+								?.packageSize ?? null)
+						: null
+				}
+				totalDailyDosage={
+					sheetState?.supplement
+						? sheetState.supplement.schedules.reduce((sum, s) => sum + s.dosageAmount, 0)
+						: undefined
+				}
 				open={sheetState !== null}
 				onOpenChange={(open) => {
 					if (!open) closeSheet();

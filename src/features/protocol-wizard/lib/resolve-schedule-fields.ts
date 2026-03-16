@@ -17,6 +17,7 @@ type ScheduleLevel = {
 	startDayOffset?: number | null;
 	durationDays?: number | null;
 	waitAfterTakingMinutes?: number | null;
+	finishPackage?: boolean | null;
 };
 
 type ResolvedScheduleFields = {
@@ -28,6 +29,7 @@ type ResolvedScheduleFields = {
 	durationDays: number | null;
 	dosageIntervalMinutes: number | null;
 	waitAfterTakingMinutes: number | null;
+	finishPackage: boolean;
 };
 
 export function resolveScheduleFields(
@@ -47,5 +49,6 @@ export function resolveScheduleFields(
 		waitAfterTakingMinutes: schedule.waitAfterTakingMinutes ?? item.waitAfterTakingMinutes ?? null,
 		cycleDaysOn: hasCycling ? cycleDaysOn : null,
 		cycleDaysOff: hasCycling ? cycleDaysOff : null,
+		finishPackage: schedule.finishPackage ?? false,
 	};
 }

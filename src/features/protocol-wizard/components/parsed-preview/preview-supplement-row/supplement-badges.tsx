@@ -11,9 +11,17 @@ type SupplementBadgesProps = {
 	supplement: IdentifiedSupplement;
 	schedule?: EditedSupplement["schedules"][number];
 	finishPackage?: boolean;
+	packageSize?: number | null;
+	totalDailyDosage?: number;
 };
 
-export function SupplementBadges({ supplement, schedule, finishPackage }: SupplementBadgesProps) {
+export function SupplementBadges({
+	supplement,
+	schedule,
+	finishPackage,
+	packageSize,
+	totalDailyDosage,
+}: SupplementBadgesProps) {
 	const t = useTranslations("schedule");
 
 	const cycleDaysOn = schedule?.cycleDaysOn ?? supplement.cycleDaysOn;
@@ -23,9 +31,23 @@ export function SupplementBadges({ supplement, schedule, finishPackage }: Supple
 	const startDayOffset = schedule?.startDayOffset ?? supplement.startDayOffset;
 	const durationDays = schedule?.durationDays ?? supplement.durationDays;
 
+	const packageCount =
+		finishPackage && durationDays && packageSize && totalDailyDosage
+			? Math.round((durationDays * totalDailyDosage) / packageSize)
+			: null;
+
 	return (
 		<>
-			{finishPackage && <IconBadge icon={PackageCheck} label={t("finishPackageBadge")} />}
+			{finishPackage && (
+				<IconBadge
+					icon={PackageCheck}
+					label={
+						packageCount
+							? t("finishPackageCountBadge", { count: packageCount })
+							: t("finishPackageBadge")
+					}
+				/>
+			)}
 			{cycleDaysOn && cycleDaysOff ? (
 				<IconBadge
 					icon={Repeat}

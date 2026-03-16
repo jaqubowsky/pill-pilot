@@ -25,11 +25,15 @@ import type { PreviewSupplementSheetValues } from "./preview-supplement-sheet.sc
 type PreviewSupplementSheetFieldsProps = {
 	timeBlocks: TimeBlockSummary[];
 	readOnlyDosageUnit?: boolean;
+	packageSize?: number | null;
+	totalDailyDosage?: number;
 };
 
 export function PreviewSupplementSheetFields({
 	timeBlocks,
 	readOnlyDosageUnit,
+	packageSize,
+	totalDailyDosage,
 }: PreviewSupplementSheetFieldsProps) {
 	const t = useTranslations();
 
@@ -45,6 +49,7 @@ export function PreviewSupplementSheetFields({
 	const cycleDaysOn = watch("cycleDaysOn");
 	const startDayOffset = watch("startDayOffset");
 	const durationDays = watch("durationDays");
+	const dosageAmount = watch("dosageAmount");
 	const dosageUnit = watch("dosageUnit");
 	const timeBlockId = watch("timeBlockId");
 	const dosageIntervalMinutes = watch("dosageIntervalMinutes");
@@ -53,18 +58,55 @@ export function PreviewSupplementSheetFields({
 
 	const isCycling = cycleDaysOn !== undefined;
 	const hasOffset = startDayOffset !== undefined && startDayOffset !== 0;
-	const hasDuration = durationDays !== undefined;
+	const hasDuration = durationDays !== undefined || !!finishPackage;
 	const hasInterval = dosageIntervalMinutes !== undefined;
 	const hasWaitAfter = waitAfterTakingMinutes !== undefined;
+	const durationMode: "days" | "packages" = finishPackage ? "packages" : "days";
+
+	const canUsePackageMode = packageSize !== null && packageSize !== undefined && packageSize > 0;
+
+	const [packageCount, setPackageCount] = useState(() => {
+		if (!finishPackage || !durationDays || !dosageAmount || !packageSize) return 1;
+		return Math.max(1, Math.round((durationDays * dosageAmount) / packageSize));
+	});
+
+	const effectiveDailyDosage = totalDailyDosage ?? dosageAmount;
+
+	function calcDaysFromPackages(count: number) {
+		if (!packageSize || !effectiveDailyDosage || effectiveDailyDosage <= 0) return undefined;
+		return Math.ceil((packageSize * count) / effectiveDailyDosage);
+	}
+
+	function handleDurationToggle(v: boolean) {
+		if (v) {
+			setValue("durationDays", 14);
+			setValue("finishPackage", false);
+		} else {
+			setValue("durationDays", undefined);
+			setValue("finishPackage", false);
+		}
+	}
+
+	function handleDurationModeChange(mode: "days" | "packages") {
+		if (mode === "packages") {
+			setValue("finishPackage", true);
+			const days = calcDaysFromPackages(packageCount);
+			setValue("durationDays", days);
+		} else {
+			setValue("finishPackage", false);
+			setValue("durationDays", durationDays ?? 14);
+		}
+	}
+
+	function handlePackageCountChange(value: string) {
+		const count = Math.max(1, parseInt(value, 10) || 1);
+		setPackageCount(count);
+		const days = calcDaysFromPackages(count);
+		setValue("durationDays", days);
+	}
 
 	const hasAnyAdvanced =
-		isCritical ||
-		isCycling ||
-		hasOffset ||
-		hasDuration ||
-		hasInterval ||
-		hasWaitAfter ||
-		finishPackage;
+		isCritical || isCycling || hasOffset || hasDuration || hasInterval || hasWaitAfter;
 	const [advancedOpen, setAdvancedOpen] = useState(hasAnyAdvanced);
 
 	return (
@@ -234,22 +276,68 @@ export function PreviewSupplementSheetFields({
 					label={t("schedule.limitedDurationQuestion")}
 					hint={t("schedule.limitedDurationHint")}
 					checked={hasDuration}
-					onCheckedChange={(v) => {
-						if (v) {
-							setValue("durationDays", 14);
-						} else {
-							setValue("durationDays", undefined);
-						}
-					}}
+					onCheckedChange={handleDurationToggle}
 				/>
 
 				{hasDuration && (
-					<LabeledInput
-						label={t("schedule.durationDays")}
-						type="number"
-						min="1"
-						{...register("durationDays", { valueAsNumber: true })}
-					/>
+					<div className="flex flex-col gap-sm">
+						{canUsePackageMode && (
+							<div className="flex rounded-lg border border-edge overflow-hidden">
+								<button
+									type="button"
+									onClick={() => handleDurationModeChange("days")}
+									className={cn(
+										"flex-1 text-sm py-xs px-sm transition-colors",
+										durationMode === "days"
+											? "bg-brand-500 text-content-inverse font-medium"
+											: "bg-surface-sunken text-content-muted",
+									)}
+								>
+									{t("schedule.durationModeDays")}
+								</button>
+								<button
+									type="button"
+									onClick={() => handleDurationModeChange("packages")}
+									className={cn(
+										"flex-1 text-sm py-xs px-sm transition-colors",
+										durationMode === "packages"
+											? "bg-brand-500 text-content-inverse font-medium"
+											: "bg-surface-sunken text-content-muted",
+									)}
+								>
+									{t("schedule.durationModePackages")}
+								</button>
+							</div>
+						)}
+
+						{durationMode === "packages" && canUsePackageMode ? (
+							<div className="flex flex-col gap-xs">
+								<LabeledInput
+									label={t("schedule.packageCount")}
+									type="number"
+									min="1"
+									value={packageCount}
+									onChange={(e) => handlePackageCountChange(e.target.value)}
+								/>
+								{durationDays && (
+									<p className="text-xs text-content-faint">
+										{t("schedule.packageDurationHint", {
+											days: durationDays,
+											amount: effectiveDailyDosage,
+											unit: t(`schedule.units.${dosageUnit}`),
+										})}
+									</p>
+								)}
+							</div>
+						) : (
+							<LabeledInput
+								label={t("schedule.durationDays")}
+								type="number"
+								min="1"
+								{...register("durationDays", { valueAsNumber: true })}
+							/>
+						)}
+					</div>
 				)}
 
 				<ToggleRow
@@ -293,13 +381,6 @@ export function PreviewSupplementSheetFields({
 						onChange={(v) => setValue("waitAfterTakingMinutes", v)}
 					/>
 				)}
-
-				<ToggleRow
-					label={t("schedule.finishPackageQuestion")}
-					hint={t("schedule.finishPackageHint")}
-					checked={finishPackage ?? false}
-					onCheckedChange={(v) => setValue("finishPackage", v)}
-				/>
 			</div>
 		</div>
 	);

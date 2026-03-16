@@ -12,6 +12,7 @@ const editedScheduleSchema = z.object({
 	cycleDaysOff: z.number().nullable().optional(),
 	startDayOffset: z.number().min(0).optional(),
 	durationDays: z.number().positive().nullable().optional(),
+	finishPackage: z.boolean().optional(),
 });
 
 export const editedSupplementSchema = z.object({

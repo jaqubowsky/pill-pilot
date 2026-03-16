@@ -10,7 +10,7 @@ interface ISupplementRepository {
 	findByUserId(userId: string): Promise<Supplement[]>;
 	findSummaryByUserId(
 		userId: string,
-	): Promise<{ id: string; name: string; brandName: string | null }[]>;
+	): Promise<{ id: string; name: string; brandName: string | null; packageSize: number | null }[]>;
 	findById(id: string): Promise<Supplement | undefined>;
 	findByIdAndUserId(id: string, userId: string): Promise<Supplement>;
 	create(data: NewSupplement): Promise<Supplement>;
@@ -31,9 +31,14 @@ class SupplementRepository implements ISupplementRepository {
 
 	async findSummaryByUserId(
 		userId: string,
-	): Promise<{ id: string; name: string; brandName: string | null }[]> {
+	): Promise<{ id: string; name: string; brandName: string | null; packageSize: number | null }[]> {
 		return db
-			.select({ id: supplements.id, name: supplements.name, brandName: supplements.brandName })
+			.select({
+				id: supplements.id,
+				name: supplements.name,
+				brandName: supplements.brandName,
+				packageSize: supplements.packageSize,
+			})
 			.from(supplements)
 			.where(and(eq(supplements.userId, userId), eq(supplements.active, true)));
 	}

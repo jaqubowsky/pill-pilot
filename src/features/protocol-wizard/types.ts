@@ -8,6 +8,7 @@ type ExistingSupplementSummary = {
 	id: string;
 	name: string;
 	brandName: string | null;
+	packageSize: number | null;
 };
 
 type ActiveProtocolSummary = {

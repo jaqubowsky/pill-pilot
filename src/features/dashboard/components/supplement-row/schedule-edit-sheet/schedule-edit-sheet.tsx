@@ -14,6 +14,8 @@ type ScheduleEditSheetProps = {
 	supplementName: string;
 	defaultValues: PreviewSupplementSheetValues;
 	timeBlocks: { id: string; name: string; startTime: string }[];
+	packageSize?: number | null;
+	totalDailyDosage?: number;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 };
@@ -25,6 +27,8 @@ export function ScheduleEditSheet({
 	supplementName,
 	defaultValues,
 	timeBlocks,
+	packageSize,
+	totalDailyDosage,
 	open,
 	onOpenChange,
 }: ScheduleEditSheetProps) {
@@ -89,7 +93,12 @@ export function ScheduleEditSheet({
 			<div className={cn(hideForm && "hidden")}>
 				<FormProvider {...methods}>
 					<form id={FORM_ID} onSubmit={handleSubmit}>
-						<PreviewSupplementSheetFields timeBlocks={timeBlocks} readOnlyDosageUnit />
+						<PreviewSupplementSheetFields
+							timeBlocks={timeBlocks}
+							readOnlyDosageUnit
+							packageSize={packageSize}
+							totalDailyDosage={totalDailyDosage}
+						/>
 					</form>
 				</FormProvider>
 			</div>

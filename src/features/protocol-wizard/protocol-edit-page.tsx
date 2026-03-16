@@ -36,6 +36,7 @@ export async function ProtocolEditPage({ userId, protocolId }: ProtocolEditPageP
 				id: s.id,
 				name: s.name,
 				brandName: s.brandName,
+				packageSize: s.packageSize,
 			}))}
 			mode="edit"
 			initialStartDate={startDate ?? undefined}

@@ -14,6 +14,7 @@ export async function ProtocolManualPage({ userId }: { userId: string }) {
 				id: s.id,
 				name: s.name,
 				brandName: s.brandName,
+				packageSize: s.packageSize,
 			}))}
 			timeBlocks={timeBlocks.map((tb) => ({
 				id: tb.id,

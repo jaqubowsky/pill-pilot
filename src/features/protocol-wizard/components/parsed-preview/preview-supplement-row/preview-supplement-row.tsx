@@ -20,6 +20,7 @@ type PreviewSupplementRowProps = {
 	scheduleIndex: number;
 	timeBlockId: string;
 	allTimeBlocks: TimeBlockSummary[];
+	packageSize?: number | null;
 	onEdit: () => void;
 	onDelete: () => void;
 	onRestore: () => void;
@@ -33,6 +34,7 @@ export function PreviewSupplementRow({
 	scheduleIndex,
 	timeBlockId,
 	allTimeBlocks,
+	packageSize,
 	onEdit,
 	onDelete,
 	onRestore,
@@ -117,7 +119,13 @@ export function PreviewSupplementRow({
 						{(schedule.isCritical ?? supplement.isCritical) && (
 							<IconBadge icon={ShieldAlert} variant="danger" label={t("dashboard.critical")} />
 						)}
-						<SupplementBadges supplement={supplement} schedule={schedule} />
+						<SupplementBadges
+							supplement={supplement}
+							schedule={schedule}
+							finishPackage={schedule.finishPackage}
+							packageSize={packageSize}
+							totalDailyDosage={supplement.schedules.reduce((sum, s) => sum + s.dosageAmount, 0)}
+						/>
 					</>
 				}
 			/>

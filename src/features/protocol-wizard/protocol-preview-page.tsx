@@ -36,6 +36,7 @@ export async function ProtocolPreviewPage({ userId, protocolId }: Props) {
 				id: s.id,
 				name: s.name,
 				brandName: s.brandName,
+				packageSize: s.packageSize,
 			}))}
 			priceListItems={priceListData.items}
 			priceListShopOptions={priceListData.shopOptions}

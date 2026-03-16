@@ -130,6 +130,12 @@ export function PreviewBlock({
 								scheduleIndex={scheduleIndex}
 								timeBlockId={timeBlock.id}
 								allTimeBlocks={allTimeBlocks}
+								packageSize={
+									supplement.existingSupplementId
+										? (existingSupplements.find((s) => s.id === supplement.existingSupplementId)
+												?.packageSize ?? null)
+										: null
+								}
 								onEdit={() => setSheetState({ supplement, scheduleIndex })}
 								onDelete={() => onDeleteSupplement(supplement._id)}
 								onRestore={() => onRestoreSupplement(supplement._id)}
@@ -178,6 +184,17 @@ export function PreviewBlock({
 				scheduleIndex={sheetState?.scheduleIndex ?? 0}
 				defaultTimeBlockId={sheetState?.defaultTimeBlockId}
 				timeBlocks={allTimeBlocks}
+				packageSize={
+					sheetState?.supplement?.existingSupplementId
+						? (existingSupplements.find((s) => s.id === sheetState.supplement?.existingSupplementId)
+								?.packageSize ?? null)
+						: null
+				}
+				totalDailyDosage={
+					sheetState?.supplement
+						? sheetState.supplement.schedules.reduce((sum, s) => sum + s.dosageAmount, 0)
+						: undefined
+				}
 				open={sheetState !== null}
 				onOpenChange={(open) => {
 					if (!open) setSheetState(null);

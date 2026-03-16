@@ -50,6 +50,7 @@ export type ScheduleEntry = {
 	waitTimer: { remainingMs: number } | null;
 	packageSize: number | null;
 	finishPackage: boolean;
+	totalDailyDosage: number;
 };
 
 export type TimeBlockStatus = {
@@ -156,6 +157,14 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 		}
 	}
 
+	const totalDailyDosageMap = new Map<string, number>();
+	for (const row of activeSchedules) {
+		totalDailyDosageMap.set(
+			row.supplementId,
+			(totalDailyDosageMap.get(row.supplementId) ?? 0) + parseFloat(row.dosageAmount),
+		);
+	}
+
 	const stockForecastMap = new Map<string, number>();
 	for (const [supplementId, schedules] of schedulesPerSupplement) {
 		const stock = stockPerSupplement.get(supplementId);
@@ -183,7 +192,7 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 		}
 	}
 
-	const ctx = { logMap, stockForecastMap, date, siblingTakenAtMap };
+	const ctx = { logMap, stockForecastMap, date, siblingTakenAtMap, totalDailyDosageMap };
 
 	const grouped = activeSchedules
 		.map((row) => ({

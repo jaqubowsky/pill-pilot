@@ -10,11 +10,17 @@ import { SupplementEditSheet } from "../supplement-edit-sheet";
 import { StockQuantity } from "./stock-quantity";
 import { useStockItem } from "./use-stock-item";
 
-type StockItemProps = {
-	item: StockListItem;
+type ShopOption = {
+	id: string;
+	name: string;
 };
 
-export function StockItem({ item }: StockItemProps) {
+type StockItemProps = {
+	item: StockListItem;
+	shops?: ShopOption[];
+};
+
+export function StockItem({ item, shops }: StockItemProps) {
 	const t = useTranslations();
 
 	const { restockOpen, setRestockOpen, adjustOpen, setAdjustOpen, editOpen, setEditOpen } =
@@ -99,7 +105,12 @@ export function StockItem({ item }: StockItemProps) {
 				onOpenChange={setAdjustOpen}
 			/>
 
-			<SupplementEditSheet supplement={item} open={editOpen} onOpenChange={setEditOpen} />
+			<SupplementEditSheet
+				supplement={item}
+				open={editOpen}
+				onOpenChange={setEditOpen}
+				shops={shops}
+			/>
 		</>
 	);
 }

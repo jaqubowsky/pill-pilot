@@ -57,6 +57,7 @@ export function useSupplementEditSheet({ supplement, onOpenChange }: UseSuppleme
 		? {
 				name: supplement.name,
 				brandName: supplement.brandName ?? undefined,
+				shopId: supplement.shopId ?? undefined,
 				category: supplement.category as SupplementFormValues["category"],
 				stockUnit: supplement.stockUnit as SupplementFormValues["stockUnit"],
 				currentStock: supplement.currentStock ? parseFloat(supplement.currentStock) : undefined,

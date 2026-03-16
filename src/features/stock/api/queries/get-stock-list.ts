@@ -8,6 +8,7 @@ export type StockListItem = {
 	id: string;
 	name: string;
 	brandName: string | null;
+	shopId: string | null;
 	category: string;
 	stockUnit: string;
 	isCritical: boolean;
@@ -29,6 +30,7 @@ export async function getStockList(userId: string): Promise<StockList> {
 			id: supplements.id,
 			name: supplements.name,
 			brandName: supplements.brandName,
+			shopId: supplements.shopId,
 			category: supplements.category,
 			stockUnit: supplements.stockUnit,
 			isCritical: sql<boolean>`COALESCE(BOOL_OR(
@@ -109,6 +111,7 @@ export async function getStockList(userId: string): Promise<StockList> {
 			id: row.id,
 			name: row.name,
 			brandName: row.brandName,
+			shopId: row.shopId,
 			category: row.category,
 			stockUnit: row.stockUnit,
 			isCritical: row.isCritical,

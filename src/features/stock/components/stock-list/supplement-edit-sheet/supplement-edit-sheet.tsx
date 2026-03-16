@@ -17,15 +17,26 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { useSupplementEditSheet } from "./use-supplement-edit-sheet";
 
+type ShopOption = {
+	id: string;
+	name: string;
+};
+
 type SupplementEditSheetProps = {
 	supplement: StockListItem | null;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
+	shops?: ShopOption[];
 };
 
 const FORM_ID = "supplement-edit-form";
 
-export function SupplementEditSheet({ supplement, open, onOpenChange }: SupplementEditSheetProps) {
+export function SupplementEditSheet({
+	supplement,
+	open,
+	onOpenChange,
+	shops,
+}: SupplementEditSheetProps) {
 	const t = useTranslations();
 
 	const {
@@ -55,6 +66,7 @@ export function SupplementEditSheet({ supplement, open, onOpenChange }: Suppleme
 					onSubmit={handleSubmit}
 					formId={FORM_ID}
 					supplementId={supplement?.id}
+					shops={shops}
 				/>
 
 				<div className="flex flex-col gap-sm mt-lg">

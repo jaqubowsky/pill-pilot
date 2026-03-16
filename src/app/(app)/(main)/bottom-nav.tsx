@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarCheck, Package, Settings } from "lucide-react";
+import { CalendarCheck, Package, Settings, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -9,6 +9,7 @@ import { cn } from "@/shared/lib/utils";
 const navItems = [
 	{ href: "/dashboard", icon: CalendarCheck, labelKey: "nav.today" },
 	{ href: "/stock", icon: Package, labelKey: "nav.stock" },
+	{ href: "/shopping", icon: ShoppingCart, labelKey: "nav.shopping" },
 	{ href: "/settings", icon: Settings, labelKey: "nav.settings" },
 ] as const;
 

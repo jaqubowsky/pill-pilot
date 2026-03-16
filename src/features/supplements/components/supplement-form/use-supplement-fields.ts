@@ -16,6 +16,7 @@ export function useSupplementFields() {
 	const currentStock = watch("currentStock");
 	const packageSize = watch("packageSize");
 	const packagePrice = watch("packagePrice");
+	const shopId = watch("shopId");
 
 	function handleCurrentStockChange(value: string) {
 		setValue("currentStock", value ? Number(value) : undefined);
@@ -37,6 +38,10 @@ export function useSupplementFields() {
 		if (value) setValue("stockUnit", value as SupplementFormValues["stockUnit"]);
 	}
 
+	function handleShopChange(value: string | null) {
+		setValue("shopId", value ?? undefined);
+	}
+
 	return {
 		register,
 		errors,
@@ -45,10 +50,12 @@ export function useSupplementFields() {
 		currentStock,
 		packageSize,
 		packagePrice,
+		shopId,
 		handleCurrentStockChange,
 		handlePackageSizeChange,
 		handlePackagePriceChange,
 		handleCategoryChange,
 		handleStockUnitChange,
+		handleShopChange,
 	};
 }

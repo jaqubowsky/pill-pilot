@@ -9,6 +9,7 @@
 	"nav": {
 		"today": "Dziś",
 		"stock": "Zapas",
+		"shopping": "Zakupy",
 		"settings": "Ustawienia"
 	},
 	"common": {
@@ -272,6 +273,8 @@
 		"currentStockHint": "Ile sztuk masz teraz w domu. Zapas zmniejsza się automatycznie przy zaznaczaniu dawek.",
 		"packageSizeHint": "Ile sztuk w opakowaniu. Pozwala wyświetlać zapas jako np. 40/90.",
 		"packagePriceHint": "Cena za opakowanie. Pozwoli obliczyć dzienny koszt suplementacji.",
+		"shop": "Sklep (opcjonalnie)",
+		"addShop": "Dodaj sklep",
 		"addTitle": "Dodaj suplement",
 		"editTitle": "Edytuj suplement",
 		"delete": "Usuń suplement",
@@ -379,6 +382,12 @@
 			"Flame": "Płomień"
 		}
 	},
+	"shopping": {
+		"title": "Zakupy",
+		"emptyTitle": "Brak produktów do kupienia",
+		"emptyDescription": "Uzupełnij ceny i przypisz sklepy w cennikach.",
+		"noShop": "Bez sklepu"
+	},
 	"errors": {
 		"generic": "Coś poszło nie tak. Spróbuj ponownie.",
 		"offline": "Tryb offline",
@@ -391,6 +400,7 @@
 		"HAS_ACTIVE_SCHEDULES": "Nie można usunąć — ma aktywne dawki.",
 		"COOLDOWN_ACTIVE": "Wymagany odstęp między dawkami. Poczekaj jeszcze chwilę.",
 		"OUT_OF_STOCK": "Brak zapasu — uzupełnij przed zaznaczeniem.",
+		"SHOP_NOT_FOUND": "Nie znaleziono sklepu.",
 		"UNEXPECTED": "Coś poszło nie tak. Spróbuj ponownie."
 	},
 	"notFound": {

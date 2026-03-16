@@ -9,6 +9,7 @@ import { supplementRepository } from "@/shared/repositories/supplement-repositor
 const schema = z.object({
 	name: z.string().min(1),
 	brandName: z.string().optional(),
+	shopId: z.string().optional(),
 	category: z.enum(SUPPLEMENT_CATEGORIES),
 	stockUnit: z.enum(DOSAGE_UNITS),
 	currentStock: z.number().nonnegative().optional(),
@@ -23,6 +24,7 @@ export const addSupplement = authActionClient
 			userId: ctx.userId,
 			name: parsedInput.name,
 			brandName: parsedInput.brandName ?? null,
+			shopId: parsedInput.shopId ?? null,
 			category: parsedInput.category,
 			stockUnit: parsedInput.stockUnit,
 			currentStock: parsedInput.currentStock?.toString() ?? null,

@@ -9,11 +9,17 @@ import { StockItem } from "./stock-item";
 import { SupplementEditSheet } from "./supplement-edit-sheet";
 import { useStockList } from "./use-stock-list";
 
-type StockListProps = {
-	data: StockList;
+type ShopOption = {
+	id: string;
+	name: string;
 };
 
-export function StockListView({ data }: StockListProps) {
+type StockListProps = {
+	data: StockList;
+	shops?: ShopOption[];
+};
+
+export function StockListView({ data, shops }: StockListProps) {
 	const t = useTranslations();
 	const { isEmpty, addOpen, setAddOpen, openAddSheet, navigateToNewProtocol } = useStockList(data);
 
@@ -44,7 +50,12 @@ export function StockListView({ data }: StockListProps) {
 					</Button>
 				</div>
 
-				<SupplementEditSheet supplement={null} open={addOpen} onOpenChange={setAddOpen} />
+				<SupplementEditSheet
+					supplement={null}
+					open={addOpen}
+					onOpenChange={setAddOpen}
+					shops={shops}
+				/>
 			</div>
 		);
 	}
@@ -52,7 +63,7 @@ export function StockListView({ data }: StockListProps) {
 	return (
 		<div className="flex flex-col gap-md">
 			{data.tracked.map((item) => (
-				<StockItem key={item.id} item={item} />
+				<StockItem key={item.id} item={item} shops={shops} />
 			))}
 
 			{data.untracked.length > 0 && (
@@ -72,7 +83,7 @@ export function StockListView({ data }: StockListProps) {
 						</p>
 					)}
 					{data.untracked.map((item) => (
-						<StockItem key={item.id} item={item} />
+						<StockItem key={item.id} item={item} shops={shops} />
 					))}
 				</>
 			)}
@@ -85,7 +96,12 @@ export function StockListView({ data }: StockListProps) {
 				+ {t("common.addSupplement")}
 			</Button>
 
-			<SupplementEditSheet supplement={null} open={addOpen} onOpenChange={setAddOpen} />
+			<SupplementEditSheet
+				supplement={null}
+				open={addOpen}
+				onOpenChange={setAddOpen}
+				shops={shops}
+			/>
 		</div>
 	);
 }

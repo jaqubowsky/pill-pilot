@@ -12,6 +12,7 @@ export const ActionErrorCode = {
 	HAS_ACTIVE_SCHEDULES: "HAS_ACTIVE_SCHEDULES",
 	OUT_OF_STOCK: "OUT_OF_STOCK",
 	COOLDOWN_ACTIVE: "COOLDOWN_ACTIVE",
+	SHOP_NOT_FOUND: "SHOP_NOT_FOUND",
 } as const;
 
 export type ActionErrorCode = (typeof ActionErrorCode)[keyof typeof ActionErrorCode];

@@ -4,6 +4,7 @@ import { DOSAGE_UNITS, SUPPLEMENT_CATEGORIES } from "@/shared/db/schema";
 export const supplementFormSchema = z.object({
 	name: z.string().min(1),
 	brandName: z.string().optional(),
+	shopId: z.string().optional(),
 	category: z.enum(SUPPLEMENT_CATEGORIES),
 	stockUnit: z.enum(DOSAGE_UNITS),
 	currentStock: z.number().nonnegative().optional(),

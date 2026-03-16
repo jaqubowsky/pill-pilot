@@ -125,6 +125,19 @@ export const timeBlocks = pgTable("time_blocks", {
 	createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const shops = pgTable("shops", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => createId()),
+	userId: text("user_id")
+		.notNull()
+		.references(() => users.id, { onDelete: "cascade" }),
+	name: text("name").notNull(),
+	deliveryCost: decimal("delivery_cost", { precision: 10, scale: 2 }),
+	freeDeliveryThreshold: decimal("free_delivery_threshold", { precision: 10, scale: 2 }),
+	createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const supplements = pgTable("supplements", {
 	id: text("id")
 		.primaryKey()
@@ -134,6 +147,7 @@ export const supplements = pgTable("supplements", {
 		.references(() => users.id, { onDelete: "cascade" }),
 	name: text("name").notNull(),
 	brandName: text("brand_name"),
+	shopId: text("shop_id").references(() => shops.id, { onDelete: "set null" }),
 	category: supplementCategoryEnum("category").notNull().default("supplement"),
 	stockUnit: dosageUnitEnum("stock_unit").notNull().default("capsule"),
 	currentStock: decimal("current_stock", { precision: 10, scale: 2 }),

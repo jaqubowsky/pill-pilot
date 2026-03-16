@@ -17,11 +17,17 @@ import {
 import { DOSAGE_UNITS, SUPPLEMENT_CATEGORIES } from "@/shared/db/schema";
 import { useSupplementFields } from "./use-supplement-fields";
 
-type SupplementFieldsProps = {
-	supplementId?: string;
+type ShopOption = {
+	id: string;
+	name: string;
 };
 
-export function SupplementFields({ supplementId }: SupplementFieldsProps) {
+type SupplementFieldsProps = {
+	supplementId?: string;
+	shops?: ShopOption[];
+};
+
+export function SupplementFields({ supplementId, shops }: SupplementFieldsProps) {
 	const t = useTranslations();
 	const {
 		register,
@@ -31,11 +37,13 @@ export function SupplementFields({ supplementId }: SupplementFieldsProps) {
 		currentStock,
 		packageSize,
 		packagePrice,
+		shopId,
 		handleCurrentStockChange,
 		handlePackageSizeChange,
 		handlePackagePriceChange,
 		handleCategoryChange,
 		handleStockUnitChange,
+		handleShopChange,
 	} = useSupplementFields();
 
 	const unitLabel = stockUnit ? t(`schedule.units.${stockUnit}`) : "";
@@ -54,6 +62,21 @@ export function SupplementFields({ supplementId }: SupplementFieldsProps) {
 				{...register("brandName")}
 				placeholder={t("supplement.brand")}
 			/>
+
+			{shops && shops.length > 0 && (
+				<LabeledSelect
+					label={t("supplement.shop")}
+					value={shopId ?? ""}
+					onValueChange={handleShopChange}
+					displayValue={shops.find((s) => s.id === shopId)?.name ?? t("supplement.shop")}
+				>
+					{shops.map((shop) => (
+						<SelectItem key={shop.id} value={shop.id}>
+							{shop.name}
+						</SelectItem>
+					))}
+				</LabeledSelect>
+			)}
 
 			<LabeledSelect
 				label={t("supplement.category")}

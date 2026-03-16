@@ -307,7 +307,13 @@ function CartItemRow({
 	);
 }
 
-export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPriceSheetProps) {
+export function CartPriceSheet({
+	supplements,
+	shops,
+	recentScans,
+	onSaved,
+	trigger,
+}: CartPriceSheetProps) {
 	const t = useTranslations("shopping.cartPriceSheet");
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const fileInputId = "cart-file-input";

@@ -37,6 +37,7 @@ export function StockItem({ item }: StockItemProps) {
 							/>
 							<StockProgressBar
 								currentStock={Number(item.currentStock)}
+								daysInStock={item.daysInStock}
 								dailyUsage={item.dailyUsage}
 								packageSize={item.packageSize}
 							/>

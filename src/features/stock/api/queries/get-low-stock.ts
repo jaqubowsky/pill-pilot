@@ -1,6 +1,8 @@
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/shared/db/client";
 import { ProtocolStatus, protocols, supplementSchedules, supplements } from "@/shared/db/schema";
+import { toDateString } from "@/shared/lib/date";
+import { forecastDaysInStock } from "@/shared/lib/stock-forecast";
 
 export type LowStockItem = {
 	id: string;
@@ -47,14 +49,59 @@ export async function getLowStock(userId: string): Promise<LowStockItem[]> {
 			), 0) > 0`,
 		);
 
+	const supplementIds = rows.map((r) => r.id);
+
+	const scheduleRows =
+		supplementIds.length > 0
+			? await db
+					.select({
+						supplementId: supplementSchedules.supplementId,
+						dosageAmount: supplementSchedules.dosageAmount,
+						cycleDaysOn: supplementSchedules.cycleDaysOn,
+						cycleDaysOff: supplementSchedules.cycleDaysOff,
+						startDayOffset: supplementSchedules.startDayOffset,
+						durationDays: supplementSchedules.durationDays,
+						protocolStartDate: protocols.startDate,
+					})
+					.from(supplementSchedules)
+					.innerJoin(protocols, eq(supplementSchedules.protocolId, protocols.id))
+					.where(
+						and(
+							sql`${supplementSchedules.supplementId} IN ${supplementIds}`,
+							eq(supplementSchedules.active, true),
+							eq(protocols.status, ProtocolStatus.active),
+						),
+					)
+			: [];
+
+	const schedulesPerSupplement = new Map<string, typeof scheduleRows>();
+	for (const row of scheduleRows) {
+		const arr = schedulesPerSupplement.get(row.supplementId) ?? [];
+		arr.push(row);
+		schedulesPerSupplement.set(row.supplementId, arr);
+	}
+
+	const today = toDateString(new Date());
 	const items: LowStockItem[] = [];
 
 	for (const row of rows) {
 		const dailyUsage = Number(row.dailyUsage);
 		const stock = Number(row.currentStock);
 		const threshold = row.stockWarningThreshold ?? 7;
-		const daysRemaining =
-			dailyUsage > 0 ? Math.floor(stock / dailyUsage) : Number.POSITIVE_INFINITY;
+
+		const schedules = schedulesPerSupplement.get(row.id) ?? [];
+		const daysRemaining = forecastDaysInStock(
+			stock,
+			schedules.map((s) => ({
+				dosageAmount: parseFloat(s.dosageAmount),
+				cycleDaysOn: s.cycleDaysOn,
+				cycleDaysOff: s.cycleDaysOff,
+				startDayOffset: s.startDayOffset,
+				durationDays: s.durationDays,
+				protocolStartDate: s.protocolStartDate,
+			})),
+			today,
+		);
 
 		if (daysRemaining <= threshold) {
 			items.push({

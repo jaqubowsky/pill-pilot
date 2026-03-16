@@ -12,6 +12,7 @@ import {
 	supplements,
 	timeBlocks,
 } from "@/shared/db/schema";
+import { forecastDaysInStock } from "@/shared/lib/stock-forecast";
 
 export type StockStatus = {
 	currentStock: number;
@@ -122,12 +123,40 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 
 	const logMap = new Map(logs.map((l) => [l.scheduleId, l]));
 
-	const dailyDosageMap = new Map<string, number>();
+	const schedulesPerSupplement = new Map<
+		string,
+		{
+			dosageAmount: number;
+			cycleDaysOn: number | null;
+			cycleDaysOff: number | null;
+			startDayOffset: number;
+			durationDays: number | null;
+			protocolStartDate: string | null;
+		}[]
+	>();
+	const stockPerSupplement = new Map<string, string | null>();
+
 	for (const row of activeSchedules) {
-		dailyDosageMap.set(
-			row.supplementId,
-			(dailyDosageMap.get(row.supplementId) ?? 0) + parseFloat(row.dosageAmount),
-		);
+		const arr = schedulesPerSupplement.get(row.supplementId) ?? [];
+		arr.push({
+			dosageAmount: parseFloat(row.dosageAmount),
+			cycleDaysOn: row.cycleDaysOn,
+			cycleDaysOff: row.cycleDaysOff,
+			startDayOffset: row.startDayOffset,
+			durationDays: row.durationDays,
+			protocolStartDate: row.protocolStartDate,
+		});
+		schedulesPerSupplement.set(row.supplementId, arr);
+		if (!stockPerSupplement.has(row.supplementId)) {
+			stockPerSupplement.set(row.supplementId, row.currentStock);
+		}
+	}
+
+	const stockForecastMap = new Map<string, number>();
+	for (const [supplementId, schedules] of schedulesPerSupplement) {
+		const stock = stockPerSupplement.get(supplementId);
+		if (stock === null || stock === undefined) continue;
+		stockForecastMap.set(supplementId, forecastDaysInStock(parseFloat(stock), schedules, date));
 	}
 
 	const siblingTakenAtMap = new Map<
@@ -150,7 +179,7 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 		}
 	}
 
-	const ctx = { logMap, dailyDosageMap, date, siblingTakenAtMap };
+	const ctx = { logMap, stockForecastMap, date, siblingTakenAtMap };
 
 	const grouped = activeSchedules
 		.map((row) => ({

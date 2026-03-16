@@ -38,7 +38,7 @@ type Log = {
 
 type Context = {
 	logMap: Map<string, Log>;
-	dailyDosageMap: Map<string, number>;
+	stockForecastMap: Map<string, number>;
 	date: string;
 	siblingTakenAtMap: Map<
 		string,
@@ -79,7 +79,7 @@ export function buildScheduleEntry(
 	const stockStatus = buildStockStatus(
 		row.currentStock,
 		row.stockUnit,
-		ctx.dailyDosageMap.get(row.supplementId) ?? 0,
+		ctx.stockForecastMap.get(row.supplementId) ?? Number.POSITIVE_INFINITY,
 	);
 
 	const cooldown = computeCooldown(row, log, ctx);
@@ -162,14 +162,13 @@ function computeWaitTimer(row: ScheduleRow, log: Log | undefined): { remainingMs
 function buildStockStatus(
 	currentStock: string | null,
 	stockUnit: DosageUnit,
-	totalDaily: number,
+	daysInStock: number,
 ): StockStatus | null {
 	if (currentStock === null) return null;
 
-	const stock = parseFloat(currentStock);
 	return {
-		currentStock: stock,
-		daysRemaining: totalDaily > 0 ? stock / totalDaily : Number.POSITIVE_INFINITY,
+		currentStock: parseFloat(currentStock),
+		daysRemaining: daysInStock,
 		stockUnit,
 	};
 }

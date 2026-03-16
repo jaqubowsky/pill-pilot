@@ -1,11 +1,13 @@
 "use client";
 
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { Plus } from "lucide-react";
+import { Package, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
-import type { TimeBlockSummary } from "@/features/protocol-wizard/types";
+import { useCallback, useState } from "react";
+import type { ExistingSupplementSummary, TimeBlockSummary } from "@/features/protocol-wizard/types";
 import { Button } from "@/shared/components/ui/button";
+import { DosageUnit, SupplementCategory } from "@/shared/db/schema";
+import { ExistingSupplementPicker } from "../manual-protocol-form/existing-supplement-picker";
 import type { EditedSupplement } from "./parsed-preview.schema";
 import { PreviewSupplementRow } from "./preview-supplement-row";
 import { PreviewSupplementSheet } from "./preview-supplement-sheet";
@@ -15,12 +17,14 @@ type SheetState = {
 	supplement: IdentifiedSupplement | null;
 	scheduleIndex: number;
 	defaultTimeBlockId?: string;
+	fromExisting?: boolean;
 } | null;
 
 type PreviewBlockProps = {
 	timeBlock: TimeBlockSummary;
 	supplements: IdentifiedSupplement[];
 	allTimeBlocks: TimeBlockSummary[];
+	existingSupplements: ExistingSupplementSummary[];
 	onUpdateSupplement: (id: string, updated: EditedSupplement) => void;
 	onAddSupplement: (supplement: EditedSupplement) => void;
 	onDeleteSupplement: (id: string) => void;
@@ -33,6 +37,7 @@ export function PreviewBlock({
 	timeBlock,
 	supplements,
 	allTimeBlocks,
+	existingSupplements,
 	onUpdateSupplement,
 	onAddSupplement,
 	onDeleteSupplement,
@@ -42,6 +47,7 @@ export function PreviewBlock({
 }: PreviewBlockProps) {
 	const t = useTranslations();
 	const [sheetState, setSheetState] = useState<SheetState>(null);
+	const [pickerOpen, setPickerOpen] = useState(false);
 
 	function handleSheetSave(edited: EditedSupplement) {
 		if (sheetState === null) return;
@@ -53,7 +59,51 @@ export function PreviewBlock({
 		}
 	}
 
+	const handlePickExisting = useCallback(
+		(existing: ExistingSupplementSummary) => {
+			setPickerOpen(false);
+			const prefilled: IdentifiedSupplement = {
+				name: existing.name,
+				existingSupplementId: existing.id,
+				brandName: existing.brandName,
+				category: SupplementCategory.supplement,
+				isCritical: false,
+				notes: null,
+				cycleDaysOn: null,
+				cycleDaysOff: null,
+				startDayOffset: 0,
+				durationDays: null,
+				dosageIntervalMinutes: null,
+				waitAfterTakingMinutes: null,
+				confidence: 1,
+				uncertaintyReason: null,
+				schedules: [
+					{
+						dosageAmount: 1,
+						dosageUnit: DosageUnit.capsule,
+						timeBlockId: timeBlock.id,
+						notes: null,
+						isCritical: false,
+						waitAfterTakingMinutes: null,
+						cycleDaysOn: null,
+						cycleDaysOff: null,
+						startDayOffset: 0,
+						durationDays: null,
+					},
+				],
+				_id: crypto.randomUUID(),
+			};
+			setSheetState({
+				supplement: prefilled,
+				scheduleIndex: 0,
+				fromExisting: true,
+			});
+		},
+		[timeBlock.id],
+	);
+
 	const sortableIds = supplements.map((s) => `${timeBlock.id}:${s._id}`);
+	const hasExisting = existingSupplements.length > 0;
 
 	return (
 		<div className="bg-surface-raised border border-edge-subtle rounded-xl shadow-sm p-md flex flex-col gap-md">
@@ -91,21 +141,37 @@ export function PreviewBlock({
 				</div>
 			</SortableContext>
 
-			<Button
-				variant="ghost"
-				size="sm"
-				onClick={() =>
-					setSheetState({
-						supplement: null,
-						scheduleIndex: 0,
-						defaultTimeBlockId: timeBlock.id,
-					})
-				}
-				className="text-brand-600 min-h-11"
-			>
-				<Plus className="size-4 stroke-[1.5]" />
-				{t("protocolWizard.addSupplement")}
-			</Button>
+			<div className="flex items-center gap-sm">
+				<Button
+					variant="ghost"
+					size="sm"
+					onClick={() =>
+						setSheetState({
+							supplement: null,
+							scheduleIndex: 0,
+							defaultTimeBlockId: timeBlock.id,
+						})
+					}
+					className="text-brand-600 min-h-11 flex-1"
+				>
+					<Plus className="size-4 stroke-[1.5]" />
+					{t("protocolWizard.addSupplement")}
+				</Button>
+				{hasExisting && (
+					<>
+						<div className="w-px h-5 bg-edge-subtle" />
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={() => setPickerOpen(true)}
+							className="text-brand-600 min-h-11 flex-1"
+						>
+							<Package className="size-4 stroke-[1.5]" />
+							{t("protocolWizard.manual.addFromExisting")}
+						</Button>
+					</>
+				)}
+			</div>
 
 			<PreviewSupplementSheet
 				supplement={sheetState?.supplement ?? null}
@@ -117,7 +183,19 @@ export function PreviewBlock({
 					if (!open) setSheetState(null);
 				}}
 				onSave={handleSheetSave}
+				title={
+					sheetState?.fromExisting ? t("protocolWizard.configureExistingSupplement") : undefined
+				}
 			/>
+
+			{hasExisting && (
+				<ExistingSupplementPicker
+					supplements={existingSupplements}
+					open={pickerOpen}
+					onOpenChange={setPickerOpen}
+					onPick={handlePickExisting}
+				/>
+			)}
 		</div>
 	);
 }

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getProtocolAsParsed } from "@/features/settings/api/queries/get-protocol-as-parsed";
+import { supplementRepository } from "@/shared/repositories/supplement-repository";
 import { timeBlockRepository } from "@/shared/repositories/time-block-repository";
 import { ParsedPreview } from "./components/parsed-preview";
 
@@ -17,7 +18,10 @@ export async function ProtocolEditPage({ userId, protocolId }: ProtocolEditPageP
 
 	const { parsed, startDate } = result;
 
-	const timeBlocks = await timeBlockRepository.findByUserId(userId);
+	const [timeBlocks, supplements] = await Promise.all([
+		timeBlockRepository.findByUserId(userId),
+		supplementRepository.findByUserId(userId),
+	]);
 
 	return (
 		<ParsedPreview
@@ -27,6 +31,11 @@ export async function ProtocolEditPage({ userId, protocolId }: ProtocolEditPageP
 				id: tb.id,
 				name: tb.name,
 				startTime: tb.startTime,
+			}))}
+			existingSupplements={supplements.map((s) => ({
+				id: s.id,
+				name: s.name,
+				brandName: s.brandName,
 			}))}
 			mode="edit"
 			initialStartDate={startDate ?? undefined}

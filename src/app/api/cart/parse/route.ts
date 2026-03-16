@@ -1,6 +1,9 @@
 import { generateText, Output } from "ai";
+import { eq } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import type { NextRequest } from "next/server";
+import { after } from "next/server";
 import sharp from "sharp";
 import { z } from "zod";
 import { cartParseSchema } from "@/features/shopping/schemas/cart-parse-schema";
@@ -135,41 +138,60 @@ export async function POST(request: NextRequest) {
 	const buffer = Buffer.from(await file.arrayBuffer());
 	const compressedData = await compressImage(buffer);
 
-	try {
-		const { output } = await generateText({
-			model: anthropic("claude-haiku-4-5"),
-			output: Output.object({ schema: cartParseSchema }),
-			system: buildPrompt(supplements),
-			messages: [
-				{
-					role: "user",
-					content: [
-						{
-							type: "image",
-							image: compressedData,
-						},
-						{
-							type: "text",
-							text: "Extract all products and prices from this shopping cart screenshot.",
-						},
-					],
-				},
-			],
-		});
-
-		if (!output) {
-			return Response.json({ error: "ai_error" }, { status: 500 });
-		}
-
-		await db.insert(cartScans).values({
+	const [scan] = await db
+		.insert(cartScans)
+		.values({
 			userId,
-			shopName: output.shopName ?? null,
-			items: output.items,
-		});
+			status: "processing",
+			shopName: null,
+			items: null,
+		})
+		.returning({ id: cartScans.id });
 
-		return Response.json(output);
-	} catch (e) {
-		console.error("[cart/parse] AI error:", e);
-		return Response.json({ error: "ai_error" }, { status: 500 });
-	}
+	after(async () => {
+		try {
+			const { output } = await generateText({
+				model: anthropic("claude-haiku-4-5"),
+				output: Output.object({ schema: cartParseSchema }),
+				system: buildPrompt(supplements),
+				messages: [
+					{
+						role: "user",
+						content: [
+							{
+								type: "image",
+								image: compressedData,
+							},
+							{
+								type: "text",
+								text: "Extract all products and prices from this shopping cart screenshot.",
+							},
+						],
+					},
+				],
+			});
+
+			if (!output) {
+				await db.update(cartScans).set({ status: "failed" }).where(eq(cartScans.id, scan.id));
+				revalidatePath("/shopping");
+				return;
+			}
+
+			await db
+				.update(cartScans)
+				.set({
+					status: "completed",
+					shopName: output.shopName ?? null,
+					items: output.items,
+				})
+				.where(eq(cartScans.id, scan.id));
+			revalidatePath("/shopping");
+		} catch (e) {
+			console.error("[cart/parse] AI error:", e);
+			await db.update(cartScans).set({ status: "failed" }).where(eq(cartScans.id, scan.id));
+			revalidatePath("/shopping");
+		}
+	});
+
+	return Response.json({ scanId: scan.id });
 }

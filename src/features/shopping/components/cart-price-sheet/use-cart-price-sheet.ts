@@ -2,28 +2,34 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { deleteCartScan } from "@/features/shopping/api/actions/delete-cart-scan";
 import { createShop } from "@/features/shopping/api/actions/manage-shop";
 import { updateSupplementPrices } from "@/features/shopping/api/actions/update-supplement-prices";
+import {
+	type CartItemState,
+	type ShopOption,
+	CART_CONFIDENCE_THRESHOLD,
+	applyMatch,
+	applyPriceChange,
+	applySkip,
+	applyUnskip,
+	applyVerify,
+	buildPriceUpdates,
+	canSaveCart,
+	getUnverifiedCount,
+	matchShopByName,
+	toCartItemStates,
+} from "@/features/shopping/lib/cart-logic";
 import type { CartItem } from "@/features/shopping/schemas/cart-parse-schema";
 import { addSupplement } from "@/features/supplements";
 
-const CART_CONFIDENCE_THRESHOLD = 0.8;
-
-export type CartItemState = CartItem & {
-	_id: string;
-	verified: boolean;
-	skipped: boolean;
-};
+export type { CartItemState, ShopOption };
+export { CART_CONFIDENCE_THRESHOLD };
 
 export type SupplementOption = {
 	id: string;
 	name: string;
 	brandName?: string | null;
-};
-
-export type ShopOption = {
-	id: string;
-	name: string;
 };
 
 type UseCartPriceSheetParams = {
@@ -34,7 +40,6 @@ type UseCartPriceSheetParams = {
 
 export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceSheetParams) {
 	const [isOpen, setIsOpen] = useState(false);
-	const [isUploading, setIsUploading] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [items, setItems] = useState<CartItemState[]>([]);
@@ -44,10 +49,7 @@ export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceS
 	const [selectedShopId, setSelectedShopId] = useState<string | null>(null);
 	const [shopDeliveryCost, setShopDeliveryCost] = useState<string>("");
 	const [shopFreeThreshold, setShopFreeThreshold] = useState<string>("");
-
-	function openSheet() {
-		setIsOpen(true);
-	}
+	const [loadedScanId, setLoadedScanId] = useState<string | null>(null);
 
 	function closeSheet() {
 		setIsOpen(false);
@@ -58,26 +60,21 @@ export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceS
 		setSelectedShopId(null);
 		setShopDeliveryCost("");
 		setShopFreeThreshold("");
+		setLoadedScanId(null);
 	}
 
-	function loadScan(data: { shopName: string | null; items: CartItem[] }) {
-		const cartItems: CartItemState[] = data.items.map((item, i) => ({
-			...item,
-			_id: `ci_${i}_${Date.now()}`,
-			verified: item.confidence >= CART_CONFIDENCE_THRESHOLD,
-			skipped: false,
-		}));
-
-		setItems(cartItems);
+	function loadScan(data: { scanId: string; shopName: string | null; items: CartItem[] }) {
+		setLoadedScanId(data.scanId);
+		setItems(toCartItemStates(data.items));
 		setError(null);
 
 		if (data.shopName) {
 			setDetectedShopName(data.shopName);
 			setShopName(data.shopName);
 
-			const existingShop = shops.find((s) => s.name.toLowerCase() === data.shopName!.toLowerCase());
-			if (existingShop) {
-				setSelectedShopId(existingShop.id);
+			const existingShopId = matchShopByName(data.shopName, shops);
+			if (existingShopId) {
+				setSelectedShopId(existingShopId);
 			}
 		}
 
@@ -85,90 +82,45 @@ export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceS
 	}
 
 	async function handleFileUpload(file: File) {
-		setIsUploading(true);
-		setIsOpen(true);
+		const formData = new FormData();
+		formData.append("file", file);
+		formData.append(
+			"supplements",
+			JSON.stringify(supplements.map((s) => ({ id: s.id, name: s.name, brandName: s.brandName }))),
+		);
 
 		try {
-			const formData = new FormData();
-			formData.append("file", file);
-			formData.append(
-				"supplements",
-				JSON.stringify(
-					supplements.map((s) => ({ id: s.id, name: s.name, brandName: s.brandName })),
-				),
-			);
-
 			const response = await fetch("/api/cart/parse", {
 				method: "POST",
 				body: formData,
 			});
 
 			if (!response.ok) {
-				setError("Nie udało się przeanalizować zrzutu. Spróbuj ponownie.");
-				return;
-			}
-
-			const data = await response.json();
-
-			const cartItems: CartItemState[] = (data.items ?? []).map((item: CartItem, i: number) => ({
-				...item,
-				_id: `ci_${i}_${Date.now()}`,
-				verified: item.confidence >= CART_CONFIDENCE_THRESHOLD,
-				skipped: false,
-			}));
-
-			setItems(cartItems);
-
-			if (data.shopName) {
-				setDetectedShopName(data.shopName);
-				setShopName(data.shopName);
-
-				const existingShop = shops.find(
-					(s) => s.name.toLowerCase() === data.shopName.toLowerCase(),
-				);
-				if (existingShop) {
-					setSelectedShopId(existingShop.id);
-				}
+				toast.error("Nie udało się rozpocząć analizy. Spróbuj ponownie.");
 			}
 		} catch {
-			setError("Nie udało się przeanalizować zrzutu. Spróbuj ponownie.");
-		} finally {
-			setIsUploading(false);
+			toast.error("Nie udało się rozpocząć analizy. Spróbuj ponownie.");
 		}
 	}
 
 	function handleMatchChange(itemId: string, supplementId: string | null) {
-		setItems((prev) =>
-			prev.map((item) =>
-				item._id === itemId
-					? {
-							...item,
-							matchedSupplementId: supplementId,
-							verified: supplementId !== null,
-						}
-					: item,
-			),
-		);
+		setItems((prev) => applyMatch(prev, itemId, supplementId));
+	}
+
+	function handlePriceChange(itemId: string, price: number) {
+		setItems((prev) => applyPriceChange(prev, itemId, price));
 	}
 
 	function handleVerify(itemId: string) {
-		setItems((prev) =>
-			prev.map((item) => (item._id === itemId ? { ...item, verified: true } : item)),
-		);
+		setItems((prev) => applyVerify(prev, itemId));
 	}
 
 	function handleSkip(itemId: string) {
-		setItems((prev) =>
-			prev.map((item) => (item._id === itemId ? { ...item, skipped: true, verified: true } : item)),
-		);
+		setItems((prev) => applySkip(prev, itemId));
 	}
 
 	function handleUnskip(itemId: string) {
-		setItems((prev) =>
-			prev.map((item) =>
-				item._id === itemId ? { ...item, skipped: false, verified: false } : item,
-			),
-		);
+		setItems((prev) => applyUnskip(prev, itemId));
 	}
 
 	async function handleCreateSupplement(name: string): Promise<string | null> {
@@ -186,8 +138,8 @@ export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceS
 		return null;
 	}
 
-	const unverifiedCount = items.filter((i) => !i.verified && !i.skipped).length;
-	const canSave = unverifiedCount === 0 && items.length > 0;
+	const unverifiedCount = getUnverifiedCount(items);
+	const canSave = canSaveCart(items, selectedShopId, shopName);
 
 	async function handleSave() {
 		if (!canSave) return;
@@ -210,16 +162,14 @@ export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceS
 				}
 			}
 
-			const updates = items
-				.filter((item) => !item.skipped && item.matchedSupplementId)
-				.map((item) => ({
-					supplementId: item.matchedSupplementId as string,
-					packagePrice: item.price,
-					...(shopId ? { shopId } : {}),
-				}));
+			const updates = buildPriceUpdates(items, shopId);
 
 			if (updates.length > 0) {
 				await updateSupplementPrices({ updates });
+			}
+
+			if (loadedScanId) {
+				await deleteCartScan({ scanId: loadedScanId });
 			}
 
 			closeSheet();
@@ -233,7 +183,6 @@ export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceS
 
 	return {
 		isOpen,
-		isUploading,
 		isSaving,
 		error,
 		items,
@@ -250,11 +199,11 @@ export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceS
 		setShopFreeThreshold,
 		unverifiedCount,
 		canSave,
-		openSheet,
 		closeSheet,
 		loadScan,
 		handleFileUpload,
 		handleMatchChange,
+		handlePriceChange,
 		handleVerify,
 		handleSkip,
 		handleUnskip,

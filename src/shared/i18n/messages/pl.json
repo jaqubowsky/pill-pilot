@@ -445,6 +445,9 @@
 			"cancel": "Anuluj",
 			"scanCart": "Skanuj koszyk",
 			"recentScans": "Ostatnie skany",
+			"scanFailed": "Błąd analizy",
+			"deleteScanTitle": "Usunąć skan?",
+			"deleteScanDescription": "Skan zostanie trwale usunięty.",
 			"items": "{count, plural, one {# pozycja} few {# pozycje} other {# pozycji}}"
 		},
 		"priceSheet": {

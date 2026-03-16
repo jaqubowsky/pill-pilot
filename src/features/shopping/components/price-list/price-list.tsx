@@ -1,7 +1,9 @@
 "use client";
 
 import { ImageUp, Pencil, Store } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useEffect } from "react";
 import type { PriceListItem, ShopOption } from "@/features/shopping/api/queries/get-price-list";
 import type { RecentScan } from "@/features/shopping/api/queries/get-recent-scans";
 import { CartPriceSheet } from "@/features/shopping/components/cart-price-sheet";
@@ -21,6 +23,19 @@ const NO_SHOP_VALUE = "__none__";
 
 export function PriceList({ items, shopOptions, filterIds, recentScans }: PriceListProps) {
 	const t = useTranslations();
+	const router = useRouter();
+
+	const hasProcessing = recentScans?.some((s) => s.status === "processing") ?? false;
+
+	useEffect(() => {
+		if (!hasProcessing) return;
+
+		const interval = setInterval(() => {
+			router.refresh();
+		}, 5000);
+
+		return () => clearInterval(interval);
+	}, [hasProcessing, router]);
 
 	const {
 		groupedRows,

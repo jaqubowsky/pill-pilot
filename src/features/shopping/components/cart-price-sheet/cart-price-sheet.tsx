@@ -2,9 +2,10 @@
 
 import {
 	AlertTriangle,
-	CheckCircle,
+	Check,
 	ChevronDown,
 	Clock,
+	Link2,
 	Loader2,
 	Pencil,
 	Plus,
@@ -13,12 +14,28 @@ import {
 	ShoppingCart,
 	Store,
 	Trash2,
+	X,
 	XCircle,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
+import { deleteCartScan } from "@/features/shopping/api/actions/delete-cart-scan";
 import { ShopEditSheet } from "@/features/shopping/components/shop-edit-sheet";
+import { BottomSheet } from "@/shared/components/bottom-sheet";
+import { IconBadge } from "@/shared/components/icon-badge";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
 import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover";
 import {
 	Select,
 	SelectContent,
@@ -38,6 +55,7 @@ import { useCartPriceSheet } from "./use-cart-price-sheet";
 
 type RecentScanSummary = {
 	id: string;
+	status: "processing" | "completed" | "failed";
 	shopName: string | null;
 	items: {
 		productName: string;
@@ -103,7 +121,7 @@ function SupplementPicker({
 	}
 
 	return (
-		<div className="flex-1 flex flex-col gap-xs">
+		<div className="flex-1 relative flex flex-col gap-xs">
 			<div className="flex items-center gap-sm border border-edge rounded-lg px-sm py-xs bg-surface-sunken">
 				<Search className="size-4 text-content-faint shrink-0" />
 				<input
@@ -116,7 +134,7 @@ function SupplementPicker({
 					className="flex-1 bg-transparent text-sm outline-none placeholder:text-content-faint py-xs"
 				/>
 			</div>
-			<div className="max-h-40 overflow-y-auto rounded-lg border border-edge-subtle bg-surface-raised">
+			<div className="absolute top-full left-0 right-0 z-20 mt-xs max-h-52 overflow-y-auto rounded-lg border border-edge-subtle bg-surface-raised shadow-lg">
 				{onCreateNew && (
 					<button
 						type="button"
@@ -173,6 +191,7 @@ function CartItemRow({
 	supplements,
 	confidenceThreshold,
 	onMatch,
+	onPriceChange,
 	onVerify,
 	onSkip,
 	onUnskip,
@@ -182,12 +201,13 @@ function CartItemRow({
 	supplements: SupplementOption[];
 	confidenceThreshold: number;
 	onMatch: (id: string | null) => void;
+	onPriceChange: (price: number) => void;
 	onVerify: () => void;
 	onSkip: () => void;
 	onUnskip: () => void;
 	onCreateNew: (name: string) => Promise<string | null>;
 }) {
-	const [expanded, setExpanded] = useState(false);
+	const [editOpen, setEditOpen] = useState(false);
 
 	if (item.skipped) {
 		return (
@@ -218,41 +238,36 @@ function CartItemRow({
 		onMatch(id);
 		if (id) {
 			onVerify();
-			setExpanded(false);
+			setEditOpen(false);
 		}
 	}
 
 	return (
 		<div className="flex flex-col gap-xs py-xs">
-			<div className="flex items-center justify-between gap-sm">
-				<div className="flex items-center gap-xs min-w-0 flex-1">
-					<span className="text-sm font-medium text-content truncate min-w-0 shrink">
-						{item.productName}
-					</span>
-					<span className="text-xs text-content-muted whitespace-nowrap shrink-0">
-						{item.price.toFixed(2)} zł
-					</span>
-					{isVerified && !isLowConfidence && (
-						<span className="rounded-lg p-xs bg-success-bg text-brand-700 shrink-0">
-							<CheckCircle className="size-4 stroke-[1.5]" />
-						</span>
-					)}
-					{isLowConfidence && !isVerified && (
-						<span className="rounded-lg p-xs bg-warning-bg text-[#8B6914] shrink-0">
-							<AlertTriangle className="size-4 stroke-[1.5]" />
-						</span>
-					)}
-					{!isMatched && (
-						<span className="rounded-lg p-xs bg-danger-bg text-danger shrink-0">
-							<XCircle className="size-4 stroke-[1.5]" />
-						</span>
-					)}
-				</div>
+			<div className="flex items-center gap-xs">
+				<span className="text-sm font-medium text-content truncate min-w-0 flex-1">
+					{item.productName}
+				</span>
+				<span className="text-xs text-content-muted whitespace-nowrap shrink-0">
+					{item.price.toFixed(2)} zł
+				</span>
+				{isMatched && isVerified && (
+					<IconBadge icon={Link2} variant="success" label={matchedName ?? ""} />
+				)}
+				{((isLowConfidence && !isVerified) || !isMatched) && (
+					<button
+						type="button"
+						onClick={() => setEditOpen(true)}
+						className="relative rounded-lg p-xs bg-warning-bg text-[#8B6914] after:absolute after:inset-1/2 after:min-h-11 after:min-w-11 after:-translate-1/2 shrink-0"
+					>
+						<AlertTriangle className="size-4 stroke-[1.5]" />
+					</button>
+				)}
 				<div className="flex items-center shrink-0">
 					<Button
 						variant="ghost"
 						size="icon-sm"
-						onClick={() => setExpanded(!expanded)}
+						onClick={() => setEditOpen(true)}
 						className="active:scale-[0.98] transition-transform"
 					>
 						<Pencil className="size-4 text-content-faint stroke-[1.5]" />
@@ -268,27 +283,73 @@ function CartItemRow({
 				</div>
 			</div>
 
-			{matchedName && !expanded && (
-				<span className="text-xs text-content-faint truncate">→ {matchedName}</span>
-			)}
+			{matchedName && <span className="text-xs text-content-faint truncate">→ {matchedName}</span>}
 
-			{expanded && (
-				<SupplementPicker
-					supplements={supplements}
-					value={item.matchedSupplementId}
-					onChange={handleSelect}
-					onCreateNew={async (name) => {
-						const id = await onCreateNew(name);
-						if (id) {
-							onVerify();
-							setExpanded(false);
-						}
-						return id;
-					}}
-					suggestedName={item.productName}
-					placeholder="Wybierz suplement"
+			{editOpen && (
+				<div
+					className="fixed inset-0 z-50 bg-black/20 supports-backdrop-filter:backdrop-blur-xs"
+					onClick={() => setEditOpen(false)}
+					onKeyDown={() => {}}
+					role="presentation"
 				/>
 			)}
+			<BottomSheet
+				open={editOpen}
+				onOpenChange={setEditOpen}
+				title={item.productName}
+				scrollable
+				footer={
+					<Button
+						className="w-full"
+						onClick={() => {
+							if (item.matchedSupplementId) onVerify();
+							setEditOpen(false);
+						}}
+					>
+						Gotowe
+					</Button>
+				}
+			>
+				<div className="flex flex-col gap-lg">
+					<div className="flex flex-col gap-sm">
+						<label className="text-xs font-medium text-content-muted">Suplement</label>
+						<SupplementPicker
+							supplements={supplements}
+							value={item.matchedSupplementId}
+							onChange={handleSelect}
+							onCreateNew={async (name) => {
+								const id = await onCreateNew(name);
+								if (id) {
+									onVerify();
+									setEditOpen(false);
+								}
+								return id;
+							}}
+							suggestedName={item.productName}
+							placeholder="Wybierz suplement"
+						/>
+					</div>
+
+					<div className="flex flex-col gap-sm">
+						<label className="text-xs font-medium text-content-muted">Cena</label>
+						<div className="flex items-center gap-sm">
+							<Input
+								type="number"
+								inputMode="decimal"
+								min={0}
+								step={0.01}
+								value={item.price}
+								onChange={(e) => {
+									const val = parseFloat(e.target.value);
+									if (!Number.isNaN(val)) onPriceChange(val);
+								}}
+								className="w-28 h-11 text-right text-sm px-sm bg-surface-sunken border-edge rounded-lg"
+							/>
+							<span className="text-sm text-content-faint">zł</span>
+						</div>
+					</div>
+				</div>
+			</BottomSheet>
 		</div>
 	);
 }
@@ -301,32 +362,29 @@ export function CartPriceSheet({
 	trigger,
 }: CartPriceSheetProps) {
 	const t = useTranslations("shopping.cartPriceSheet");
+	const tCommon = useTranslations("common");
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const fileInputId = "cart-file-input";
 	const [shopEditOpen, setShopEditOpen] = useState(false);
+	const [deleteScanId, setDeleteScanId] = useState<string | null>(null);
 
 	const {
 		isOpen,
-		isUploading,
 		isSaving,
 		error,
 		items,
 		localSupplements,
 		handleCreateSupplement,
-		shopName,
 		setShopName,
 		selectedShopId,
 		setSelectedShopId,
-		shopDeliveryCost,
-		setShopDeliveryCost,
-		shopFreeThreshold,
-		setShopFreeThreshold,
 		unverifiedCount,
 		canSave,
 		closeSheet,
 		loadScan,
 		handleFileUpload,
 		handleMatchChange,
+		handlePriceChange,
 		handleVerify,
 		handleSkip,
 		handleUnskip,
@@ -382,27 +440,69 @@ export function CartPriceSheet({
 					</div>
 					<div className="flex gap-sm overflow-x-auto pb-xs -mx-md px-md scrollbar-none">
 						{recentScans.map((scan) => (
-							<button
-								key={scan.id}
-								type="button"
-								onClick={() => loadScan({ shopName: scan.shopName, items: scan.items })}
-								className="flex flex-col gap-xs rounded-xl border border-edge-subtle bg-surface-raised p-sm min-w-[140px] max-w-[160px] shrink-0 text-left active:scale-[0.98] transition-transform shadow-sm"
-							>
-								<span className="text-sm font-medium text-content truncate w-full">
-									{scan.shopName ?? t("selectShop")}
-								</span>
-								<span className="text-xs text-content-faint">
-									{t("items", { count: scan.items.length })}
-								</span>
-								<span className="text-xs text-content-faint">
-									{scan.createdAt.toLocaleString("pl-PL", {
-										day: "numeric",
-										month: "short",
-										hour: "2-digit",
-										minute: "2-digit",
-									})}
-								</span>
-							</button>
+							<div key={scan.id} className="relative shrink-0">
+								<button
+									type="button"
+									onClick={() => setDeleteScanId(scan.id)}
+									className="absolute top-xs right-xs text-content-faint hover:text-content-muted z-10 after:absolute after:inset-1/2 after:min-h-11 after:min-w-11 after:-translate-1/2"
+								>
+									<X className="size-3.5" />
+								</button>
+								{scan.status === "processing" ? (
+									<div className="flex flex-col gap-xs rounded-xl border border-brand-200 bg-brand-50/50 p-sm pr-lg min-w-[140px] max-w-[160px]">
+										<div className="flex items-center gap-xs">
+											<Loader2 className="size-3.5 animate-spin text-brand-600" />
+											<span className="text-sm font-medium text-brand-600">{t("analysing")}</span>
+										</div>
+										<span className="text-xs text-content-faint">
+											{scan.createdAt.toLocaleString("pl-PL", {
+												day: "numeric",
+												month: "short",
+												hour: "2-digit",
+												minute: "2-digit",
+											})}
+										</span>
+									</div>
+								) : scan.status === "failed" ? (
+									<div className="flex flex-col gap-xs rounded-xl border border-danger/20 bg-danger-bg p-sm pr-lg min-w-[140px] max-w-[160px]">
+										<div className="flex items-center gap-xs">
+											<AlertTriangle className="size-3.5 text-danger" />
+											<span className="text-sm font-medium text-danger">{t("scanFailed")}</span>
+										</div>
+										<span className="text-xs text-content-faint">
+											{scan.createdAt.toLocaleString("pl-PL", {
+												day: "numeric",
+												month: "short",
+												hour: "2-digit",
+												minute: "2-digit",
+											})}
+										</span>
+									</div>
+								) : (
+									<button
+										type="button"
+										onClick={() =>
+											loadScan({ scanId: scan.id, shopName: scan.shopName, items: scan.items })
+										}
+										className="flex flex-col gap-xs rounded-xl border border-edge-subtle bg-surface-raised p-sm pr-lg min-w-[140px] max-w-[160px] text-left active:scale-[0.98] transition-transform shadow-sm"
+									>
+										<span className="text-sm font-medium text-content truncate w-full">
+											{scan.shopName ?? t("selectShop")}
+										</span>
+										<span className="text-xs text-content-faint">
+											{t("items", { count: scan.items.length })}
+										</span>
+										<span className="text-xs text-content-faint">
+											{scan.createdAt.toLocaleString("pl-PL", {
+												day: "numeric",
+												month: "short",
+												hour: "2-digit",
+												minute: "2-digit",
+											})}
+										</span>
+									</button>
+								)}
+							</div>
 						))}
 					</div>
 				</div>
@@ -414,19 +514,15 @@ export function CartPriceSheet({
 					if (!open) closeSheet();
 				}}
 			>
-				<SheetContent side="bottom" className="max-h-[90dvh] overflow-hidden flex flex-col p-0">
-					<SheetHeader className="shrink-0 p-md pb-0">
+				<SheetContent
+					side="bottom"
+					className="max-h-[90dvh] overflow-hidden flex flex-col gap-0 p-0"
+				>
+					<SheetHeader className="shrink-0 px-md pt-lg pb-md">
 						<SheetTitle>{t("title")}</SheetTitle>
 					</SheetHeader>
 
-					{isUploading ? (
-						<div className="flex flex-1 items-center justify-center py-xl">
-							<div className="flex flex-col items-center gap-md text-content-muted">
-								<Loader2 className="size-8 animate-spin" />
-								<p className="text-sm">{t("analysing")}</p>
-							</div>
-						</div>
-					) : error ? (
+					{error ? (
 						<div className="flex flex-1 items-center justify-center py-xl">
 							<div className="flex flex-col items-center gap-md text-center px-md">
 								<AlertTriangle className="size-8 text-warning" />
@@ -444,98 +540,101 @@ export function CartPriceSheet({
 							</div>
 						</div>
 					) : (
-						<div className="flex flex-col gap-md overflow-y-auto flex-1 min-h-0 px-md pb-sm">
-							<div className="flex flex-col gap-sm">
-								<label className="text-xs font-medium text-content-muted">{t("shopLabel")}</label>
+						<div className="flex-1 overflow-y-auto px-md pb-lg pt-md">
+							<div className="flex flex-col gap-md">
+								<div className="flex flex-col gap-sm">
+									<label className="text-xs font-medium text-content-muted">{t("shopLabel")}</label>
 
-								{selectedShopId ? (
-									<div className="flex items-center justify-between bg-surface-raised border border-edge-subtle rounded-xl p-md">
-										<div className="flex items-center gap-xs">
-											<Store size={16} className="text-content-muted" />
-											<span className="text-sm font-medium text-content">
-												{shops.find((s) => s.id === selectedShopId)?.name}
-											</span>
+									{selectedShopId ? (
+										<div className="flex items-center justify-between bg-surface-raised border border-edge-subtle rounded-xl p-md">
+											<div className="flex items-center gap-xs">
+												<Store size={16} className="text-content-muted" />
+												<span className="text-sm font-medium text-content">
+													{shops.find((s) => s.id === selectedShopId)?.name}
+												</span>
+											</div>
+											<button
+												type="button"
+												onClick={() => {
+													setSelectedShopId(null);
+													setShopName("");
+												}}
+												className="text-xs text-brand-600"
+											>
+												{t("change")}
+											</button>
 										</div>
-										<button
-											type="button"
-											onClick={() => {
-												setSelectedShopId(null);
-												setShopName("");
-											}}
-											className="text-xs text-brand-600"
-										>
-											{t("change")}
-										</button>
-									</div>
-								) : (
-									<>
-										<Select
-											value=""
-											onValueChange={(val) => {
-												setSelectedShopId(val || null);
-												const shop = shops.find((s) => s.id === val);
-												if (shop) setShopName(shop.name);
-											}}
-										>
-											<SelectTrigger className="w-full bg-surface-sunken border-edge rounded-lg">
-												<SelectValue>{t("selectShop")}</SelectValue>
-											</SelectTrigger>
-											<SelectContent>
-												{shops.map((shop) => (
-													<SelectItem key={shop.id} value={shop.id}>
-														{shop.name}
-													</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
+									) : (
+										<>
+											<Select
+												value=""
+												onValueChange={(val) => {
+													setSelectedShopId(val || null);
+													const shop = shops.find((s) => s.id === val);
+													if (shop) setShopName(shop.name);
+												}}
+											>
+												<SelectTrigger className="w-full bg-surface-sunken border-edge rounded-lg">
+													<SelectValue>{t("selectShop")}</SelectValue>
+												</SelectTrigger>
+												<SelectContent>
+													{shops.map((shop) => (
+														<SelectItem key={shop.id} value={shop.id}>
+															{shop.name}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
 
-										<div className="flex items-center gap-md">
-											<div className="flex-1 border-t border-edge-subtle" />
-											<span className="text-xs font-semibold uppercase tracking-wide text-content-faint">
-												lub
-											</span>
-											<div className="flex-1 border-t border-edge-subtle" />
-										</div>
+											<div className="flex items-center gap-md">
+												<div className="flex-1 border-t border-edge-subtle" />
+												<span className="text-xs font-semibold uppercase tracking-wide text-content-faint">
+													lub
+												</span>
+												<div className="flex-1 border-t border-edge-subtle" />
+											</div>
 
-										<Button
-											variant="outline"
-											size="lg"
-											className="w-full flex items-center justify-center gap-sm rounded-xl bg-surface-raised border-edge-subtle shadow-sm"
-											onClick={() => setShopEditOpen(true)}
-										>
-											<Plus className="size-5 text-brand-600" />
-											<span className="text-sm font-medium text-content">{t("addShop")}</span>
-										</Button>
-									</>
-								)}
-							</div>
-
-							{unverifiedCount > 0 && (
-								<div className="rounded-xl bg-warning-bg border border-warning/20 p-md">
-									<p className="text-sm text-[#8B6914]">
-										{t("requiresVerification", { count: unverifiedCount })}
-									</p>
+											<Button
+												variant="outline"
+												size="lg"
+												className="w-full flex items-center justify-center gap-sm rounded-xl bg-surface-raised border-edge-subtle shadow-sm"
+												onClick={() => setShopEditOpen(true)}
+											>
+												<Plus className="size-5 text-brand-600" />
+												<span className="text-sm font-medium text-content">{t("addShop")}</span>
+											</Button>
+										</>
+									)}
 								</div>
-							)}
 
-							<div className="bg-surface-raised border border-edge-subtle rounded-xl shadow-sm overflow-hidden px-md">
-								{items.map((item, idx) => (
-									<div
-										key={item._id}
-										className={idx < items.length - 1 ? "border-b border-edge-subtle" : ""}
-									>
-										<CartItemRow
-											item={item}
-											supplements={localSupplements}
-											confidenceThreshold={CART_CONFIDENCE_THRESHOLD}
-											onMatch={(id) => handleMatchChange(item._id, id)}
-											onVerify={() => handleVerify(item._id)}
-											onSkip={() => handleSkip(item._id)}
-											onUnskip={() => handleUnskip(item._id)}
-											onCreateNew={handleCreateSupplement}
-										/>
+								{unverifiedCount > 0 && (
+									<div className="rounded-xl bg-warning-bg border border-warning/20 p-md">
+										<p className="text-sm text-[#8B6914]">
+											{t("requiresVerification", { count: unverifiedCount })}
+										</p>
 									</div>
-								))}
+								)}
+
+								<div className="bg-surface-raised border border-edge-subtle rounded-xl shadow-sm overflow-hidden px-md">
+									{items.map((item, idx) => (
+										<div
+											key={item._id}
+											className={idx < items.length - 1 ? "border-b border-edge-subtle" : ""}
+										>
+											<CartItemRow
+												item={item}
+												supplements={localSupplements}
+												confidenceThreshold={CART_CONFIDENCE_THRESHOLD}
+												onMatch={(id) => handleMatchChange(item._id, id)}
+												onPriceChange={(price) => handlePriceChange(item._id, price)}
+												onVerify={() => handleVerify(item._id)}
+												onSkip={() => handleSkip(item._id)}
+												onUnskip={() => handleUnskip(item._id)}
+												onCreateNew={handleCreateSupplement}
+											/>
+										</div>
+									))}
+								</div>
 							</div>
 						</div>
 					)}
@@ -552,6 +651,31 @@ export function CartPriceSheet({
 			</Sheet>
 
 			<ShopEditSheet shop={null} open={shopEditOpen} onOpenChange={setShopEditOpen} />
+
+			<AlertDialog
+				open={deleteScanId !== null}
+				onOpenChange={(open) => {
+					if (!open) setDeleteScanId(null);
+				}}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>{t("deleteScanTitle")}</AlertDialogTitle>
+						<AlertDialogDescription>{t("deleteScanDescription")}</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={() => {
+								if (deleteScanId) deleteCartScan({ scanId: deleteScanId });
+								setDeleteScanId(null);
+							}}
+						>
+							{tCommon("delete")}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</>
 	);
 }

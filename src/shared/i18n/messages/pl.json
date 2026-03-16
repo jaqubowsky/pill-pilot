@@ -391,6 +391,7 @@
 		"noShop": "Bez sklepu",
 		"noPrices": "Brak suplementów do wyświetlenia.",
 		"scanCart": "Skanuj koszyk",
+		"scanCartHint": "Zrób zdjęcie koszyka — AI odczyta ceny",
 		"addShop": "Dodaj sklep",
 		"editShop": "Edytuj sklep",
 		"deleteShop": "Usuń sklep",

@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Plus, ScanLine, Store } from "lucide-react";
+import { Camera, Pencil, Plus, Store } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { PriceListItem, ShopOption } from "@/features/shopping/api/queries/get-price-list";
 import { CartPriceSheet } from "@/features/shopping/components/cart-price-sheet";
@@ -68,18 +68,19 @@ export function PriceList({ items, shopOptions, filterIds }: PriceListProps) {
 
 	return (
 		<div className="flex flex-col gap-lg">
-			<div className="flex items-center justify-between">
-				<CartPriceSheet
-					supplements={supplementsForCart}
-					shops={shopsForCart}
-					trigger={
-						<Button variant="outline" size="sm" className="flex items-center gap-xs">
-							<ScanLine className="size-4" />
-							{t("shopping.scanCart")}
-						</Button>
-					}
-				/>
+			<CartPriceSheet
+				supplements={supplementsForCart}
+				shops={shopsForCart}
+				trigger={
+					<div className="w-full flex flex-col items-center justify-center gap-sm rounded-xl border-2 border-dashed border-edge-strong bg-surface-sunken p-lg cursor-pointer active:scale-[0.98] transition-transform">
+						<Camera className="size-8 text-content-faint stroke-[1.5]" />
+						<p className="text-sm font-medium text-content-muted">{t("shopping.scanCart")}</p>
+						<p className="text-xs text-content-faint">{t("shopping.scanCartHint")}</p>
+					</div>
+				}
+			/>
 
+			<div className="flex items-center justify-end">
 				<Button
 					variant="ghost"
 					size="sm"

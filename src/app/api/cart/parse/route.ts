@@ -4,6 +4,8 @@ import type { NextRequest } from "next/server";
 import sharp from "sharp";
 import { z } from "zod";
 import { cartParseSchema } from "@/features/shopping/schemas/cart-parse-schema";
+import { db } from "@/shared/db/client";
+import { cartScans } from "@/shared/db/schema";
 import { anthropic } from "@/shared/lib/ai";
 import { auth } from "@/shared/lib/auth";
 
@@ -158,6 +160,12 @@ export async function POST(request: NextRequest) {
 		if (!output) {
 			return Response.json({ error: "ai_error" }, { status: 500 });
 		}
+
+		await db.insert(cartScans).values({
+			userId,
+			shopName: output.shopName ?? null,
+			items: output.items,
+		});
 
 		return Response.json(output);
 	} catch (e) {

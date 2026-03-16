@@ -17,6 +17,13 @@ import { useRef, useState } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/shared/components/ui/select";
+import {
 	Sheet,
 	SheetContent,
 	SheetFooter,
@@ -164,7 +171,10 @@ function CartItemRow({
 	onUnskip: () => void;
 	onCreateNew: (name: string) => Promise<string | null>;
 }) {
-	const t = useTranslations("shopping.cartPriceSheet");
+	const needsInput =
+		!item.matchedSupplementId ||
+		(item.matchedSupplementId && item.confidence < confidenceThreshold && !item.verified);
+	const [expanded, setExpanded] = useState(needsInput);
 
 	if (item.skipped) {
 		return (
@@ -184,42 +194,59 @@ function CartItemRow({
 		);
 	}
 
-	const isHighConfidence =
-		item.matchedSupplementId !== null &&
-		item.matchedSupplementId !== undefined &&
-		item.confidence >= confidenceThreshold;
-	const isLowConfidence =
-		item.matchedSupplementId !== null &&
-		item.matchedSupplementId !== undefined &&
-		item.confidence < confidenceThreshold;
-	const isUnmatched = !item.matchedSupplementId;
+	const isMatched = !!item.matchedSupplementId;
+	const isVerified = item.verified;
+	const isLowConfidence = isMatched && item.confidence < confidenceThreshold;
+	const matchedName = isMatched
+		? supplements.find((s) => s.id === item.matchedSupplementId)?.name
+		: null;
+
+	function handleSelect(id: string | null) {
+		onMatch(id);
+		if (id) {
+			onVerify();
+			setExpanded(false);
+		}
+	}
 
 	return (
-		<div className="flex flex-col gap-sm py-sm">
-			<div className="flex items-center justify-between gap-sm">
-				<div className="flex flex-col gap-0.5 flex-1 min-w-0">
+		<div className="flex flex-col gap-xs py-sm">
+			<div className="flex items-center gap-sm">
+				<div className="flex-1 min-w-0">
 					<p className="text-sm font-bold text-content truncate">{item.productName}</p>
-					<p className="text-xs text-content-muted">{item.price.toFixed(2)} zł</p>
+					<p className="text-xs text-content-muted">
+						{item.price.toFixed(2)} zł
+						{matchedName && <span className="text-content-faint"> → {matchedName}</span>}
+					</p>
 				</div>
 
 				<div className="flex items-center shrink-0">
-					{isHighConfidence && item.verified && (
-						<span className="inline-flex items-center gap-xs rounded-lg px-sm py-xs text-xs font-semibold bg-success-bg text-brand-700">
-							<CheckCircle className="size-3.5" />
-							{t("ok")}
-						</span>
+					{isVerified && !isLowConfidence && (
+						<button
+							type="button"
+							onClick={() => setExpanded(!expanded)}
+							className="inline-flex items-center justify-center size-9 rounded-lg bg-success-bg active:scale-[0.95] transition-transform"
+						>
+							<CheckCircle className="size-4 text-brand-700" />
+						</button>
 					)}
-					{isLowConfidence && !item.verified && (
-						<span className="inline-flex items-center gap-xs rounded-lg px-sm py-xs text-xs font-semibold bg-warning-bg text-[#8B6914]">
-							<AlertTriangle className="size-3.5" />
-							{t("verify")}
-						</span>
+					{isLowConfidence && !isVerified && (
+						<button
+							type="button"
+							onClick={() => setExpanded(!expanded)}
+							className="inline-flex items-center justify-center size-9 rounded-lg bg-warning-bg active:scale-[0.95] transition-transform"
+						>
+							<AlertTriangle className="size-4 text-[#8B6914]" />
+						</button>
 					)}
-					{isUnmatched && (
-						<span className="inline-flex items-center gap-xs rounded-lg px-sm py-xs text-xs font-semibold bg-danger-bg text-danger">
-							<XCircle className="size-3.5" />
-							{t("unmatched")}
-						</span>
+					{!isMatched && (
+						<button
+							type="button"
+							onClick={() => setExpanded(!expanded)}
+							className="inline-flex items-center justify-center size-9 rounded-lg bg-danger-bg active:scale-[0.95] transition-transform"
+						>
+							<XCircle className="size-4 text-danger" />
+						</button>
 					)}
 					<Button
 						variant="ghost"
@@ -232,27 +259,23 @@ function CartItemRow({
 				</div>
 			</div>
 
-			<div className="flex gap-xs items-start">
+			{expanded && (
 				<SupplementPicker
 					supplements={supplements}
 					value={item.matchedSupplementId}
-					onChange={onMatch}
-					onCreateNew={onCreateNew}
+					onChange={handleSelect}
+					onCreateNew={async (name) => {
+						const id = await onCreateNew(name);
+						if (id) {
+							onVerify();
+							setExpanded(false);
+						}
+						return id;
+					}}
 					suggestedName={item.productName}
-					placeholder={t("selectSupplement")}
+					placeholder="Wybierz suplement"
 				/>
-				{!item.verified && (
-					<Button
-						variant="default"
-						size="sm"
-						onClick={onVerify}
-						disabled={!item.matchedSupplementId}
-						className="shrink-0 min-h-11 bg-brand-500 text-content-inverse"
-					>
-						{t("ok")}
-					</Button>
-				)}
-			</div>
+			)}
 		</div>
 	);
 }
@@ -365,31 +388,45 @@ export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPri
 						</div>
 					) : (
 						<div className="flex flex-col gap-md overflow-y-auto flex-1 px-md pb-sm">
-							<div className="flex flex-col gap-xs">
-								<label className="text-xs font-medium text-content-muted">{t("shopLabel")}</label>
-								<div className="flex gap-sm items-center">
-									<Input
-										value={shopName}
-										onChange={(e) => {
-											setShopName(e.target.value);
-											setSelectedShopId(null);
-										}}
-										placeholder={t("shopPlaceholder")}
-										className="flex-1 bg-surface-sunken border-edge rounded-lg"
-									/>
-									{shops.map((shop) => (
-										<button
-											key={shop.id}
-											type="button"
-											onClick={() => {
-												setSelectedShopId(shop.id);
-												setShopName(shop.name);
+							<div className="flex flex-col gap-sm">
+								<div className="flex flex-col gap-xs">
+									<label className="text-xs font-medium text-content-muted">{t("shopLabel")}</label>
+									<div className="flex gap-sm">
+										<Input
+											value={shopName}
+											onChange={(e) => {
+												setShopName(e.target.value);
+												setSelectedShopId(null);
 											}}
-											className={`px-sm py-xs text-xs rounded-lg border shrink-0 transition-colors ${selectedShopId === shop.id ? "bg-brand-50 border-brand-400 text-brand-700" : "bg-surface-raised border-edge-subtle text-content-muted"}`}
-										>
-											{shop.name}
-										</button>
-									))}
+											placeholder={t("shopPlaceholder")}
+											className="flex-1 bg-surface-sunken border-edge rounded-lg"
+										/>
+										{shops.length > 0 && (
+											<Select
+												value={selectedShopId ?? ""}
+												onValueChange={(val) => {
+													setSelectedShopId(val || null);
+													const shop = shops.find((s) => s.id === val);
+													if (shop) setShopName(shop.name);
+												}}
+											>
+												<SelectTrigger className="w-auto shrink-0 bg-surface-sunken border-edge rounded-lg">
+													<SelectValue>
+														{selectedShopId
+															? shops.find((s) => s.id === selectedShopId)?.name
+															: t("selectShop")}
+													</SelectValue>
+												</SelectTrigger>
+												<SelectContent>
+													{shops.map((shop) => (
+														<SelectItem key={shop.id} value={shop.id}>
+															{shop.name}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										)}
+									</div>
 								</div>
 
 								{shopName.trim() && !selectedShopId && (

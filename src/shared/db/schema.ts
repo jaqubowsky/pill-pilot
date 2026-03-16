@@ -231,6 +231,18 @@ export const pushSubscriptions = pgTable("push_subscriptions", {
 	createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const cartScans = pgTable("cart_scans", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => createId()),
+	userId: text("user_id")
+		.notNull()
+		.references(() => users.id, { onDelete: "cascade" }),
+	shopName: text("shop_name"),
+	items: json("items").notNull(),
+	createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const notificationSettings = pgTable("notification_settings", {
 	id: text("id")
 		.primaryKey()

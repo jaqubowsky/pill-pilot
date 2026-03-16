@@ -428,6 +428,7 @@
 		"cartPriceSheet": {
 			"title": "Wyniki skanu",
 			"addShop": "Dodaj nowy",
+			"change": "Zmień",
 			"analysing": "Analizuję zrzut ekranu...",
 			"shopLabel": "Sklep",
 			"shopPlaceholder": "np. iHerb, Allegro",

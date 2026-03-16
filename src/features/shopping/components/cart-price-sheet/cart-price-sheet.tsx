@@ -5,10 +5,12 @@ import {
 	CheckCircle,
 	ChevronDown,
 	Loader2,
+	Pencil,
 	Plus,
 	RotateCcw,
 	Search,
 	ShoppingCart,
+	Store,
 	Trash2,
 	XCircle,
 } from "lucide-react";
@@ -16,7 +18,6 @@ import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { ShopEditSheet } from "@/features/shopping/components/shop-edit-sheet";
 import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
 import {
 	Select,
 	SelectContent,
@@ -34,9 +35,22 @@ import {
 import type { CartItemState, ShopOption, SupplementOption } from "./use-cart-price-sheet";
 import { useCartPriceSheet } from "./use-cart-price-sheet";
 
+type RecentScanSummary = {
+	id: string;
+	shopName: string | null;
+	items: {
+		productName: string;
+		price: number;
+		matchedSupplementId?: string | null;
+		confidence: number;
+	}[];
+	createdAt: Date;
+};
+
 type CartPriceSheetProps = {
 	supplements: SupplementOption[];
 	shops: ShopOption[];
+	recentScans?: RecentScanSummary[];
 	onSaved?: () => void;
 	trigger?: React.ReactNode;
 };
@@ -211,44 +225,52 @@ function CartItemRow({
 	}
 
 	return (
-		<div className="flex flex-col gap-xs py-sm">
-			<div className="flex items-center gap-sm">
-				<div className="flex-1 min-w-0">
-					<p className="text-sm font-bold text-content truncate">{item.productName}</p>
-					<p className="text-xs text-content-muted">
+		<div className="flex flex-col gap-xs py-xs">
+			<div className="flex items-center justify-between gap-sm">
+				<div className="flex items-center gap-xs min-w-0 flex-1">
+					<span className="text-sm font-medium text-content truncate min-w-0 shrink">
+						{item.productName}
+					</span>
+					<span className="text-xs text-content-muted whitespace-nowrap shrink-0">
 						{item.price.toFixed(2)} zł
-						{matchedName && <span className="text-content-faint"> → {matchedName}</span>}
-					</p>
-				</div>
-
-				<div className="flex items-center shrink-0">
+					</span>
 					{isVerified && !isLowConfidence && (
 						<button
 							type="button"
 							onClick={() => setExpanded(!expanded)}
-							className="inline-flex items-center justify-center size-9 rounded-lg bg-success-bg active:scale-[0.95] transition-transform"
+							className="relative rounded-lg p-xs bg-success-bg text-brand-700 after:absolute after:inset-1/2 after:min-h-11 after:min-w-11 after:-translate-1/2 shrink-0"
 						>
-							<CheckCircle className="size-4 text-brand-700" />
+							<CheckCircle className="size-4 stroke-[1.5]" />
 						</button>
 					)}
 					{isLowConfidence && !isVerified && (
 						<button
 							type="button"
 							onClick={() => setExpanded(!expanded)}
-							className="inline-flex items-center justify-center size-9 rounded-lg bg-warning-bg active:scale-[0.95] transition-transform"
+							className="relative rounded-lg p-xs bg-warning-bg text-[#8B6914] after:absolute after:inset-1/2 after:min-h-11 after:min-w-11 after:-translate-1/2 shrink-0"
 						>
-							<AlertTriangle className="size-4 text-[#8B6914]" />
+							<AlertTriangle className="size-4 stroke-[1.5]" />
 						</button>
 					)}
 					{!isMatched && (
 						<button
 							type="button"
 							onClick={() => setExpanded(!expanded)}
-							className="inline-flex items-center justify-center size-9 rounded-lg bg-danger-bg active:scale-[0.95] transition-transform"
+							className="relative rounded-lg p-xs bg-danger-bg text-danger after:absolute after:inset-1/2 after:min-h-11 after:min-w-11 after:-translate-1/2 shrink-0"
 						>
-							<XCircle className="size-4 text-danger" />
+							<XCircle className="size-4 stroke-[1.5]" />
 						</button>
 					)}
+				</div>
+				<div className="flex items-center shrink-0">
+					<Button
+						variant="ghost"
+						size="icon-sm"
+						onClick={() => setExpanded(!expanded)}
+						className="active:scale-[0.98] transition-transform"
+					>
+						<Pencil className="size-4 text-content-faint stroke-[1.5]" />
+					</Button>
 					<Button
 						variant="ghost"
 						size="icon-sm"
@@ -259,6 +281,10 @@ function CartItemRow({
 					</Button>
 				</div>
 			</div>
+
+			{matchedName && !expanded && (
+				<span className="text-xs text-content-faint truncate">→ {matchedName}</span>
+			)}
 
 			{expanded && (
 				<SupplementPicker
@@ -392,31 +418,38 @@ export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPri
 						<div className="flex flex-col gap-md overflow-y-auto flex-1 min-h-0 px-md pb-sm">
 							<div className="flex flex-col gap-sm">
 								<label className="text-xs font-medium text-content-muted">{t("shopLabel")}</label>
-								<Input
-									value={shopName}
-									onChange={(e) => {
-										setShopName(e.target.value);
-										setSelectedShopId(null);
-									}}
-									placeholder={t("shopPlaceholder")}
-									className="bg-surface-sunken border-edge rounded-lg"
-								/>
-								<div className="flex gap-sm">
-									{shops.length > 0 && (
+
+								{selectedShopId ? (
+									<div className="flex items-center justify-between bg-surface-raised border border-edge-subtle rounded-xl p-md">
+										<div className="flex items-center gap-xs">
+											<Store size={16} className="text-content-muted" />
+											<span className="text-sm font-medium text-content">
+												{shops.find((s) => s.id === selectedShopId)?.name}
+											</span>
+										</div>
+										<button
+											type="button"
+											onClick={() => {
+												setSelectedShopId(null);
+												setShopName("");
+											}}
+											className="text-xs text-brand-600"
+										>
+											{t("change")}
+										</button>
+									</div>
+								) : (
+									<>
 										<Select
-											value={selectedShopId ?? ""}
+											value=""
 											onValueChange={(val) => {
 												setSelectedShopId(val || null);
 												const shop = shops.find((s) => s.id === val);
 												if (shop) setShopName(shop.name);
 											}}
 										>
-											<SelectTrigger className="flex-1 h-9 bg-surface-sunken border-edge rounded-lg">
-												<SelectValue>
-													{selectedShopId
-														? shops.find((s) => s.id === selectedShopId)?.name
-														: t("selectShop")}
-												</SelectValue>
+											<SelectTrigger className="w-full bg-surface-sunken border-edge rounded-lg">
+												<SelectValue>{t("selectShop")}</SelectValue>
 											</SelectTrigger>
 											<SelectContent>
 												{shops.map((shop) => (
@@ -426,17 +459,26 @@ export function CartPriceSheet({ supplements, shops, onSaved, trigger }: CartPri
 												))}
 											</SelectContent>
 										</Select>
-									)}
-									<Button
-										variant="outline"
-										size="sm"
-										className="flex-1"
-										onClick={() => setShopEditOpen(true)}
-									>
-										<Plus className="size-4" />
-										{t("addShop")}
-									</Button>
-								</div>
+
+										<div className="flex items-center gap-md">
+											<div className="flex-1 border-t border-edge-subtle" />
+											<span className="text-xs font-semibold uppercase tracking-wide text-content-faint">
+												lub
+											</span>
+											<div className="flex-1 border-t border-edge-subtle" />
+										</div>
+
+										<Button
+											variant="outline"
+											size="lg"
+											className="w-full flex items-center justify-center gap-sm rounded-xl bg-surface-raised border-edge-subtle shadow-sm"
+											onClick={() => setShopEditOpen(true)}
+										>
+											<Plus className="size-5 text-brand-600" />
+											<span className="text-sm font-medium text-content">{t("addShop")}</span>
+										</Button>
+									</>
+								)}
 							</div>
 
 							{unverifiedCount > 0 && (

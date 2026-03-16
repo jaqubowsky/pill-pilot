@@ -60,6 +60,30 @@ export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceS
 		setShopFreeThreshold("");
 	}
 
+	function loadScan(data: { shopName: string | null; items: CartItem[] }) {
+		const cartItems: CartItemState[] = data.items.map((item, i) => ({
+			...item,
+			_id: `ci_${i}_${Date.now()}`,
+			verified: item.confidence >= CART_CONFIDENCE_THRESHOLD,
+			skipped: false,
+		}));
+
+		setItems(cartItems);
+		setError(null);
+
+		if (data.shopName) {
+			setDetectedShopName(data.shopName);
+			setShopName(data.shopName);
+
+			const existingShop = shops.find((s) => s.name.toLowerCase() === data.shopName!.toLowerCase());
+			if (existingShop) {
+				setSelectedShopId(existingShop.id);
+			}
+		}
+
+		setIsOpen(true);
+	}
+
 	async function handleFileUpload(file: File) {
 		setIsUploading(true);
 		setIsOpen(true);
@@ -228,6 +252,7 @@ export function useCartPriceSheet({ supplements, shops, onSaved }: UseCartPriceS
 		canSave,
 		openSheet,
 		closeSheet,
+		loadScan,
 		handleFileUpload,
 		handleMatchChange,
 		handleVerify,

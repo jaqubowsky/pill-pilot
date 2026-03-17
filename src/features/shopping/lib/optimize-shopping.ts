@@ -9,6 +9,7 @@ export type OptimizedShopOrder = {
 	mustBuy: OptimizedItem[];
 	suggestAdd: OptimizedItem[];
 	subtotal: number;
+	suggestSubtotal: number;
 	deliveryCost: number;
 	wouldReachFreeDelivery: boolean;
 	amountToFreeDelivery: number | null;
@@ -51,17 +52,20 @@ export function optimizeShopping(groups: ShoppingGroup[]): OptimizedShoppingList
 				? parseFloat(group.shop.deliveryCost)
 				: 0;
 
-		const wouldReachFreeDelivery = freeThreshold !== null && fullSubtotal >= freeThreshold;
+		const hasMustBuy = mustBuy.length > 0;
+
+		const wouldReachFreeDelivery =
+			hasMustBuy && freeThreshold !== null && fullSubtotal >= freeThreshold;
 
 		const effectiveDeliveryCost =
-			wouldReachFreeDelivery || freeThreshold === null ? 0 : deliveryCostValue;
+			!hasMustBuy || wouldReachFreeDelivery || freeThreshold === null ? 0 : deliveryCostValue;
 
 		const amountToFreeDelivery =
-			freeThreshold !== null && !wouldReachFreeDelivery
+			hasMustBuy && freeThreshold !== null && !wouldReachFreeDelivery
 				? Math.max(0, freeThreshold - fullSubtotal)
 				: null;
 
-		if (mustBuy.length === 0 && suggestAdd.length === 0) continue;
+		if (!hasMustBuy && suggestAdd.length === 0) continue;
 
 		grandTotal += mustBuySubtotal + effectiveDeliveryCost;
 
@@ -70,6 +74,7 @@ export function optimizeShopping(groups: ShoppingGroup[]): OptimizedShoppingList
 			mustBuy,
 			suggestAdd,
 			subtotal: mustBuySubtotal,
+			suggestSubtotal,
 			deliveryCost: effectiveDeliveryCost,
 			wouldReachFreeDelivery,
 			amountToFreeDelivery,

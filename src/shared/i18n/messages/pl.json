@@ -415,12 +415,14 @@
 		"list": {
 			"mustBuy": "Do kupienia",
 			"suggestAdd": "Dorzuć?",
+			"endingSoon": "Kończy się wkrótce",
 			"suggestLabel": "dorzuć?",
 			"urgent": "Pilne",
 			"depletionDate": "Kończy się {date}",
 			"freeDelivery": "Darmowa dostawa",
 			"deliveryCost": "Dostawa: {cost} zł",
 			"subtotal": "Produkty",
+			"suggestSubtotal": "Dorzuć?",
 			"delivery": "Dostawa",
 			"grandTotal": "Łącznie",
 			"addForFreeDelivery": "Dorzuć za {amount} zł do darmowej dostawy"

@@ -49,4 +49,5 @@ export const updateSupplement = authActionClient
 		revalidatePath("/stock");
 		revalidatePath("/dashboard");
 		revalidatePath("/settings");
+		revalidatePath("/shopping");
 	});

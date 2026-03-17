@@ -10,7 +10,8 @@ import { TruncatedNote } from "./truncated-note";
 
 type SupplementInfoProps = {
 	name: string;
-	subtitle?: string | null;
+	brandName?: string | null;
+	packageInfo?: string | null;
 	dosageAmount: string | number;
 	dosageUnit: DosageUnit;
 	notes?: string | null;
@@ -22,7 +23,8 @@ type SupplementInfoProps = {
 
 export function SupplementInfo({
 	name,
-	subtitle,
+	brandName,
+	packageInfo,
 	dosageAmount,
 	dosageUnit,
 	notes,
@@ -54,7 +56,8 @@ export function SupplementInfo({
 				</span>
 				{badges && <div className="flex items-center gap-xs shrink-0">{badges}</div>}
 			</div>
-			{subtitle && <span className="text-xs text-content-faint truncate">{subtitle}</span>}
+			{brandName && <span className="text-xs text-content-faint truncate">{brandName}</span>}
+			{packageInfo && <span className="text-xs text-content-faint">{packageInfo}</span>}
 			{notes && <TruncatedNote text={notes} popoverSide={notesPopoverSide} />}
 			{warning}
 		</div>

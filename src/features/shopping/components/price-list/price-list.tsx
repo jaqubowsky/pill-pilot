@@ -139,16 +139,12 @@ export function PriceList({ items, shopOptions, filterIds, recentScans }: PriceL
 							>
 								<div className="flex flex-col min-w-0 flex-1">
 									<span className="text-sm font-medium text-content truncate">{row.name}</span>
-									{(row.brandName || row.packageSize) && (
-										<span className="text-xs text-content-faint truncate">
-											{[
-												row.brandName,
-												row.packageSize
-													? `${row.packageSize} ${t(`schedule.units.${row.stockUnit}`)}`
-													: null,
-											]
-												.filter(Boolean)
-												.join(" \u00B7 ")}
+									{row.brandName && (
+										<span className="text-xs text-content-faint truncate">{row.brandName}</span>
+									)}
+									{row.packageSize && (
+										<span className="text-xs text-content-faint">
+											{row.packageSize} {t(`schedule.units.${row.stockUnit}`)}
 										</span>
 									)}
 								</div>

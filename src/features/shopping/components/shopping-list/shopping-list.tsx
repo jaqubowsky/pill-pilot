@@ -100,15 +100,18 @@ function ShopOrder({
 				</div>
 			)}
 
-			{hasMustBuyItems && order.amountToFreeDelivery !== null && order.suggestAdd.length > 0 && (
-				<div className="px-md py-xs">
-					<p className="text-xs text-warning font-medium">
-						{t("list.addForFreeDelivery", {
-							amount: formatAmount(order.amountToFreeDelivery),
-						})}
-					</p>
-				</div>
-			)}
+			{hasMustBuyItems &&
+				order.amountToFreeDelivery !== null &&
+				order.amountToFreeDelivery > 0 &&
+				order.suggestSubtotal >= order.amountToFreeDelivery && (
+					<div className="px-md py-xs">
+						<p className="text-xs text-warning font-medium">
+							{t("list.addForFreeDelivery", {
+								amount: formatAmount(order.amountToFreeDelivery),
+							})}
+						</p>
+					</div>
+				)}
 
 			{hasMustBuyItems && (
 				<div className="border-t-2 border-edge px-md py-sm flex flex-col gap-xs">
@@ -120,9 +123,9 @@ function ShopOrder({
 					</div>
 					{order.suggestSubtotal > 0 && (
 						<div className="flex items-center justify-between opacity-60">
-							<span className="text-sm text-content-muted">{t("list.suggestSubtotal")}</span>
+							<span className="text-sm text-content-muted">{t("list.withSuggest")}</span>
 							<span className="text-sm text-content-muted tabular-nums">
-								+{formatAmount(order.suggestSubtotal)} zł
+								{formatAmount(order.subtotal + order.suggestSubtotal)} zł
 							</span>
 						</div>
 					)}
@@ -154,12 +157,14 @@ export function ShoppingList({ groups }: ShoppingListProps) {
 	}
 
 	const hasMustBuy = orders.some((o) => o.mustBuy.length > 0);
-	const totalSuggest = orders.reduce((sum, o) => sum + o.suggestSubtotal, 0);
+	const totalSuggest = orders
+		.filter((o) => o.mustBuy.length > 0 && o.shop !== null)
+		.reduce((sum, o) => sum + o.suggestSubtotal, 0);
 
 	return (
 		<div className="flex flex-col gap-lg">
 			{orders
-				.filter((o) => o.mustBuy.length > 0 || o.suggestAdd.length > 0)
+				.filter((o) => o.mustBuy.length > 0 || (o.suggestAdd.length > 0 && o.shop !== null))
 				.map((order) => {
 					const shopName = order.shop?.name ?? t("noShop");
 					const hasMustBuyItems = order.mustBuy.length > 0;
@@ -204,9 +209,9 @@ export function ShoppingList({ groups }: ShoppingListProps) {
 					</div>
 					{totalSuggest > 0 && (
 						<div className="flex items-center justify-between opacity-60">
-							<span className="text-sm text-content-muted">{t("list.suggestSubtotal")}</span>
+							<span className="text-sm text-content-muted">{t("list.withSuggest")}</span>
 							<span className="text-sm text-content-muted tabular-nums">
-								+{formatAmount(totalSuggest)} zł
+								{formatAmount(grandTotal + totalSuggest)} zł
 							</span>
 						</div>
 					)}

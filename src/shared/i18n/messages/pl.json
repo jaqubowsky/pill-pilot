@@ -423,6 +423,7 @@
 			"deliveryCost": "Dostawa: {cost} zł",
 			"subtotal": "Produkty",
 			"suggestSubtotal": "Dorzuć?",
+			"withSuggest": "Z dorzuconymi",
 			"delivery": "Dostawa",
 			"grandTotal": "Łącznie",
 			"addForFreeDelivery": "Dorzuć za {amount} zł do darmowej dostawy"

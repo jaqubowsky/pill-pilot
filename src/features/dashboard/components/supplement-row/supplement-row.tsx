@@ -82,13 +82,9 @@ export function SupplementRow({
 
 	const [detailOpen, setDetailOpen] = useState(false);
 
-	const subtitle =
-		[
-			entry.supplementBrandName,
-			entry.packageSize ? `${entry.packageSize} ${t(`units.${entry.dosageUnit}`)}` : null,
-		]
-			.filter(Boolean)
-			.join(" \u00B7 ") || null;
+	const packageInfo = entry.packageSize
+		? `${entry.packageSize} ${t(`units.${entry.dosageUnit}`)}`
+		: null;
 
 	const isNotStarted = notStartedDays !== null && notStartedDays > 0;
 	const isLocked = phase !== null && !phase.isUnlocked;
@@ -127,7 +123,8 @@ export function SupplementRow({
 				/>
 				<SupplementInfo
 					name={supplementName}
-					subtitle={subtitle}
+					brandName={entry.supplementBrandName}
+					packageInfo={packageInfo}
 					dosageAmount={dosageAmount}
 					dosageUnit={dosageUnit}
 					notes={notes}

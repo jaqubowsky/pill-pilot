@@ -99,7 +99,7 @@ export function PreviewSupplementRow({
 			</button>
 			<SupplementInfo
 				name={supplement.name}
-				subtitle={supplement.brandName || null}
+				brandName={supplement.brandName}
 				dosageAmount={schedule.dosageAmount}
 				dosageUnit={schedule.dosageUnit}
 				notes={schedule.notes ?? supplement.notes}

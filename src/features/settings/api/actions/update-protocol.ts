@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { resolveScheduleFields } from "@/features/protocol-wizard/lib/resolve-schedule-fields";
 import { parsedProtocolSchema } from "@/features/protocol-wizard/schemas/parsed-protocol-schema";
 import { ActionError, ActionErrorCode, authActionClient } from "@/shared/lib/safe-action";
 import { protocolRepository } from "@/shared/repositories/protocol-repository";
@@ -63,9 +64,7 @@ export const updateProtocol = authActionClient
 					throw new ActionError(ActionErrorCode.TIME_BLOCK_NOT_FOUND);
 				}
 
-				const cycleDaysOn = schedule.cycleDaysOn ?? item.cycleDaysOn ?? null;
-				const cycleDaysOff = schedule.cycleDaysOff ?? item.cycleDaysOff ?? null;
-				const hasCycling = cycleDaysOn !== null && cycleDaysOff !== null;
+				const resolved = resolveScheduleFields(schedule, item);
 
 				const scheduleData = {
 					protocolId,
@@ -73,17 +72,8 @@ export const updateProtocol = authActionClient
 					timeBlockId: schedule.timeBlockId,
 					dosageAmount: String(schedule.dosageAmount),
 					dosageUnit: schedule.dosageUnit,
-					notes: schedule.notes ?? item.notes ?? null,
-					isCritical: schedule.isCritical ?? item.isCritical,
 					sortOrder: sortOrder++,
-					startDayOffset: schedule.startDayOffset ?? item.startDayOffset ?? 0,
-					durationDays: schedule.durationDays ?? item.durationDays ?? null,
-					dosageIntervalMinutes: item.dosageIntervalMinutes ?? null,
-					waitAfterTakingMinutes:
-						schedule.waitAfterTakingMinutes ?? item.waitAfterTakingMinutes ?? null,
-					...(hasCycling
-						? { cycleDaysOn, cycleDaysOff }
-						: { cycleDaysOn: null, cycleDaysOff: null }),
+					...resolved,
 				};
 
 				const key = `${supplementId}:${schedule.timeBlockId}`;

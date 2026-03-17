@@ -42,6 +42,7 @@ export async function getProtocolAsParsed(
 			dosageAmount: supplementSchedules.dosageAmount,
 			dosageUnit: supplementSchedules.dosageUnit,
 			timeBlockId: supplementSchedules.timeBlockId,
+			finishPackage: supplementSchedules.finishPackage,
 		})
 		.from(supplementSchedules)
 		.innerJoin(supplements, eq(supplementSchedules.supplementId, supplements.id))
@@ -59,6 +60,7 @@ export async function getProtocolAsParsed(
 		| "cycleDaysOff"
 		| "startDayOffset"
 		| "durationDays"
+		| "finishPackage"
 	> & { dosageAmount: number };
 
 	type SupplementEntry = {
@@ -113,6 +115,7 @@ export async function getProtocolAsParsed(
 			cycleDaysOff: row.cycleDaysOff,
 			startDayOffset: row.startDayOffset,
 			durationDays: row.durationDays,
+			finishPackage: row.finishPackage,
 		});
 	}
 

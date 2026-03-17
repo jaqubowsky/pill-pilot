@@ -36,6 +36,7 @@ function convertFromParsed(supplements: ParsedSupplement[]): IdentifiedSupplemen
 			cycleDaysOff: sch.cycleDaysOff ?? s.cycleDaysOff ?? null,
 			startDayOffset: sch.startDayOffset ?? s.startDayOffset ?? 0,
 			durationDays: sch.durationDays ?? s.durationDays ?? null,
+			finishPackage: sch.finishPackage ?? false,
 		})),
 	}));
 }

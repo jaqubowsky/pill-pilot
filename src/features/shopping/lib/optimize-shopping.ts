@@ -33,11 +33,13 @@ export function optimizeShopping(groups: ShoppingGroup[]): OptimizedShoppingList
 			.filter((i) => i.isMustBuy)
 			.map<OptimizedItem>((i) => ({ ...i, isSuggested: false }));
 
-		const potentialSuggest = group.items
+		const suggestAdd = group.items
 			.filter((i) => !i.isMustBuy)
 			.map<OptimizedItem>((i) => ({ ...i, isSuggested: true }));
 
 		const mustBuySubtotal = mustBuy.reduce((sum, i) => sum + itemPrice(i), 0);
+		const suggestSubtotal = suggestAdd.reduce((sum, i) => sum + itemPrice(i), 0);
+		const fullSubtotal = mustBuySubtotal + suggestSubtotal;
 
 		const freeThreshold =
 			group.shop?.freeDeliveryThreshold !== null && group.shop?.freeDeliveryThreshold !== undefined
@@ -49,48 +51,25 @@ export function optimizeShopping(groups: ShoppingGroup[]): OptimizedShoppingList
 				? parseFloat(group.shop.deliveryCost)
 				: 0;
 
-		let suggestAdd: OptimizedItem[] = [];
-
-		if (freeThreshold !== null && mustBuySubtotal < freeThreshold) {
-			const deficit = freeThreshold - mustBuySubtotal;
-			let accumulated = 0;
-
-			for (const candidate of potentialSuggest) {
-				const price = itemPrice(candidate);
-				if (price <= 0) continue;
-				accumulated += price;
-				suggestAdd.push(candidate);
-				if (accumulated >= deficit) break;
-			}
-
-			const totalWithSuggest = mustBuySubtotal + suggestAdd.reduce((s, i) => s + itemPrice(i), 0);
-			if (totalWithSuggest < freeThreshold) {
-				suggestAdd = [];
-			}
-		}
-
-		const subtotal = mustBuySubtotal + suggestAdd.reduce((sum, i) => sum + itemPrice(i), 0);
-
-		const wouldReachFreeDelivery = freeThreshold !== null && subtotal >= freeThreshold;
+		const wouldReachFreeDelivery = freeThreshold !== null && fullSubtotal >= freeThreshold;
 
 		const effectiveDeliveryCost =
 			wouldReachFreeDelivery || freeThreshold === null ? 0 : deliveryCostValue;
 
 		const amountToFreeDelivery =
 			freeThreshold !== null && !wouldReachFreeDelivery
-				? Math.max(0, freeThreshold - subtotal)
+				? Math.max(0, freeThreshold - fullSubtotal)
 				: null;
 
 		if (mustBuy.length === 0 && suggestAdd.length === 0) continue;
 
-		const orderTotal = subtotal + effectiveDeliveryCost;
-		grandTotal += orderTotal;
+		grandTotal += mustBuySubtotal + effectiveDeliveryCost;
 
 		orders.push({
 			shop: group.shop,
 			mustBuy,
 			suggestAdd,
-			subtotal,
+			subtotal: mustBuySubtotal,
 			deliveryCost: effectiveDeliveryCost,
 			wouldReachFreeDelivery,
 			amountToFreeDelivery,

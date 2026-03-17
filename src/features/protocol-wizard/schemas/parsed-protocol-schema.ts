@@ -69,6 +69,11 @@ const parsedScheduleSchema = z.object({
 		.optional()
 		.default(null)
 		.describe("Per-schedule duration in days. null = indefinitely."),
+	finishPackage: z
+		.boolean()
+		.optional()
+		.default(false)
+		.describe("Per-schedule flag to finish current package instead of fixed duration."),
 });
 
 export const parsedSupplementSchema = z.object({

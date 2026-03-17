@@ -28,10 +28,18 @@ type ScheduleDetailSheetProps = {
 
 function DetailRow({ label, value }: { label: string; value: string }) {
 	return (
-		<div className="flex justify-between gap-sm py-xs">
+		<div className="flex justify-between gap-sm py-sm">
 			<span className="text-sm text-content-muted shrink-0">{label}</span>
 			<span className="text-sm text-content text-right">{value}</span>
 		</div>
+	);
+}
+
+function DetailTag({ label }: { label: string }) {
+	return (
+		<span className="inline-flex items-center rounded-md bg-surface-sunken px-sm py-xs text-xs font-medium text-content-muted">
+			{label}
+		</span>
 	);
 }
 
@@ -62,36 +70,46 @@ export function ScheduleDetailSheet({
 	const hasDuration = durationDays != null;
 	const hasInterval = dosageIntervalMinutes != null;
 	const hasWait = waitAfterTakingMinutes != null;
-	const hasAdvanced =
-		isCritical || hasCycling || hasOffset || hasDuration || hasInterval || hasWait || finishPackage;
+	const hasAdvanced = hasCycling || hasOffset || hasDuration || hasInterval || hasWait;
+
+	const tags = [
+		isCritical && t("supplement.critical"),
+		finishPackage && t("schedule.finishPackageBadge"),
+	].filter(Boolean) as string[];
 
 	return (
 		<BottomSheet open={open} onOpenChange={onOpenChange} title={supplementName} scrollable>
-			<div className="flex flex-col divide-y divide-edge-subtle">
-				{brandName && <DetailRow label={t("supplement.brand")} value={brandName} />}
-				<DetailRow
-					label={t("supplement.category")}
-					value={t(`supplement.categories.${category}`)}
-				/>
-				<DetailRow
-					label={t("schedule.dosage")}
-					value={`${dosageAmount} ${t(`schedule.units.${dosageUnit}`)}`}
-				/>
-				<DetailRow label={t("schedule.block")} value={timeBlockName} />
-				{packageSize != null && packageSize > 0 && (
+			<div className="flex flex-col gap-md">
+				<div className="flex flex-col">
+					{brandName && <DetailRow label={t("supplement.brand")} value={brandName} />}
 					<DetailRow
-						label={t("supplement.packageSize")}
-						value={`${packageSize} ${t(`schedule.units.${dosageUnit}`)}`}
+						label={t("supplement.category")}
+						value={t(`supplement.categories.${category}`)}
 					/>
+					<DetailRow
+						label={t("schedule.dosage")}
+						value={`${dosageAmount} ${t(`schedule.units.${dosageUnit}`)}`}
+					/>
+					<DetailRow label={t("schedule.block")} value={timeBlockName} />
+					{packageSize != null && packageSize > 0 && (
+						<DetailRow
+							label={t("supplement.packageSize")}
+							value={`${packageSize} ${t(`schedule.units.${dosageUnit}`)}`}
+						/>
+					)}
+					{notes && <DetailRow label={t("schedule.notes")} value={notes} />}
+				</div>
+
+				{tags.length > 0 && (
+					<div className="flex flex-wrap gap-xs">
+						{tags.map((tag) => (
+							<DetailTag key={tag} label={tag} />
+						))}
+					</div>
 				)}
-				{notes && <DetailRow label={t("schedule.notes")} value={notes} />}
 
 				{hasAdvanced && (
-					<>
-						<div className="pt-sm" />
-						{isCritical && (
-							<DetailRow label={t("supplement.critical")} value={t("common.confirm")} />
-						)}
+					<div className="flex flex-col border-t border-edge-subtle pt-md">
 						{hasCycling && (
 							<DetailRow
 								label={t("schedule.cycling")}
@@ -113,9 +131,6 @@ export function ScheduleDetailSheet({
 								value={t("schedule.durationBadge", { count: durationDays })}
 							/>
 						)}
-						{finishPackage && (
-							<DetailRow label={t("schedule.finishPackageBadge")} value={t("common.confirm")} />
-						)}
 						{hasInterval && (
 							<DetailRow
 								label={t("schedule.dosageInterval")}
@@ -128,7 +143,7 @@ export function ScheduleDetailSheet({
 								value={formatMinutes(waitAfterTakingMinutes!)}
 							/>
 						)}
-					</>
+					</div>
 				)}
 			</div>
 		</BottomSheet>

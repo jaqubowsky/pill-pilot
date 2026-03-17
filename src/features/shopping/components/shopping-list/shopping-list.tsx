@@ -100,7 +100,7 @@ function ShopOrder({
 				</div>
 			)}
 
-			{hasMustBuyItems && order.amountToFreeDelivery !== null && (
+			{hasMustBuyItems && order.amountToFreeDelivery !== null && order.suggestAdd.length > 0 && (
 				<div className="px-md py-xs">
 					<p className="text-xs text-warning font-medium">
 						{t("list.addForFreeDelivery", {
@@ -154,6 +154,7 @@ export function ShoppingList({ groups }: ShoppingListProps) {
 	}
 
 	const hasMustBuy = orders.some((o) => o.mustBuy.length > 0);
+	const totalSuggest = orders.reduce((sum, o) => sum + o.suggestSubtotal, 0);
 
 	return (
 		<div className="flex flex-col gap-lg">
@@ -194,11 +195,21 @@ export function ShoppingList({ groups }: ShoppingListProps) {
 				})}
 
 			{hasMustBuy && grandTotal > 0 && (
-				<div className="bg-surface-raised border border-edge-subtle rounded-xl shadow-sm p-md flex items-center justify-between">
-					<span className="text-base font-bold text-content">{t("list.grandTotal")}</span>
-					<span className="text-base font-bold text-content tabular-nums">
-						{formatAmount(grandTotal)} zł
-					</span>
+				<div className="bg-surface-raised border border-edge-subtle rounded-xl shadow-sm p-md flex flex-col gap-xs">
+					<div className="flex items-center justify-between">
+						<span className="text-base font-bold text-content">{t("list.grandTotal")}</span>
+						<span className="text-base font-bold text-content tabular-nums">
+							{formatAmount(grandTotal)} zł
+						</span>
+					</div>
+					{totalSuggest > 0 && (
+						<div className="flex items-center justify-between opacity-60">
+							<span className="text-sm text-content-muted">{t("list.suggestSubtotal")}</span>
+							<span className="text-sm text-content-muted tabular-nums">
+								+{formatAmount(totalSuggest)} zł
+							</span>
+						</div>
+					)}
 				</div>
 			)}
 		</div>

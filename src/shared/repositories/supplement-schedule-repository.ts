@@ -9,10 +9,12 @@ type NewSupplementSchedule = typeof supplementSchedules.$inferInsert;
 interface ISupplementScheduleRepository {
 	findById(id: string): Promise<SupplementSchedule | undefined>;
 	findOwned(id: string, userId: string): Promise<SupplementSchedule>;
+	findByProtocolId(protocolId: string): Promise<SupplementSchedule[]>;
 	findSiblings(protocolId: string, supplementId: string): Promise<SupplementSchedule[]>;
 	hasActiveSchedulesForTimeBlock(timeBlockId: string): Promise<boolean>;
 	create(data: NewSupplementSchedule): Promise<SupplementSchedule>;
 	update(id: string, data: Partial<NewSupplementSchedule>): Promise<SupplementSchedule>;
+	deleteById(id: string): Promise<void>;
 	deleteByProtocolId(protocolId: string): Promise<void>;
 	deactivateByProtocolId(protocolId: string): Promise<void>;
 	reactivateByProtocolId(protocolId: string): Promise<void>;
@@ -65,6 +67,13 @@ class SupplementScheduleRepository implements ISupplementScheduleRepository {
 		return schedule;
 	}
 
+	async findByProtocolId(protocolId: string): Promise<SupplementSchedule[]> {
+		return db
+			.select()
+			.from(supplementSchedules)
+			.where(eq(supplementSchedules.protocolId, protocolId));
+	}
+
 	async findSiblings(protocolId: string, supplementId: string): Promise<SupplementSchedule[]> {
 		return db
 			.select()
@@ -99,6 +108,10 @@ class SupplementScheduleRepository implements ISupplementScheduleRepository {
 			.where(eq(supplementSchedules.id, id))
 			.returning();
 		return rows[0];
+	}
+
+	async deleteById(id: string): Promise<void> {
+		await db.delete(supplementSchedules).where(eq(supplementSchedules.id, id));
 	}
 
 	async deleteByProtocolId(protocolId: string): Promise<void> {

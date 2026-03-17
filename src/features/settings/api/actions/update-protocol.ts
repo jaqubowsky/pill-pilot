@@ -25,7 +25,12 @@ export const updateProtocol = authActionClient
 
 		const parsed = parsedProtocolSchema.parse(JSON.parse(parsedData));
 
-		await supplementScheduleRepository.deleteByProtocolId(protocolId);
+		const existingSchedules = await supplementScheduleRepository.findByProtocolId(protocolId);
+
+		const existingMap = new Map<string, (typeof existingSchedules)[number]>();
+		for (const schedule of existingSchedules) {
+			existingMap.set(`${schedule.supplementId}:${schedule.timeBlockId}`, schedule);
+		}
 
 		const userTimeBlocks = await timeBlockRepository.findByUserId(userId);
 		const validTimeBlockIds = new Set(userTimeBlocks.map((tb) => tb.id));
@@ -47,7 +52,9 @@ export const updateProtocol = authActionClient
 			}
 		}
 
+		const matchedKeys = new Set<string>();
 		let sortOrder = 0;
+
 		for (const item of parsed.supplements) {
 			const supplementId = supplementIdMap[item.name];
 
@@ -60,7 +67,7 @@ export const updateProtocol = authActionClient
 				const cycleDaysOff = schedule.cycleDaysOff ?? item.cycleDaysOff ?? null;
 				const hasCycling = cycleDaysOn !== null && cycleDaysOff !== null;
 
-				await supplementScheduleRepository.create({
+				const scheduleData = {
 					protocolId,
 					supplementId,
 					timeBlockId: schedule.timeBlockId,
@@ -74,8 +81,27 @@ export const updateProtocol = authActionClient
 					dosageIntervalMinutes: item.dosageIntervalMinutes ?? null,
 					waitAfterTakingMinutes:
 						schedule.waitAfterTakingMinutes ?? item.waitAfterTakingMinutes ?? null,
-					...(hasCycling ? { cycleDaysOn, cycleDaysOff } : {}),
-				});
+					...(hasCycling
+						? { cycleDaysOn, cycleDaysOff }
+						: { cycleDaysOn: null, cycleDaysOff: null }),
+				};
+
+				const key = `${supplementId}:${schedule.timeBlockId}`;
+				const existing = existingMap.get(key);
+
+				if (existing) {
+					matchedKeys.add(key);
+					await supplementScheduleRepository.update(existing.id, scheduleData);
+				} else {
+					await supplementScheduleRepository.create(scheduleData);
+				}
+			}
+		}
+
+		for (const schedule of existingSchedules) {
+			const key = `${schedule.supplementId}:${schedule.timeBlockId}`;
+			if (!matchedKeys.has(key)) {
+				await supplementScheduleRepository.deleteById(schedule.id);
 			}
 		}
 

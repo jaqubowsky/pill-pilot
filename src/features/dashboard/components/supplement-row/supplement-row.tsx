@@ -4,9 +4,9 @@ import {
 	AlertTriangle,
 	CheckCircle,
 	Hourglass,
+	Info,
 	Lock,
 	PackageCheck,
-	Pencil,
 	Repeat,
 	ShieldAlert,
 	Timer,
@@ -29,7 +29,7 @@ import type { SupplementCategory } from "@/shared/db/schema";
 import { formatMinutes } from "@/shared/lib/format-minutes";
 import { cn } from "@/shared/lib/utils";
 import { formatRemainingTime } from "../../lib/format-remaining-time";
-import { ScheduleEditSheet } from "./schedule-edit-sheet";
+import { ScheduleDetailSheet } from "./schedule-detail-sheet";
 import { SupplementCheckbox } from "./supplement-checkbox";
 import { useSupplementRow } from "./use-supplement-row";
 
@@ -80,7 +80,7 @@ export function SupplementRow({
 		handleCloseConfirm,
 	} = useSupplementRow({ scheduleId, date, initialChecked, hasTimer, onCheckChange });
 
-	const [editOpen, setEditOpen] = useState(false);
+	const [detailOpen, setDetailOpen] = useState(false);
 
 	const subtitle =
 		[
@@ -232,39 +232,32 @@ export function SupplementRow({
 				<Button
 					variant="ghost"
 					size="icon-sm"
-					onClick={() => setEditOpen(true)}
+					onClick={() => setDetailOpen(true)}
 					className="shrink-0 text-content-faint hover:text-content-muted"
 				>
-					<Pencil className="size-3.5" />
+					<Info className="size-3.5" />
 				</Button>
 			</div>
 
-			<ScheduleEditSheet
-				key={scheduleId}
-				scheduleId={scheduleId}
+			<ScheduleDetailSheet
 				supplementName={supplementName}
+				brandName={entry.supplementBrandName}
+				category={entry.supplementCategory as SupplementCategory}
+				dosageAmount={Number(entry.dosageAmount)}
+				dosageUnit={entry.dosageUnit}
+				timeBlockName={timeBlocks.find((tb) => tb.id === entry.timeBlockId)?.name ?? ""}
+				notes={entry.notes}
+				isCritical={entry.isCritical}
+				cycleDaysOn={entry.cycleDaysOn}
+				cycleDaysOff={entry.cycleDaysOff}
+				startDayOffset={entry.startDayOffset}
+				durationDays={entry.durationDays}
+				dosageIntervalMinutes={entry.dosageIntervalMinutes}
+				waitAfterTakingMinutes={entry.waitAfterTakingMinutes}
+				finishPackage={entry.finishPackage}
 				packageSize={entry.packageSize}
-				totalDailyDosage={entry.totalDailyDosage}
-				defaultValues={{
-					name: entry.supplementName,
-					brandName: entry.supplementBrandName ?? undefined,
-					category: entry.supplementCategory as SupplementCategory,
-					isCritical: entry.isCritical,
-					notes: entry.notes ?? undefined,
-					cycleDaysOn: entry.cycleDaysOn ?? undefined,
-					cycleDaysOff: entry.cycleDaysOff ?? undefined,
-					startDayOffset: entry.startDayOffset,
-					durationDays: entry.durationDays ?? undefined,
-					dosageIntervalMinutes: entry.dosageIntervalMinutes ?? undefined,
-					waitAfterTakingMinutes: entry.waitAfterTakingMinutes ?? undefined,
-					dosageAmount: Number(entry.dosageAmount),
-					dosageUnit: entry.dosageUnit,
-					timeBlockId: entry.timeBlockId,
-					finishPackage: entry.finishPackage,
-				}}
-				timeBlocks={timeBlocks}
-				open={editOpen}
-				onOpenChange={setEditOpen}
+				open={detailOpen}
+				onOpenChange={setDetailOpen}
 			/>
 
 			<Dialog open={timerPromptOpen} onOpenChange={setTimerPromptOpen}>

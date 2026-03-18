@@ -1,17 +1,12 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Button } from "@/shared/components/ui/button";
-import { useAccountSection } from "./use-account-section";
+import { authClient } from "@/shared/lib/auth-client";
+import { SignOutButton } from "./sign-out-button";
 
-type AccountSectionProps = {
-	email: string;
-};
-
-export function AccountSection({ email }: AccountSectionProps) {
+export function AccountSection() {
 	const t = useTranslations();
-
-	const { handleSignOut } = useAccountSection();
+	const { data: session } = authClient.useSession();
 
 	return (
 		<div className="bg-surface-raised border border-edge-subtle rounded-xl shadow-sm p-md">
@@ -19,11 +14,9 @@ export function AccountSection({ email }: AccountSectionProps) {
 				<p className="text-xs text-content-faint uppercase tracking-wide mb-xs">
 					{t("settings.account")}
 				</p>
-				<p className="text-sm text-content-muted">{email}</p>
+				<p className="text-sm text-content-muted">{session?.user?.email}</p>
 			</div>
-			<Button variant="destructive" className="w-full" onClick={handleSignOut}>
-				{t("common.logout")}
-			</Button>
+			<SignOutButton />
 		</div>
 	);
 }

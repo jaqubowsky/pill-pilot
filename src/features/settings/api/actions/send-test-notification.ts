@@ -1,5 +1,6 @@
 "use server";
 
+import { getTranslations } from "next-intl/server";
 import { z } from "zod";
 import { authActionClient } from "@/shared/lib/safe-action";
 import { sendPushNotification } from "@/shared/lib/web-push";
@@ -8,22 +9,23 @@ import { notificationRepository } from "@/shared/repositories/notification-repos
 export const sendTestNotification = authActionClient
 	.inputSchema(z.object({}))
 	.action(async ({ ctx: { userId } }) => {
+		const t = await getTranslations("settings.notifications");
 		const subscriptions = await notificationRepository.findByUserId(userId);
 
 		if (subscriptions.length === 0) {
-			return { sent: 0 };
+			throw new Error(t("noSubscriptions"));
 		}
 
-		let sent = 0;
-		for (const sub of subscriptions) {
-			try {
-				await sendPushNotification(sub.subscriptionJson, {
+		const results = await Promise.allSettled(
+			subscriptions.map((sub) =>
+				sendPushNotification(sub.subscriptionJson, {
 					title: "PillPilot",
-					body: "Powiadomienia testowe dziala!",
-				});
-				sent++;
-			} catch {}
-		}
+					body: t("testPushBody"),
+				}),
+			),
+		);
+
+		const sent = results.filter((r) => r.status === "fulfilled").length;
 
 		return { sent };
 	});

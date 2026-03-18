@@ -1,22 +1,11 @@
 "use client";
 
-import { Loader2, Pencil, RefreshCw, RotateCcw, Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
 import type { ProtocolWithSchedules } from "@/features/settings/api/queries/get-user-protocols";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "@/shared/components/ui/alert-dialog";
-import { Badge } from "@/shared/components/ui/badge";
-import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
-import { ProcessingPhrase } from "./processing-phrase";
+import { ArchiveConfirmDialog } from "./archive-confirm-dialog";
+import { DeleteConfirmDialog } from "./delete-confirm-dialog";
+import { ProtocolCardActions } from "./protocol-card-actions";
+import { ProtocolCardHeader } from "./protocol-card-header";
 import { useProtocolCard } from "./use-protocol-card";
 
 type ProtocolCardProps = {
@@ -25,16 +14,11 @@ type ProtocolCardProps = {
 };
 
 export function ProtocolCard({ protocol, borderColor }: ProtocolCardProps) {
-	const t = useTranslations();
 	const {
 		archiveConfirmOpen,
 		setArchiveConfirmOpen,
 		deleteConfirmOpen,
 		setDeleteConfirmOpen,
-		isDraft,
-		isArchived,
-		isProcessing,
-		isFailed,
 		isArchiving,
 		isReactivating,
 		isDeleting,
@@ -51,177 +35,37 @@ export function ProtocolCard({ protocol, borderColor }: ProtocolCardProps) {
 			<div
 				className={cn(
 					"bg-surface-raised border border-edge-subtle rounded-xl shadow-sm border-t-4",
-					isArchived && "opacity-60",
+					protocol.status === "archived" && "opacity-60",
 				)}
 				style={{ borderTopColor: borderColor }}
 			>
-				<div className="flex items-center justify-between px-md py-sm">
-					<span className="text-sm font-bold text-content truncate min-w-0">{protocol.name}</span>
-					<div className="flex items-center gap-sm shrink-0">
-						{isProcessing ? (
-							<Badge className="rounded-lg px-sm py-xs text-xs font-semibold uppercase tracking-wide bg-brand-100 text-brand-700 flex items-center gap-xs">
-								<Loader2 className="size-3 animate-spin" />
-								{t("settings.statusProcessing")}
-							</Badge>
-						) : isFailed ? (
-							<Badge className="rounded-lg px-sm py-xs text-xs font-semibold uppercase tracking-wide bg-danger-bg text-danger">
-								{t("settings.statusFailed")}
-							</Badge>
-						) : isDraft ? (
-							<Badge className="rounded-lg px-sm py-xs text-xs font-semibold uppercase tracking-wide bg-warning-bg text-[#8B6914]">
-								{t("settings.statusDraft")}
-							</Badge>
-						) : isArchived ? (
-							<>
-								<Button
-									variant="ghost"
-									size="icon-sm"
-									className="text-content-muted"
-									onClick={handleEdit}
-									aria-label={t("common.edit")}
-								>
-									<Pencil className="size-4 stroke-2" />
-								</Button>
-								<Button
-									variant="ghost"
-									size="icon-sm"
-									className="bg-brand-100 text-brand-700 hover:bg-brand-200"
-									onClick={handleReactivate}
-									disabled={isReactivating}
-									aria-label={t("common.reactivate")}
-								>
-									<RotateCcw className="size-4 stroke-[2.5]" />
-								</Button>
-								<Badge className="rounded-lg px-sm py-xs text-xs font-semibold uppercase tracking-wide bg-surface-sunken text-content-muted">
-									{t("settings.statusArchived")}
-								</Badge>
-							</>
-						) : (
-							<>
-								<Button
-									variant="ghost"
-									size="icon-sm"
-									className="text-content-muted"
-									onClick={handleEdit}
-									aria-label={t("common.edit")}
-								>
-									<Pencil className="size-4 stroke-2" />
-								</Button>
-								<Badge className="rounded-lg px-sm py-xs text-xs font-semibold uppercase tracking-wide bg-success-bg text-brand-700">
-									{t("settings.statusActive")}
-								</Badge>
-							</>
-						)}
-					</div>
-				</div>
-
-				{isProcessing && (
-					<div className="px-md pb-md pt-sm border-t border-edge-subtle flex flex-col gap-sm">
-						<ProcessingPhrase />
-						<Button
-							variant="destructive"
-							className="w-full"
-							onClick={() => setDeleteConfirmOpen(true)}
-						>
-							<Trash2 className="size-4" />
-							{t("common.delete")}
-						</Button>
-					</div>
-				)}
-
-				{isFailed && (
-					<div className="px-md pb-md pt-sm border-t border-edge-subtle flex flex-col gap-sm">
-						<p className="text-sm text-danger">{t("settings.failedDescription")}</p>
-						<Button className="w-full" onClick={handleRetry}>
-							<RefreshCw className="size-4" />
-							{t("settings.retry")}
-						</Button>
-						<Button
-							variant="destructive"
-							className="w-full"
-							onClick={() => setDeleteConfirmOpen(true)}
-						>
-							<Trash2 className="size-4" />
-							{t("common.delete")}
-						</Button>
-					</div>
-				)}
-
-				{isDraft && (
-					<div className="px-md pb-md pt-sm border-t border-edge-subtle flex flex-col gap-sm">
-						<Button className="w-full" onClick={handleContinueDraft}>
-							{t("settings.continueDraft")}
-						</Button>
-						<Button
-							variant="destructive"
-							className="w-full"
-							onClick={() => setDeleteConfirmOpen(true)}
-						>
-							<Trash2 className="size-4" />
-							{t("common.delete")}
-						</Button>
-					</div>
-				)}
-
-				{!isDraft && !isArchived && !isProcessing && !isFailed && (
-					<div className="px-md pb-md pt-sm border-t border-edge-subtle">
-						<Button
-							variant="destructive"
-							className="w-full"
-							onClick={() => setArchiveConfirmOpen(true)}
-						>
-							{t("common.archive")}
-						</Button>
-					</div>
-				)}
-
-				{isArchived && (
-					<div className="px-md pb-md pt-sm border-t border-edge-subtle">
-						<Button
-							variant="destructive"
-							className="w-full"
-							onClick={() => setDeleteConfirmOpen(true)}
-						>
-							<Trash2 className="size-4" />
-							{t("common.delete")}
-						</Button>
-					</div>
-				)}
+				<ProtocolCardHeader
+					protocol={protocol}
+					onEdit={handleEdit}
+					onReactivate={handleReactivate}
+					isReactivating={isReactivating}
+				/>
+				<ProtocolCardActions
+					status={protocol.status}
+					onContinueDraft={handleContinueDraft}
+					onRetry={handleRetry}
+					onRequestArchive={() => setArchiveConfirmOpen(true)}
+					onRequestDelete={() => setDeleteConfirmOpen(true)}
+				/>
 			</div>
 
-			<AlertDialog open={archiveConfirmOpen} onOpenChange={setArchiveConfirmOpen}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>{t("settings.archiveConfirmTitle")}</AlertDialogTitle>
-						<AlertDialogDescription>
-							{t("settings.archiveConfirmDescription")}
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-						<AlertDialogAction onClick={handleArchive} disabled={isArchiving}>
-							{t("common.archive")}
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
-
-			<AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>{t("settings.deleteConfirmTitle")}</AlertDialogTitle>
-						<AlertDialogDescription>
-							{t("settings.deleteConfirmDescription")}
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-						<AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
-							{t("common.delete")}
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+			<ArchiveConfirmDialog
+				open={archiveConfirmOpen}
+				onOpenChange={setArchiveConfirmOpen}
+				onConfirm={handleArchive}
+				disabled={isArchiving}
+			/>
+			<DeleteConfirmDialog
+				open={deleteConfirmOpen}
+				onOpenChange={setDeleteConfirmOpen}
+				onConfirm={handleDelete}
+				disabled={isDeleting}
+			/>
 		</>
 	);
 }

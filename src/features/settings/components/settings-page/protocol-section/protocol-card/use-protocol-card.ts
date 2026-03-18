@@ -21,11 +21,6 @@ export function useProtocolCard({ protocol }: UseProtocolCardParams) {
 	const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
 	const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
-	const isDraft = protocol.status === "draft";
-	const isArchived = protocol.status === "archived";
-	const isProcessing = protocol.status === "processing";
-	const isFailed = protocol.status === "failed";
-
 	const { execute: execArchive, isPending: isArchiving } = useAction(archiveProtocol, {
 		onSuccess: () => {
 			toast.success(t("settings.protocolArchived"));
@@ -49,6 +44,11 @@ export function useProtocolCard({ protocol }: UseProtocolCardParams) {
 		onError: ({ error }) => toast.error(error.serverError),
 	});
 
+	const { execute: execRetryDelete, isPending: isRetrying } = useAction(deleteProtocol, {
+		onSuccess: () => router.push("/protocol/new"),
+		onError: ({ error }) => toast.error(error.serverError),
+	});
+
 	function handleEdit() {
 		router.push(`/protocol/edit/${protocol.id}`);
 	}
@@ -58,8 +58,7 @@ export function useProtocolCard({ protocol }: UseProtocolCardParams) {
 	}
 
 	function handleRetry() {
-		execDelete({ protocolId: protocol.id });
-		router.push("/protocol/new");
+		execRetryDelete({ protocolId: protocol.id });
 	}
 
 	function handleArchive() {
@@ -79,13 +78,9 @@ export function useProtocolCard({ protocol }: UseProtocolCardParams) {
 		setArchiveConfirmOpen,
 		deleteConfirmOpen,
 		setDeleteConfirmOpen,
-		isDraft,
-		isArchived,
-		isProcessing,
-		isFailed,
 		isArchiving,
 		isReactivating,
-		isDeleting,
+		isDeleting: isDeleting || isRetrying,
 		handleEdit,
 		handleContinueDraft,
 		handleArchive,

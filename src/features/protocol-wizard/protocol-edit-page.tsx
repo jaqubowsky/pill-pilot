@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getProtocolAsParsed } from "@/features/settings/api/queries/get-protocol-as-parsed";
+import { getProtocolAsParsed } from "@/features/protocol-wizard/api/queries/get-protocol-as-parsed";
 import { supplementRepository } from "@/shared/repositories/supplement-repository";
 import { timeBlockRepository } from "@/shared/repositories/time-block-repository";
 import { ParsedPreview } from "./components/parsed-preview";

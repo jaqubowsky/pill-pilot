@@ -1,7 +1,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { buildScheduleEntry } from "@/features/dashboard/lib/build-schedule-entry";
 import { groupByTimeBlock } from "@/features/dashboard/lib/group-by-time-block";
-import { assignProtocolColors } from "@/features/dashboard/lib/protocol-colors";
+import { assignProtocolColors } from "@/shared/lib/protocol-colors";
 import { db } from "@/shared/db/client";
 import {
 	type DosageUnit,

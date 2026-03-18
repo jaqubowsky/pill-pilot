@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { authClient } from "@/shared/lib/auth-client";
 
-export function useAccountSection() {
+export function useSignOutButton() {
 	const router = useRouter();
 
 	async function handleSignOut() {

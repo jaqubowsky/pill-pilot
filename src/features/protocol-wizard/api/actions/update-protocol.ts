@@ -1,29 +1,25 @@
 "use server";
 
-import { returnValidationErrors } from "next-safe-action";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
 	buildScheduleDataList,
 	resolveSupplements,
 } from "@/features/protocol-wizard/lib/resolve-supplements";
-import {
-	CONFIDENCE_THRESHOLD,
-	parsedProtocolSchema,
-} from "@/features/protocol-wizard/schemas/parsed-protocol-schema";
-import { ProtocolStatus } from "@/shared/db/schema";
+import { parsedProtocolSchema } from "@/features/protocol-wizard/schemas/parsed-protocol-schema";
 import { authActionClient } from "@/shared/lib/safe-action";
 import { protocolRepository } from "@/shared/repositories/protocol-repository";
 import { supplementScheduleRepository } from "@/shared/repositories/supplement-schedule-repository";
 import { timeBlockRepository } from "@/shared/repositories/time-block-repository";
 
-const createProtocolSchema = z.object({
+const updateProtocolSchema = z.object({
 	protocolId: z.string(),
 	parsedData: z.string(),
 	startDate: z.iso.date(),
 });
 
-export const createProtocol = authActionClient
-	.inputSchema(createProtocolSchema)
+export const updateProtocol = authActionClient
+	.inputSchema(updateProtocolSchema)
 	.action(async ({ parsedInput, ctx }) => {
 		const { userId } = ctx;
 		const { protocolId, parsedData, startDate } = parsedInput;
@@ -32,30 +28,42 @@ export const createProtocol = authActionClient
 
 		const parsed = parsedProtocolSchema.parse(JSON.parse(parsedData));
 
-		const unverified = parsed.supplements.filter((s) => s.confidence < CONFIDENCE_THRESHOLD);
-		if (unverified.length > 0) {
-			returnValidationErrors(createProtocolSchema, {
-				_errors: ["unverified_supplements"],
-			});
-		}
+		const existingSchedules = await supplementScheduleRepository.findByProtocolId(protocolId);
+		const existingMap = new Map(
+			existingSchedules.map((s) => [`${s.supplementId}:${s.timeBlockId}`, s]),
+		);
 
 		const supplementMap = await resolveSupplements(parsed.supplements, userId);
 		const userTimeBlocks = await timeBlockRepository.findByUserId(userId);
 		const validTimeBlockIds = new Set(userTimeBlocks.map((tb) => tb.id));
 		const schedules = buildScheduleDataList(parsed.supplements, supplementMap, protocolId, validTimeBlockIds);
 
+		const matchedKeys = new Set<string>();
+
 		for (const schedule of schedules) {
-			await supplementScheduleRepository.create(schedule);
+			const key = `${schedule.supplementId}:${schedule.timeBlockId}`;
+			const existing = existingMap.get(key);
+
+			if (existing) {
+				matchedKeys.add(key);
+				await supplementScheduleRepository.update(existing.id, schedule);
+			} else {
+				await supplementScheduleRepository.create(schedule);
+			}
+		}
+
+		for (const schedule of existingSchedules) {
+			const key = `${schedule.supplementId}:${schedule.timeBlockId}`;
+			if (!matchedKeys.has(key)) {
+				await supplementScheduleRepository.deleteById(schedule.id);
+			}
 		}
 
 		await protocolRepository.update(protocolId, {
-			status: ProtocolStatus.active,
+			name: parsed.protocolName,
+			parsedData,
 			startDate,
 		});
 
-		const newSupplementIds = Object.values(supplementMap)
-			.filter((s) => s.isNew)
-			.map((s) => s.supplementId);
-
-		return { newSupplementIds };
+		redirect("/settings");
 	});

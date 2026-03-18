@@ -190,7 +190,11 @@
 		"notificationsLabel": "Powiadomienia",
 		"notifications": {
 			"enable": "Włącz powiadomienia",
-			"test": "Wyślij testowe powiadomienie"
+			"test": "Wyślij testowe powiadomienie",
+			"testSuccess": "Powiadomienie testowe wysłane",
+			"testError": "Nie udało się wysłać powiadomienia",
+			"noSubscriptions": "Brak aktywnych subskrypcji push",
+			"testPushBody": "Powiadomienie testowe działa!"
 		}
 	},
 	"protocolWizard": {

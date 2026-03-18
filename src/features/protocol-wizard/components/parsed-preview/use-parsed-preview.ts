@@ -15,7 +15,7 @@ import {
 	type ParsedSupplement,
 } from "@/features/protocol-wizard/schemas/parsed-protocol-schema";
 import type { TimeBlockSummary } from "@/features/protocol-wizard/types";
-import { updateProtocol } from "@/features/settings/api/actions/update-protocol";
+import { updateProtocol } from "@/features/protocol-wizard/api/actions/update-protocol";
 import { toDateString } from "@/shared/lib/date";
 import type { EditedSupplement } from "./parsed-preview.schema";
 

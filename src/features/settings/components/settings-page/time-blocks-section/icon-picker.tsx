@@ -1,23 +1,5 @@
 "use client";
 
-import {
-	Activity,
-	Apple,
-	Clock,
-	Coffee,
-	Droplets,
-	Flame,
-	Heart,
-	Leaf,
-	type LucideIcon,
-	Moon,
-	Pill,
-	Star,
-	Sun,
-	Sunrise,
-	Sunset,
-	Utensils,
-} from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
 	Select,
@@ -26,24 +8,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/shared/components/ui/select";
-
-const ICON_MAP: Record<string, LucideIcon> = {
-	Sunrise,
-	Coffee,
-	Sun,
-	Sunset,
-	Moon,
-	Utensils,
-	Apple,
-	Pill,
-	Heart,
-	Activity,
-	Clock,
-	Star,
-	Leaf,
-	Droplets,
-	Flame,
-};
+import { ICON_MAP } from "@/shared/lib/time-block-icons";
 
 const TIME_BLOCK_ICONS = Object.keys(ICON_MAP);
 

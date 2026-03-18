@@ -1,40 +1,30 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import type { NotificationSettingData } from "@/features/settings/api/queries/get-notification-settings";
 import type { ProtocolWithSchedules } from "@/features/settings/api/queries/get-user-protocols";
 import type { UserTimeBlock } from "@/features/settings/api/queries/get-user-time-blocks";
 import { AccountSection } from "./account-section";
 import { NotificationSection } from "./notification-section";
 import { ProtocolSection } from "./protocol-section";
+import { SectionHeader } from "./section-header";
 import { TimeBlocksSection } from "./time-blocks-section";
-
-type NotificationSettingData = {
-	timeBlockId: string;
-	enabled: boolean;
-	notifyAt: string;
-};
 
 type SettingsPageProps = {
 	protocols: ProtocolWithSchedules[];
 	timeBlocks: UserTimeBlock[];
-	userEmail: string;
 	notificationSettings: NotificationSettingData[];
 };
 
-function SectionHeader({ label }: { label: string }) {
-	return (
-		<p className="text-xs uppercase tracking-wide text-content-faint font-semibold mb-sm">
-			{label}
-		</p>
-	);
+function mapTimeBlocksForNotifications(timeBlocks: UserTimeBlock[]) {
+	return timeBlocks.map((tb) => ({
+		id: tb.id,
+		name: tb.name,
+		startTime: tb.startTime,
+	}));
 }
 
-export function SettingsPage({
-	protocols,
-	timeBlocks,
-	userEmail,
-	notificationSettings,
-}: SettingsPageProps) {
+export function SettingsPage({ protocols, timeBlocks, notificationSettings }: SettingsPageProps) {
 	const t = useTranslations("settings");
 
 	return (
@@ -54,18 +44,14 @@ export function SettingsPage({
 			<div>
 				<SectionHeader label={t("notificationsLabel")} />
 				<NotificationSection
-					timeBlocks={timeBlocks.map((tb) => ({
-						id: tb.id,
-						name: tb.name,
-						startTime: tb.startTime,
-					}))}
+					timeBlocks={mapTimeBlocksForNotifications(timeBlocks)}
 					initialSettings={notificationSettings}
 				/>
 			</div>
 
 			<div>
 				<SectionHeader label={t("account")} />
-				<AccountSection email={userEmail} />
+				<AccountSection />
 			</div>
 		</div>
 	);

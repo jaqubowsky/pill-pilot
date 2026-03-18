@@ -5,10 +5,9 @@ import { SettingsPage } from "./components/settings-page";
 
 type SettingsPageWrapperProps = {
 	userId: string;
-	userEmail: string;
 };
 
-export async function SettingsPageWrapper({ userId, userEmail }: SettingsPageWrapperProps) {
+export async function SettingsPageWrapper({ userId }: SettingsPageWrapperProps) {
 	const [protocols, timeBlocks, notificationSettings] = await Promise.all([
 		getUserProtocols(userId),
 		getUserTimeBlocks(userId),
@@ -19,7 +18,6 @@ export async function SettingsPageWrapper({ userId, userEmail }: SettingsPageWra
 		<SettingsPage
 			protocols={protocols}
 			timeBlocks={timeBlocks}
-			userEmail={userEmail}
 			notificationSettings={notificationSettings}
 		/>
 	);

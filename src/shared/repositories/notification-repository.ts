@@ -17,6 +17,11 @@ interface INotificationRepository {
 	findSettingsForTimeBlock(
 		timeBlockId: string,
 	): Promise<(NotificationSetting & { subscriptions: PushSubscription[] })[]>;
+	syncNotifyAtForTimeBlock(
+		timeBlockId: string,
+		userId: string,
+		notifyAt: string,
+	): Promise<void>;
 }
 
 class NotificationRepository implements INotificationRepository {
@@ -122,6 +127,22 @@ class NotificationRepository implements INotificationRepository {
 		}
 
 		return results;
+	}
+
+	async syncNotifyAtForTimeBlock(
+		timeBlockId: string,
+		userId: string,
+		notifyAt: string,
+	): Promise<void> {
+		await db
+			.update(notificationSettings)
+			.set({ notifyAt, lastSentDate: null })
+			.where(
+				and(
+					eq(notificationSettings.timeBlockId, timeBlockId),
+					eq(notificationSettings.userId, userId),
+				),
+			);
 	}
 }
 

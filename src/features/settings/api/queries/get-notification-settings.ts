@@ -1,6 +1,6 @@
 import { notificationRepository } from "@/shared/repositories/notification-repository";
 
-type NotificationSettingData = {
+export type NotificationSettingData = {
 	timeBlockId: string;
 	enabled: boolean;
 	notifyAt: string;

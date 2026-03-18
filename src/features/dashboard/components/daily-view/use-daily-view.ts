@@ -1,55 +1,27 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useQueryState } from "nuqs";
 import { useCallback, useMemo } from "react";
 import type { DailyStatus } from "@/features/dashboard/api/queries/get-daily-status";
-import { toDateString } from "@/shared/lib/date";
+import { dashboardSearchParams } from "@/features/dashboard/search-params";
+import { parseDate, shiftDate } from "@/shared/lib/date";
 
 type Params = {
-	date: string;
 	status: DailyStatus;
 };
 
-export function useDailyView({ date, status }: Params) {
-	const router = useRouter();
+export function useDailyView({ status }: Params) {
+	const [date, setDate] = useQueryState("date", dashboardSearchParams.date);
 
-	const parsedDate = useMemo(() => {
-		const [y, mo, d] = date.split("-").map(Number);
-		return new Date(y, mo - 1, d);
-	}, [date]);
+	const parsedDate = useMemo(() => parseDate(date), [date]);
 
-	const navigateToDate = useCallback(
-		(d: Date) => {
-			const ds = toDateString(d);
-			const today = toDateString(new Date());
-			router.replace(ds === today ? "/dashboard" : `/dashboard?date=${ds}`);
-		},
-		[router],
-	);
-
-	const goToPrevDay = useCallback(() => {
-		const d = new Date(parsedDate);
-		d.setDate(d.getDate() - 1);
-		navigateToDate(d);
-	}, [parsedDate, navigateToDate]);
-
-	const goToNextDay = useCallback(() => {
-		const d = new Date(parsedDate);
-		d.setDate(d.getDate() + 1);
-		navigateToDate(d);
-	}, [parsedDate, navigateToDate]);
-
-	const refresh = useCallback(() => {
-		router.refresh();
-	}, [router]);
-
-	const isEmpty = status.timeBlocks.length === 0;
+	const goToPrevDay = useCallback(() => setDate(shiftDate(date, -1)), [date, setDate]);
+	const goToNextDay = useCallback(() => setDate(shiftDate(date, 1)), [date, setDate]);
 
 	return {
 		parsedDate,
-		isEmpty,
+		isEmpty: status.timeBlocks.length === 0,
 		goToPrevDay,
 		goToNextDay,
-		refresh,
 	};
 }

@@ -1,9 +1,10 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/shared/components/ui/button";
+import { isToday, toLongDate } from "@/shared/lib/date";
 import { cn } from "@/shared/lib/utils";
-import { useDateNavigator } from "./use-date-navigator";
 
 type Props = {
 	date: Date;
@@ -12,7 +13,7 @@ type Props = {
 };
 
 export function DateNavigator({ date, onPrev, onNext }: Props) {
-	const { isToday, formattedDate } = useDateNavigator(date);
+	const t = useTranslations("dashboard");
 
 	return (
 		<div className="flex items-center justify-between">
@@ -21,19 +22,19 @@ export function DateNavigator({ date, onPrev, onNext }: Props) {
 				size="icon"
 				onClick={onPrev}
 				className="text-brand-600"
-				aria-label="Poprzedni dzień"
+				aria-label={t("prevDay")}
 			>
 				<ChevronLeft className="size-5" />
 			</Button>
-			<h1 className={cn("font-display text-xl text-content", isToday && "text-brand-600")}>
-				{formattedDate}
+			<h1 className={cn("font-display text-xl text-content", isToday(date) && "text-brand-600")}>
+				{toLongDate(date)}
 			</h1>
 			<Button
 				variant="ghost"
 				size="icon"
 				onClick={onNext}
 				className="text-brand-600"
-				aria-label="Następny dzień"
+				aria-label={t("nextDay")}
 			>
 				<ChevronRight className="size-5" />
 			</Button>

@@ -5,21 +5,19 @@ import { useTranslations } from "next-intl";
 import type { WeeklyStatus } from "@/features/dashboard/api/queries/get-weekly-status";
 import { ViewSwitcher } from "@/features/dashboard/components/view-switcher";
 import { Button } from "@/shared/components/ui/button";
-import { toDateString } from "@/shared/lib/date";
+import { toDateString, toShortMonth } from "@/shared/lib/date";
 import { cn } from "@/shared/lib/utils";
 import { useWeeklyView } from "./use-weekly-view";
 import { WeekDayCell } from "./week-day-cell";
 
 type Props = {
 	status: WeeklyStatus;
-	startDate: string;
 };
 
-export function WeeklyView({ status, startDate }: Props) {
+export function WeeklyView({ status }: Props) {
 	const t = useTranslations("dashboard.weeklyView");
-	const { parsedStart, isCurrentWeek, goToPrevWeek, goToNextWeek, navigateToDay } = useWeeklyView({
-		startDate,
-	});
+
+	const { parsedStart, isCurrentWeek, goToPrevWeek, goToNextWeek, navigateToDay } = useWeeklyView();
 
 	const endOfWeek = new Date(parsedStart);
 	endOfWeek.setDate(endOfWeek.getDate() + 6);
@@ -27,8 +25,8 @@ export function WeeklyView({ status, startDate }: Props) {
 	const formatRange = () => {
 		const startDay = parsedStart.getDate();
 		const endDay = endOfWeek.getDate();
-		const startMonth = parsedStart.toLocaleDateString("pl-PL", { month: "short" });
-		const endMonth = endOfWeek.toLocaleDateString("pl-PL", { month: "short" });
+		const startMonth = toShortMonth(parsedStart);
+		const endMonth = toShortMonth(endOfWeek);
 
 		if (parsedStart.getMonth() === endOfWeek.getMonth()) {
 			return `${startDay}–${endDay} ${startMonth} ${parsedStart.getFullYear()}`;

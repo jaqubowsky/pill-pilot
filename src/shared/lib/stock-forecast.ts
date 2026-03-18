@@ -3,7 +3,7 @@ const MAX_FORECAST_DAYS = 730;
 
 export const DELIVERY_BUFFER_DAYS = 3;
 
-type ScheduleConsumption = {
+export type ScheduleConsumption = {
 	dosageAmount: number;
 	cycleDaysOn: number | null;
 	cycleDaysOff: number | null;

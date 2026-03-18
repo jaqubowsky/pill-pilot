@@ -1,15 +1,12 @@
-import { and, eq, gte, inArray, lte } from "drizzle-orm";
-import { getCycleStatus } from "@/features/dashboard/lib/cycling";
-import { getPhaseStatus } from "@/features/dashboard/lib/phase-status";
+import { and, eq } from "drizzle-orm";
+import { groupLogsByDate, isScheduleActionable } from "@/features/dashboard/lib/schedule-filters";
 import { db } from "@/shared/db/client";
+import { protocols, supplementSchedules, supplements, timeBlocks } from "@/shared/db/schema";
 import {
-	dailyLogs,
-	ProtocolStatus,
-	protocols,
-	supplementSchedules,
-	supplements,
-	timeBlocks,
-} from "@/shared/db/schema";
+	activeScheduleJoins,
+	activeScheduleWhere,
+	fetchLogsByDateRange,
+} from "./active-schedules-query";
 
 export type WeeklyDayTimeBlock = {
 	blockId: string;
@@ -31,10 +28,10 @@ export type WeeklyStatus = {
 	days: WeeklyDay[];
 };
 
-export async function getWeeklyStatus(userId: string, startDate: string): Promise<WeeklyStatus> {
+function buildDateRange(startDate: string, count: number): string[] {
 	const start = new Date(startDate);
 	const dates: string[] = [];
-	for (let i = 0; i < 7; i++) {
+	for (let i = 0; i < count; i++) {
 		const d = new Date(start);
 		d.setDate(d.getDate() + i);
 		const y = d.getFullYear();
@@ -42,7 +39,11 @@ export async function getWeeklyStatus(userId: string, startDate: string): Promis
 		const day = String(d.getDate()).padStart(2, "0");
 		dates.push(`${y}-${m}-${day}`);
 	}
+	return dates;
+}
 
+export async function getWeeklyStatus(userId: string, startDate: string): Promise<WeeklyStatus> {
+	const dates = buildDateRange(startDate, 7);
 	const endDate = dates[6];
 
 	const activeSchedules = await db
@@ -59,18 +60,10 @@ export async function getWeeklyStatus(userId: string, startDate: string): Promis
 			protocolStartDate: protocols.startDate,
 		})
 		.from(supplementSchedules)
-		.innerJoin(supplements, eq(supplementSchedules.supplementId, supplements.id))
-		.innerJoin(protocols, eq(supplementSchedules.protocolId, protocols.id))
-		.innerJoin(timeBlocks, eq(supplementSchedules.timeBlockId, timeBlocks.id))
-		.where(
-			and(
-				eq(protocols.userId, userId),
-				eq(protocols.status, ProtocolStatus.active),
-				eq(supplementSchedules.active, true),
-				eq(supplements.active, true),
-				eq(timeBlocks.active, true),
-			),
-		);
+		.innerJoin(supplements, activeScheduleJoins.supplements())
+		.innerJoin(protocols, activeScheduleJoins.protocols())
+		.innerJoin(timeBlocks, activeScheduleJoins.timeBlocks())
+		.where(activeScheduleWhere(userId));
 
 	if (activeSchedules.length === 0) {
 		return {
@@ -84,27 +77,8 @@ export async function getWeeklyStatus(userId: string, startDate: string): Promis
 	}
 
 	const scheduleIds = activeSchedules.map((s) => s.scheduleId);
-	const logs = await db
-		.select({
-			scheduleId: dailyLogs.scheduleId,
-			date: dailyLogs.date,
-		})
-		.from(dailyLogs)
-		.where(
-			and(
-				inArray(dailyLogs.scheduleId, scheduleIds),
-				gte(dailyLogs.date, startDate),
-				lte(dailyLogs.date, endDate),
-			),
-		);
-
-	const logsByDate = new Map<string, Set<string>>();
-	for (const log of logs) {
-		if (!logsByDate.has(log.date)) {
-			logsByDate.set(log.date, new Set());
-		}
-		logsByDate.get(log.date)!.add(log.scheduleId);
-	}
+	const logs = await fetchLogsByDateRange(scheduleIds, startDate, endDate);
+	const logsByDate = groupLogsByDate(logs);
 
 	const blockMap = new Map<string, { blockName: string; blockIcon: string; startTime: string }>();
 	for (const schedule of activeSchedules) {
@@ -119,8 +93,7 @@ export async function getWeeklyStatus(userId: string, startDate: string): Promis
 
 	const days: WeeklyDay[] = dates.map((date) => {
 		const completedSet = logsByDate.get(date) ?? new Set<string>();
-
-		const actionable = activeSchedules.filter((s) => isActionable(s, date));
+		const actionable = activeSchedules.filter((s) => isScheduleActionable(s, date));
 
 		const blockSchedules = new Map<string, { total: number; completed: number }>();
 		for (const s of actionable) {
@@ -149,44 +122,8 @@ export async function getWeeklyStatus(userId: string, startDate: string): Promis
 		const totalSchedules = actionable.length;
 		const completedCount = actionable.filter((s) => completedSet.has(s.scheduleId)).length;
 
-		return {
-			date,
-			totalSchedules,
-			completedCount,
-			timeBlocks: dayTimeBlocks,
-		};
+		return { date, totalSchedules, completedCount, timeBlocks: dayTimeBlocks };
 	});
 
 	return { days };
-}
-
-function isActionable(
-	schedule: {
-		cycleDaysOn: number | null;
-		cycleDaysOff: number | null;
-		startDayOffset: number;
-		durationDays: number | null;
-		protocolStartDate: string | null;
-	},
-	date: string,
-): boolean {
-	const dep = getPhaseStatus(
-		schedule.startDayOffset,
-		schedule.durationDays,
-		schedule.protocolStartDate,
-		date,
-	);
-	if (dep.isExpired) return false;
-	if (dep.isPhased && !dep.isUnlocked) return false;
-
-	const cycle = getCycleStatus(
-		schedule.protocolStartDate,
-		schedule.cycleDaysOn,
-		schedule.cycleDaysOff,
-		date,
-		schedule.startDayOffset,
-	);
-	if (cycle.isCycling && !cycle.isOnPhase) return false;
-
-	return true;
 }

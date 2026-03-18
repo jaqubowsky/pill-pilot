@@ -3,7 +3,9 @@
 import { useTranslations } from "next-intl";
 import { BottomSheet } from "@/shared/components/bottom-sheet";
 import type { SupplementCategory } from "@/shared/db/schema";
-import { formatMinutes } from "@/shared/lib/format-minutes";
+import { DetailTag } from "./detail-tag";
+import { ScheduleAdvancedDetails } from "./schedule-advanced-details";
+import { ScheduleMainDetails } from "./schedule-main-details";
 
 type ScheduleDetailSheetProps = {
 	supplementName: string;
@@ -25,23 +27,6 @@ type ScheduleDetailSheetProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 };
-
-function DetailRow({ label, value }: { label: string; value: string }) {
-	return (
-		<div className="flex justify-between gap-sm py-sm">
-			<span className="text-sm text-content-muted shrink-0">{label}</span>
-			<span className="text-sm text-content text-right">{value}</span>
-		</div>
-	);
-}
-
-function DetailTag({ label }: { label: string }) {
-	return (
-		<span className="inline-flex items-center rounded-md bg-surface-sunken px-sm py-xs text-xs font-medium text-content-muted">
-			{label}
-		</span>
-	);
-}
 
 export function ScheduleDetailSheet({
 	supplementName,
@@ -65,40 +50,23 @@ export function ScheduleDetailSheet({
 }: ScheduleDetailSheetProps) {
 	const t = useTranslations();
 
-	const hasCycling = cycleDaysOn != null && cycleDaysOff != null;
-	const hasOffset = startDayOffset > 0;
-	const hasDuration = durationDays != null;
-	const hasInterval = dosageIntervalMinutes != null;
-	const hasWait = waitAfterTakingMinutes != null;
-	const hasAdvanced = hasCycling || hasOffset || hasDuration || hasInterval || hasWait;
-
 	const tags = [
-		isCritical && t("supplement.critical"),
-		finishPackage && t("schedule.finishPackageBadge"),
-	].filter(Boolean) as string[];
+		isCritical ? t("supplement.critical") : null,
+		finishPackage ? t("schedule.finishPackageBadge") : null,
+	].filter((tag): tag is string => tag !== null);
 
 	return (
 		<BottomSheet open={open} onOpenChange={onOpenChange} title={supplementName} scrollable>
 			<div className="flex flex-col gap-md">
-				<div className="flex flex-col">
-					{brandName && <DetailRow label={t("supplement.brand")} value={brandName} />}
-					<DetailRow
-						label={t("supplement.category")}
-						value={t(`supplement.categories.${category}`)}
-					/>
-					<DetailRow
-						label={t("schedule.dosage")}
-						value={`${dosageAmount} ${t(`schedule.units.${dosageUnit}`)}`}
-					/>
-					<DetailRow label={t("schedule.block")} value={timeBlockName} />
-					{packageSize != null && packageSize > 0 && (
-						<DetailRow
-							label={t("supplement.packageSize")}
-							value={`${packageSize} ${t(`schedule.units.${dosageUnit}`)}`}
-						/>
-					)}
-					{notes && <DetailRow label={t("schedule.notes")} value={notes} />}
-				</div>
+				<ScheduleMainDetails
+					brandName={brandName}
+					category={category}
+					dosageAmount={dosageAmount}
+					dosageUnit={dosageUnit}
+					timeBlockName={timeBlockName}
+					notes={notes}
+					packageSize={packageSize}
+				/>
 
 				{tags.length > 0 && (
 					<div className="flex flex-wrap gap-xs">
@@ -108,43 +76,14 @@ export function ScheduleDetailSheet({
 					</div>
 				)}
 
-				{hasAdvanced && (
-					<div className="flex flex-col border-t border-edge-subtle pt-md">
-						{hasCycling && (
-							<DetailRow
-								label={t("schedule.cycling")}
-								value={t("schedule.cyclingLabel", {
-									on: cycleDaysOn,
-									off: cycleDaysOff,
-								})}
-							/>
-						)}
-						{hasOffset && (
-							<DetailRow
-								label={t("schedule.delayedStart")}
-								value={t("schedule.startDayOffsetBadge", { count: startDayOffset })}
-							/>
-						)}
-						{hasDuration && (
-							<DetailRow
-								label={t("schedule.limitedDuration")}
-								value={t("schedule.durationBadge", { count: durationDays })}
-							/>
-						)}
-						{hasInterval && (
-							<DetailRow
-								label={t("schedule.dosageInterval")}
-								value={formatMinutes(dosageIntervalMinutes!)}
-							/>
-						)}
-						{hasWait && (
-							<DetailRow
-								label={t("schedule.waitAfterTaking")}
-								value={formatMinutes(waitAfterTakingMinutes!)}
-							/>
-						)}
-					</div>
-				)}
+				<ScheduleAdvancedDetails
+					cycleDaysOn={cycleDaysOn}
+					cycleDaysOff={cycleDaysOff}
+					startDayOffset={startDayOffset}
+					durationDays={durationDays}
+					dosageIntervalMinutes={dosageIntervalMinutes}
+					waitAfterTakingMinutes={waitAfterTakingMinutes}
+				/>
 			</div>
 		</BottomSheet>
 	);

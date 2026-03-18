@@ -5,6 +5,7 @@ import { StockListView } from "./components/stock-list";
 
 export async function StockPage({ userId }: { userId: string }) {
 	const t = await getTranslations();
+
 	const [stockData, shops] = await Promise.all([
 		getStockList(userId),
 		shopRepository.findByUserId(userId),

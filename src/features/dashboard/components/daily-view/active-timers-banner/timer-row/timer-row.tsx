@@ -1,41 +1,37 @@
 "use client";
 
 import { Minus, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { ActiveTimer } from "../use-active-timers-banner";
+import { TimerButton } from "./timer-button";
+import { TimerSupplementRow } from "./timer-supplement-row";
 import { useTimerRow } from "./use-timer-row";
 
-type TimerRowProps = {
+type Props = {
 	timer: ActiveTimer;
-	date: string;
 };
 
-const btnClass =
-	"flex items-center gap-0.5 px-sm py-xs rounded-lg text-xs font-medium text-content-faint hover:bg-surface-sunken active:bg-surface-sunken min-h-11 min-w-11";
-
-export function TimerRow({ timer, date }: TimerRowProps) {
-	const { label, skipLabel, canAdjust, handleAdjust, handleSkip } = useTimerRow({ timer, date });
+export function TimerRow({ timer }: Props) {
+	const t = useTranslations("dashboard");
+	const { canAdjust, handleAdjust, handleSkip } = useTimerRow({ timer });
 
 	return (
 		<div className="flex items-center gap-sm">
-			<div className="flex flex-1 flex-col min-w-0">
-				<span className="text-sm font-medium text-content truncate">{timer.supplementName}</span>
-				<span className="text-xs text-content-faint">{label}</span>
-			</div>
+			<TimerSupplementRow timer={timer} />
+
 			<div className="flex items-center gap-xs shrink-0">
 				{canAdjust && (
-					<button type="button" onClick={() => handleAdjust(-15)} className={btnClass}>
+					<TimerButton onClick={() => handleAdjust(-15)}>
 						<Minus className="size-3.5" />
 						<span>15m</span>
-					</button>
+					</TimerButton>
 				)}
-				<button type="button" onClick={handleSkip} className={btnClass}>
-					{skipLabel}
-				</button>
+				<TimerButton onClick={handleSkip}>{t("skipCooldown")}</TimerButton>
 				{canAdjust && (
-					<button type="button" onClick={() => handleAdjust(15)} className={btnClass}>
+					<TimerButton onClick={() => handleAdjust(15)}>
 						<Plus className="size-3.5" />
 						<span>15m</span>
-					</button>
+					</TimerButton>
 				)}
 			</div>
 		</div>

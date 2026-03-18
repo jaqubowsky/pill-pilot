@@ -1,11 +1,11 @@
 "use server";
 
-import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { db } from "@/shared/db/client";
-import { dailyLogs, protocols, supplementSchedules } from "@/shared/db/schema";
 import { authActionClient } from "@/shared/lib/safe-action";
+import { dailyLogRepository } from "@/shared/repositories/daily-log-repository";
+import { protocolRepository } from "@/shared/repositories/protocol-repository";
+import { supplementScheduleRepository } from "@/shared/repositories/supplement-schedule-repository";
 
 const schema = z.object({
 	protocolId: z.string(),
@@ -16,39 +16,20 @@ const schema = z.object({
 export const skipCooldown = authActionClient
 	.inputSchema(schema)
 	.action(async ({ parsedInput: { protocolId, supplementId, date }, ctx }) => {
-		await db
-			.select({ id: protocols.id })
-			.from(protocols)
-			.where(and(eq(protocols.id, protocolId), eq(protocols.userId, ctx.userId)));
+		await protocolRepository.findByIdAndUserId(protocolId, ctx.userId);
 
-		const siblingSchedules = await db
-			.select({ id: supplementSchedules.id })
-			.from(supplementSchedules)
-			.where(
-				and(
-					eq(supplementSchedules.protocolId, protocolId),
-					eq(supplementSchedules.supplementId, supplementId),
-				),
-			);
-
-		const siblingIds = siblingSchedules.map((s) => s.id);
+		const siblings = await supplementScheduleRepository.findSiblings(protocolId, supplementId);
+		const siblingIds = siblings.map((s) => s.id);
 		if (siblingIds.length === 0) return;
 
-		const siblingLogs = await db
-			.select({ id: dailyLogs.id, takenAt: dailyLogs.takenAt })
-			.from(dailyLogs)
-			.where(and(eq(dailyLogs.date, date), inArray(dailyLogs.scheduleId, siblingIds)));
-
+		const siblingLogs = await dailyLogRepository.findByDateAndScheduleIds(date, siblingIds);
 		if (siblingLogs.length === 0) return;
 
 		const mostRecent = siblingLogs.reduce((latest, log) =>
 			log.takenAt > latest.takenAt ? log : latest,
 		);
 
-		await db
-			.update(dailyLogs)
-			.set({ cooldownSkippedAt: new Date() })
-			.where(eq(dailyLogs.id, mostRecent.id));
+		await dailyLogRepository.updateById(mostRecent.id, { cooldownSkippedAt: new Date() });
 
 		revalidatePath("/dashboard");
 	});

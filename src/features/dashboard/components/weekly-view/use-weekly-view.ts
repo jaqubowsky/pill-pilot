@@ -1,46 +1,23 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useQueryState } from "nuqs";
 import { useCallback, useMemo } from "react";
-import { toDateString } from "@/shared/lib/date";
+import { weeklySearchParams } from "@/features/dashboard/search-params";
+import { getMondayOfWeek, parseDate, shiftDate, toDateString } from "@/shared/lib/date";
 
-function getMondayOfWeek(date: Date): Date {
-	const d = new Date(date);
-	const day = d.getDay();
-	const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-	d.setDate(diff);
-	return d;
-}
-
-type Params = {
-	startDate: string;
-};
-
-export function useWeeklyView({ startDate }: Params) {
+export function useWeeklyView() {
 	const router = useRouter();
+	const [start, setStart] = useQueryState("start", weeklySearchParams.start);
 
-	const parsedStart = useMemo(() => {
-		const [y, mo, d] = startDate.split("-").map(Number);
-		return new Date(y, mo - 1, d);
-	}, [startDate]);
+	const parsedStart = useMemo(() => parseDate(start), [start]);
 
 	const isCurrentWeek = useMemo(() => {
-		const now = new Date();
-		const currentMonday = getMondayOfWeek(now);
-		return toDateString(currentMonday) === startDate;
-	}, [startDate]);
+		return toDateString(getMondayOfWeek(new Date())) === start;
+	}, [start]);
 
-	const goToPrevWeek = useCallback(() => {
-		const d = new Date(parsedStart);
-		d.setDate(d.getDate() - 7);
-		router.replace(`/dashboard/weekly?start=${toDateString(d)}`);
-	}, [parsedStart, router]);
-
-	const goToNextWeek = useCallback(() => {
-		const d = new Date(parsedStart);
-		d.setDate(d.getDate() + 7);
-		router.replace(`/dashboard/weekly?start=${toDateString(d)}`);
-	}, [parsedStart, router]);
+	const goToPrevWeek = useCallback(() => setStart(shiftDate(start, -7)), [start, setStart]);
+	const goToNextWeek = useCallback(() => setStart(shiftDate(start, 7)), [start, setStart]);
 
 	const navigateToDay = useCallback(
 		(date: string) => {

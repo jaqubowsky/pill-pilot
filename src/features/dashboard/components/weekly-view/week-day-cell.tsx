@@ -1,6 +1,7 @@
 "use client";
 
 import type { WeeklyDayTimeBlock } from "@/features/dashboard/api/queries/get-weekly-status";
+import { parseDate, toShortWeekday } from "@/shared/lib/date";
 import { cn } from "@/shared/lib/utils";
 
 type Props = {
@@ -20,8 +21,8 @@ export function WeekDayCell({
 	isToday,
 	onSelect,
 }: Props) {
-	const parsed = new Date(`${date}T00:00:00`);
-	const dayName = parsed.toLocaleDateString("pl-PL", { weekday: "short" });
+	const parsed = parseDate(date);
+	const dayName = toShortWeekday(parsed);
 	const dayNumber = parsed.getDate();
 	const percent = totalSchedules > 0 ? Math.round((completedCount / totalSchedules) * 100) : 0;
 

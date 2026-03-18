@@ -8,6 +8,7 @@ export const PROTOCOL_BORDER_COLORS = [
 
 function hashToIndex(id: string): number {
 	let hash = 0;
+
 	for (let i = 0; i < id.length; i++) {
 		hash = (hash * 31 + id.charCodeAt(i)) | 0;
 	}
@@ -20,8 +21,10 @@ function hashToIndex(id: string): number {
 export function assignProtocolColors(protocolIds: string[]): Record<string, number> {
 	const unique = [...new Set(protocolIds)];
 	const map: Record<string, number> = {};
+
 	for (const id of unique) {
 		map[id] = hashToIndex(id);
 	}
+
 	return map;
 }

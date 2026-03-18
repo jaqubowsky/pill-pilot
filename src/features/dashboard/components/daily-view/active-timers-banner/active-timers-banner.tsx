@@ -8,10 +8,9 @@ import { useActiveTimersBanner } from "./use-active-timers-banner";
 
 type Props = {
 	entries: ScheduleEntry[];
-	date: string;
 };
 
-export function ActiveTimersBanner({ entries, date }: Props) {
+export function ActiveTimersBanner({ entries }: Props) {
 	const { timers, nearest, expanded, toggleExpanded } = useActiveTimersBanner({
 		allEntries: entries,
 	});
@@ -42,7 +41,7 @@ export function ActiveTimersBanner({ entries, date }: Props) {
 				{expanded && (
 					<div className="flex flex-col gap-xs px-md pb-md border-t border-edge pt-sm">
 						{timers.map((timer) => (
-							<TimerRow key={`${timer.scheduleId}-${timer.type}`} timer={timer} date={date} />
+							<TimerRow key={`${timer.scheduleId}-${timer.type}`} timer={timer} />
 						))}
 					</div>
 				)}

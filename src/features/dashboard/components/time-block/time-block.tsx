@@ -1,6 +1,9 @@
 "use client";
 
-import type { TimeBlockStatus } from "@/features/dashboard/api/queries/get-daily-status";
+import type {
+	TimeBlockStatus,
+	TimeBlockSummary,
+} from "@/features/dashboard/api/queries/get-daily-status";
 import { CheckAllButton } from "@/features/dashboard/components/check-all-button";
 import { SupplementRow } from "@/features/dashboard/components/supplement-row";
 import { PROTOCOL_BORDER_COLORS } from "@/features/dashboard/lib/protocol-colors";
@@ -11,21 +14,12 @@ import { useTimeBlock } from "./use-time-block";
 
 type Props = {
 	block: TimeBlockStatus;
-	date: string;
 	defaultOpen: boolean;
 	protocolColors: Record<string, number>;
-	timeBlocks: { id: string; name: string; startTime: string }[];
-	onCheckChange?: () => void;
+	timeBlocks: TimeBlockSummary[];
 };
 
-export function TimeBlock({
-	block,
-	date,
-	defaultOpen,
-	protocolColors,
-	timeBlocks,
-	onCheckChange,
-}: Props) {
+export function TimeBlock({ block, defaultOpen, protocolColors, timeBlocks }: Props) {
 	const { isOpen, uncheckedIds, allScheduleIds, toggleOpen } = useTimeBlock({ block, defaultOpen });
 
 	return (
@@ -57,19 +51,13 @@ export function TimeBlock({
 							<SupplementRow
 								key={entry.scheduleId}
 								entry={entry}
-								date={date}
 								initialChecked={!!entry.logId}
 								protocolBorderColor={PROTOCOL_BORDER_COLORS[protocolColors[entry.protocolId] ?? 0]}
 								timeBlocks={timeBlocks}
-								onCheckChange={onCheckChange}
 							/>
 						))}
-						<CheckAllButton
-							scheduleIds={allScheduleIds}
-							uncheckedIds={uncheckedIds}
-							date={date}
-							onCheckChange={onCheckChange}
-						/>
+
+						<CheckAllButton scheduleIds={allScheduleIds} uncheckedIds={uncheckedIds} />
 					</div>
 				</div>
 			</div>

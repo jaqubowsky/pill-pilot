@@ -6,18 +6,38 @@ import { db } from "@/shared/db/client";
 import {
 	type DosageUnit,
 	dailyLogs,
-	ProtocolStatus,
 	protocols,
+	type SupplementCategory,
 	supplementSchedules,
 	supplements,
 	timeBlocks,
 } from "@/shared/db/schema";
-import { forecastDaysInStock } from "@/shared/lib/stock-forecast";
+import { forecastDaysInStock, type ScheduleConsumption } from "@/shared/lib/stock-forecast";
+import { activeScheduleJoins, activeScheduleWhere } from "./active-schedules-query";
 
 export type StockStatus = {
 	currentStock: number;
 	daysRemaining: number;
 	stockUnit: DosageUnit;
+};
+
+export type CyclingInfo = {
+	isOnPhase: boolean;
+	daysRemaining: number;
+};
+
+export type PhaseInfo = {
+	isUnlocked: boolean;
+	daysRemaining: number;
+};
+
+export type CooldownTimer = {
+	remainingMs: number;
+	logId: string;
+};
+
+export type WaitTimer = {
+	remainingMs: number;
 };
 
 export type ScheduleEntry = {
@@ -29,7 +49,7 @@ export type ScheduleEntry = {
 	supplementId: string;
 	supplementName: string;
 	supplementBrandName: string | null;
-	supplementCategory: string;
+	supplementCategory: SupplementCategory;
 	isCritical: boolean;
 	cycleDaysOn: number | null;
 	cycleDaysOff: number | null;
@@ -39,15 +59,15 @@ export type ScheduleEntry = {
 	stockStatus: StockStatus | null;
 	logId: string | null;
 	takenAt: Date | null;
-	cycling: { isOnPhase: boolean; daysRemaining: number } | null;
-	phase: { isUnlocked: boolean; daysRemaining: number } | null;
+	cycling: CyclingInfo | null;
+	phase: PhaseInfo | null;
 	isExpired: boolean;
 	notStartedDays: number | null;
 	protocolId: string;
 	dosageIntervalMinutes: number | null;
 	waitAfterTakingMinutes: number | null;
-	cooldown: { remainingMs: number; logId: string } | null;
-	waitTimer: { remainingMs: number } | null;
+	cooldown: CooldownTimer | null;
+	waitTimer: WaitTimer | null;
 	packageSize: number | null;
 	finishPackage: boolean;
 	totalDailyDosage: number;
@@ -58,10 +78,23 @@ export type TimeBlockStatus = {
 	blockName: string;
 	blockIcon: string;
 	startTime: string;
-	sortOrder: string;
+	sortOrder: number;
 	entries: ScheduleEntry[];
 	completedCount: number;
 	actionableCount: number;
+};
+
+export type TimeBlockSummary = {
+	id: string;
+	name: string;
+	startTime: string;
+};
+
+export type SiblingTakenAt = {
+	logId: string;
+	takenAt: Date;
+	adjustmentMinutes: number;
+	cooldownSkipped: boolean;
 };
 
 export type DailyStatus = {
@@ -92,7 +125,7 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 			blockName: timeBlocks.name,
 			blockIcon: timeBlocks.icon,
 			startTime: timeBlocks.startTime,
-			blockSortOrder: timeBlocks.startTime,
+			blockSortOrder: timeBlocks.sortOrder,
 			cycleDaysOn: supplementSchedules.cycleDaysOn,
 			cycleDaysOff: supplementSchedules.cycleDaysOff,
 			startDayOffset: supplementSchedules.startDayOffset,
@@ -103,18 +136,10 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 			waitAfterTakingMinutes: supplementSchedules.waitAfterTakingMinutes,
 		})
 		.from(supplementSchedules)
-		.innerJoin(supplements, eq(supplementSchedules.supplementId, supplements.id))
-		.innerJoin(protocols, eq(supplementSchedules.protocolId, protocols.id))
-		.innerJoin(timeBlocks, eq(supplementSchedules.timeBlockId, timeBlocks.id))
-		.where(
-			and(
-				eq(protocols.userId, userId),
-				eq(protocols.status, ProtocolStatus.active),
-				eq(supplementSchedules.active, true),
-				eq(supplements.active, true),
-				eq(timeBlocks.active, true),
-			),
-		);
+		.innerJoin(supplements, activeScheduleJoins.supplements())
+		.innerJoin(protocols, activeScheduleJoins.protocols())
+		.innerJoin(timeBlocks, activeScheduleJoins.timeBlocks())
+		.where(activeScheduleWhere(userId));
 
 	if (activeSchedules.length === 0) {
 		return { timeBlocks: [], totalSchedules: 0, completedCount: 0, protocolColors: {} };
@@ -128,17 +153,7 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 
 	const logMap = new Map(logs.map((l) => [l.scheduleId, l]));
 
-	const schedulesPerSupplement = new Map<
-		string,
-		{
-			dosageAmount: number;
-			cycleDaysOn: number | null;
-			cycleDaysOff: number | null;
-			startDayOffset: number;
-			durationDays: number | null;
-			protocolStartDate: string | null;
-		}[]
-	>();
+	const schedulesPerSupplement = new Map<string, ScheduleConsumption[]>();
 	const stockPerSupplement = new Map<string, string | null>();
 
 	for (const row of activeSchedules) {
@@ -172,15 +187,15 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 		stockForecastMap.set(supplementId, forecastDaysInStock(parseFloat(stock), schedules, date));
 	}
 
-	const siblingTakenAtMap = new Map<
-		string,
-		{ logId: string; takenAt: Date; adjustmentMinutes: number; cooldownSkipped: boolean }
-	>();
+	const siblingTakenAtMap = new Map<string, SiblingTakenAt>();
 	for (const row of activeSchedules) {
 		if (!row.dosageIntervalMinutes) continue;
+
 		const log = logMap.get(row.scheduleId);
 		if (!log) continue;
+
 		const key = `${row.protocolId}:${row.supplementId}`;
+
 		const existing = siblingTakenAtMap.get(key);
 		if (!existing || log.takenAt > existing.takenAt) {
 			siblingTakenAtMap.set(key, {

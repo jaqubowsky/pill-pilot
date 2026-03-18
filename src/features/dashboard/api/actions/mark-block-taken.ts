@@ -16,6 +16,7 @@ export const markBlockTaken = authActionClient
 	.inputSchema(schema)
 	.action(async ({ parsedInput: { scheduleIds, date }, ctx }) => {
 		const existing = await dailyLogRepository.findByDateAndScheduleIds(date, scheduleIds);
+
 		const existingIds = new Set(existing.map((l) => l.scheduleId));
 		const uncheckedIds = scheduleIds.filter((id) => !existingIds.has(id));
 

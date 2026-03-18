@@ -1,10 +1,12 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import type { SearchParams } from "nuqs/server";
 import { MonthlyDashboardPage } from "@/features/dashboard";
+import { loadMonthlySearchParams } from "@/features/dashboard/search-params";
 import { auth } from "@/shared/lib/auth";
 
 type Props = {
-	searchParams: Promise<{ month?: string }>;
+	searchParams: Promise<SearchParams>;
 };
 
 export default async function MonthlyDashboardRoute({ searchParams }: Props) {
@@ -16,7 +18,7 @@ export default async function MonthlyDashboardRoute({ searchParams }: Props) {
 		redirect("/login");
 	}
 
-	const { month } = await searchParams;
+	const { month } = await loadMonthlySearchParams(searchParams);
 
 	return <MonthlyDashboardPage userId={session.user.id} yearMonth={month} />;
 }

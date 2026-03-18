@@ -1,5 +1,11 @@
-import type { DosageUnit, supplementSchedules } from "@/shared/db/schema";
-import type { ScheduleEntry, StockStatus } from "../api/queries/get-daily-status";
+import type { DosageUnit, SupplementCategory, supplementSchedules } from "@/shared/db/schema";
+import type {
+	CooldownTimer,
+	ScheduleEntry,
+	SiblingTakenAt,
+	StockStatus,
+	WaitTimer,
+} from "../api/queries/get-daily-status";
 import { getCycleStatus } from "./cycling";
 import { getPhaseStatus } from "./phase-status";
 
@@ -21,7 +27,7 @@ type ScheduleRow = Pick<
 	supplementId: string;
 	supplementName: string;
 	supplementBrandName: string | null;
-	supplementCategory: string;
+	supplementCategory: SupplementCategory;
 	currentStock: string | null;
 	stockUnit: DosageUnit;
 	packageSize: number | null;
@@ -42,17 +48,16 @@ type Context = {
 	logMap: Map<string, Log>;
 	stockForecastMap: Map<string, number>;
 	date: string;
-	siblingTakenAtMap: Map<
-		string,
-		{ logId: string; takenAt: Date; adjustmentMinutes: number; cooldownSkipped: boolean }
-	>;
+	siblingTakenAtMap: Map<string, SiblingTakenAt>;
 	totalDailyDosageMap?: Map<string, number>;
 };
 
-export function buildScheduleEntry(
-	row: ScheduleRow,
-	ctx: Context,
-): { entry: ScheduleEntry; hasLog: boolean } {
+export type ScheduleEntryResult = {
+	entry: ScheduleEntry;
+	hasLog: boolean;
+};
+
+export function buildScheduleEntry(row: ScheduleRow, ctx: Context): ScheduleEntryResult {
 	const log = ctx.logMap.get(row.scheduleId);
 
 	const cycleStatus = getCycleStatus(
@@ -137,7 +142,7 @@ function computeCooldown(
 	row: ScheduleRow,
 	log: Log | undefined,
 	ctx: Context,
-): { remainingMs: number; logId: string } | null {
+): CooldownTimer | null {
 	if (!row.dosageIntervalMinutes || log) return null;
 
 	const key = `${row.protocolId}:${row.supplementId}`;
@@ -153,7 +158,7 @@ function computeCooldown(
 	return { remainingMs, logId: sibling.logId };
 }
 
-function computeWaitTimer(row: ScheduleRow, log: Log | undefined): { remainingMs: number } | null {
+function computeWaitTimer(row: ScheduleRow, log: Log | undefined): WaitTimer | null {
 	if (!row.waitAfterTakingMinutes || !log) return null;
 	if (log.timerNotifiedAt) return null;
 

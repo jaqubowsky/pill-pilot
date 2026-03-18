@@ -1,47 +1,48 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useOptimisticAction } from "next-safe-action/hooks";
+import { useQueryState } from "nuqs";
 import { toast } from "sonner";
 import { markTaken } from "@/features/dashboard/api/actions/mark-taken";
 import { markUntaken } from "@/features/dashboard/api/actions/mark-untaken";
+import { dashboardSearchParams } from "@/features/dashboard/search-params";
 
-export function useCheckSupplement(initialChecked: boolean, onComplete?: () => void) {
-	const [checked, setChecked] = useState(initialChecked);
-	const [isPending, startTransition] = useTransition();
+export function useCheckSupplement(initialChecked: boolean) {
+	const [date] = useQueryState("date", dashboardSearchParams.date);
 
-	useEffect(() => {
-		setChecked(initialChecked);
-	}, [initialChecked]);
+	const onError = ({ error }: { error: { serverError?: string } }) => {
+		if (error.serverError) toast.error(error.serverError);
+	};
 
-	function check(scheduleId: string, date: string, skipTimer?: boolean) {
-		setChecked(true);
-		startTransition(async () => {
-			const result = await markTaken({ scheduleId, date, skipTimer });
-			if (result?.serverError) {
-				setChecked(false);
-				toast.error(result.serverError);
-				return;
-			}
-			onComplete?.();
-		});
+	const taken = useOptimisticAction(markTaken, {
+		currentState: initialChecked,
+		updateFn: () => true,
+		onError,
+	});
+
+	const untaken = useOptimisticAction(markUntaken, {
+		currentState: initialChecked,
+		updateFn: () => false,
+		onError,
+	});
+
+	const checked = taken.isExecuting
+		? taken.optimisticState
+		: untaken.isExecuting
+			? untaken.optimisticState
+			: initialChecked;
+
+	function check(scheduleId: string, skipTimer?: boolean) {
+		taken.execute({ scheduleId, date, skipTimer });
 	}
 
-	function uncheck(scheduleId: string, date: string) {
-		setChecked(false);
-		startTransition(async () => {
-			const result = await markUntaken({ scheduleId, date });
-			if (result?.serverError) {
-				setChecked(true);
-				toast.error(result.serverError);
-				return;
-			}
-			onComplete?.();
-		});
+	function uncheck(scheduleId: string) {
+		untaken.execute({ scheduleId, date });
 	}
 
 	return {
 		checked,
-		pending: isPending,
+		pending: taken.isPending || untaken.isPending,
 		check,
 		uncheck,
 	};

@@ -5,21 +5,22 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { cn } from "@/shared/lib/utils";
 
-const VIEWS = [
-	{ key: "day" as const, href: "/dashboard" },
-	{ key: "week" as const, href: "/dashboard/weekly" },
-	{ key: "month" as const, href: "/dashboard/monthly" },
-];
+const DAY_VIEW = { key: "day" as const, href: "/dashboard" };
+const WEEK_VIEW = { key: "week" as const, href: "/dashboard/weekly" };
+const MONTH_VIEW = { key: "month" as const, href: "/dashboard/monthly" };
+
+const VIEWS = [DAY_VIEW, WEEK_VIEW, MONTH_VIEW];
+
+function getActiveKey(pathname: string) {
+	const activeView = VIEWS.find((view) => pathname.startsWith(view.href));
+	return activeView?.key ?? "day";
+}
 
 export function ViewSwitcher() {
 	const t = useTranslations("dashboard.viewSwitcher");
-	const pathname = usePathname();
 
-	const activeKey = pathname.startsWith("/dashboard/monthly")
-		? "month"
-		: pathname.startsWith("/dashboard/weekly")
-			? "week"
-			: "day";
+	const pathname = usePathname();
+	const activeKey = getActiveKey(pathname);
 
 	return (
 		<div className="flex rounded-lg bg-surface-sunken p-xs">

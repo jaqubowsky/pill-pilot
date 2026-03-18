@@ -18,7 +18,6 @@ export const markUntaken = authActionClient
 		const schedule = await supplementScheduleRepository.findOwned(scheduleId, ctx.userId);
 
 		const existing = await dailyLogRepository.findByScheduleAndDate(scheduleId, date);
-
 		if (!existing) {
 			return { success: true };
 		}

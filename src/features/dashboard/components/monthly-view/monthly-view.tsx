@@ -5,20 +5,20 @@ import { useTranslations } from "next-intl";
 import type { MonthlyStatus } from "@/features/dashboard/api/queries/get-monthly-status";
 import { ViewSwitcher } from "@/features/dashboard/components/view-switcher";
 import { Button } from "@/shared/components/ui/button";
-import { toDateString } from "@/shared/lib/date";
+import { parseDate, toDateString } from "@/shared/lib/date";
 import { cn } from "@/shared/lib/utils";
 import { CalendarDay } from "./calendar-day";
 import { useMonthlyView } from "./use-monthly-view";
 
 type Props = {
 	status: MonthlyStatus;
-	yearMonth: string;
 };
 
-const WEEKDAY_LABELS = ["Pn", "Wt", "Śr", "Cz", "Pt", "Sb", "Nd"];
+const WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 
-export function MonthlyView({ status, yearMonth }: Props) {
+export function MonthlyView({ status }: Props) {
 	const t = useTranslations("dashboard.monthlyView");
+	const weekdayLabels = WEEKDAY_KEYS.map((key) => t(key));
 	const {
 		isCurrentMonth,
 		monthLabel,
@@ -26,7 +26,7 @@ export function MonthlyView({ status, yearMonth }: Props) {
 		goToPrevMonth,
 		goToNextMonth,
 		navigateToDay,
-	} = useMonthlyView({ yearMonth });
+	} = useMonthlyView();
 
 	const todayStr = toDateString(new Date());
 
@@ -66,7 +66,7 @@ export function MonthlyView({ status, yearMonth }: Props) {
 
 			<div className="rounded-xl border border-edge-subtle bg-surface-raised p-md shadow-sm">
 				<div className="grid grid-cols-7 gap-xs mb-sm">
-					{WEEKDAY_LABELS.map((label) => (
+					{weekdayLabels.map((label) => (
 						<div
 							key={label}
 							className="text-center text-xs font-semibold uppercase tracking-wide text-content-faint"
@@ -84,7 +84,7 @@ export function MonthlyView({ status, yearMonth }: Props) {
 						<CalendarDay
 							key={day.date}
 							date={day.date}
-							dayNumber={new Date(`${day.date}T00:00:00`).getDate()}
+							dayNumber={parseDate(day.date).getDate()}
 							completionPercent={day.completionPercent}
 							totalSchedules={day.totalSchedules}
 							isToday={day.date === todayStr}

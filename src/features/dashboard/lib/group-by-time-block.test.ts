@@ -33,7 +33,7 @@ const entry = (overrides: Partial<ScheduleEntry> = {}): ScheduleEntry => ({
 	...overrides,
 });
 
-const block = (id: string, sortOrder: string) => ({
+const block = (id: string, sortOrder: number) => ({
 	blockId: id,
 	blockName: `Block ${id}`,
 	blockIcon: "pill",
@@ -44,9 +44,9 @@ const block = (id: string, sortOrder: string) => ({
 describe("groupByTimeBlock", () => {
 	it("groups entries into their time blocks", () => {
 		const result = groupByTimeBlock([
-			{ block: block("b1", "1"), entry: entry({ scheduleId: "s1" }), hasLog: false },
-			{ block: block("b1", "1"), entry: entry({ scheduleId: "s2" }), hasLog: false },
-			{ block: block("b2", "2"), entry: entry({ scheduleId: "s3" }), hasLog: false },
+			{ block: block("b1", 1), entry: entry({ scheduleId: "s1" }), hasLog: false },
+			{ block: block("b1", 1), entry: entry({ scheduleId: "s2" }), hasLog: false },
+			{ block: block("b2", 2), entry: entry({ scheduleId: "s3" }), hasLog: false },
 		]);
 
 		expect(result).toHaveLength(2);
@@ -56,8 +56,8 @@ describe("groupByTimeBlock", () => {
 
 	it("sorts blocks by sortOrder", () => {
 		const result = groupByTimeBlock([
-			{ block: block("b2", "2"), entry: entry(), hasLog: false },
-			{ block: block("b1", "1"), entry: entry({ scheduleId: "s2" }), hasLog: false },
+			{ block: block("b2", 2), entry: entry(), hasLog: false },
+			{ block: block("b1", 1), entry: entry({ scheduleId: "s2" }), hasLog: false },
 		]);
 
 		expect(result[0].blockId).toBe("b1");
@@ -67,17 +67,17 @@ describe("groupByTimeBlock", () => {
 	it("sorts entries: critical first, then by sortOrder", () => {
 		const result = groupByTimeBlock([
 			{
-				block: block("b1", "1"),
+				block: block("b1", 1),
 				entry: entry({ scheduleId: "s1", isCritical: false, sortOrder: 0 }),
 				hasLog: false,
 			},
 			{
-				block: block("b1", "1"),
+				block: block("b1", 1),
 				entry: entry({ scheduleId: "s2", isCritical: true, sortOrder: 5 }),
 				hasLog: false,
 			},
 			{
-				block: block("b1", "1"),
+				block: block("b1", 1),
 				entry: entry({ scheduleId: "s3", isCritical: false, sortOrder: 1 }),
 				hasLog: false,
 			},
@@ -89,14 +89,14 @@ describe("groupByTimeBlock", () => {
 
 	it("counts actionable entries (not expired, not locked, on-phase, no cooldown)", () => {
 		const result = groupByTimeBlock([
-			{ block: block("b1", "1"), entry: entry(), hasLog: false },
+			{ block: block("b1", 1), entry: entry(), hasLog: false },
 			{
-				block: block("b1", "1"),
+				block: block("b1", 1),
 				entry: entry({ scheduleId: "s2", isExpired: true }),
 				hasLog: false,
 			},
 			{
-				block: block("b1", "1"),
+				block: block("b1", 1),
 				entry: entry({
 					scheduleId: "s3",
 					phase: { isUnlocked: false, daysRemaining: 5 },
@@ -110,9 +110,9 @@ describe("groupByTimeBlock", () => {
 
 	it("counts completed as actionable entries with logs", () => {
 		const result = groupByTimeBlock([
-			{ block: block("b1", "1"), entry: entry(), hasLog: true },
+			{ block: block("b1", 1), entry: entry(), hasLog: true },
 			{
-				block: block("b1", "1"),
+				block: block("b1", 1),
 				entry: entry({ scheduleId: "s2" }),
 				hasLog: false,
 			},
@@ -125,7 +125,7 @@ describe("groupByTimeBlock", () => {
 	it("does not count expired entries as completed even with log", () => {
 		const result = groupByTimeBlock([
 			{
-				block: block("b1", "1"),
+				block: block("b1", 1),
 				entry: entry({ isExpired: true }),
 				hasLog: true,
 			},
@@ -138,7 +138,7 @@ describe("groupByTimeBlock", () => {
 	it("treats cycling off-phase as not actionable", () => {
 		const result = groupByTimeBlock([
 			{
-				block: block("b1", "1"),
+				block: block("b1", 1),
 				entry: entry({ cycling: { isOnPhase: false, daysRemaining: 2 } }),
 				hasLog: false,
 			},
@@ -154,7 +154,7 @@ describe("groupByTimeBlock", () => {
 	it("treats cycling on-phase as actionable", () => {
 		const result = groupByTimeBlock([
 			{
-				block: block("b1", "1"),
+				block: block("b1", 1),
 				entry: entry({ cycling: { isOnPhase: true, daysRemaining: 2 } }),
 				hasLog: false,
 			},
@@ -166,7 +166,7 @@ describe("groupByTimeBlock", () => {
 	it("treats unlocked dependency as actionable", () => {
 		const result = groupByTimeBlock([
 			{
-				block: block("b1", "1"),
+				block: block("b1", 1),
 				entry: entry({ phase: { isUnlocked: true, daysRemaining: 0 } }),
 				hasLog: false,
 			},
@@ -178,7 +178,7 @@ describe("groupByTimeBlock", () => {
 	it("does not count non-actionable entry with log as completed", () => {
 		const result = groupByTimeBlock([
 			{
-				block: block("b1", "1"),
+				block: block("b1", 1),
 				entry: entry({
 					cycling: { isOnPhase: false, daysRemaining: 1 },
 				}),
@@ -193,7 +193,7 @@ describe("groupByTimeBlock", () => {
 	it("treats not-started schedule as not actionable", () => {
 		const result = groupByTimeBlock([
 			{
-				block: block("b1", "1"),
+				block: block("b1", 1),
 				entry: entry({ notStartedDays: 5 }),
 				hasLog: false,
 			},
@@ -205,7 +205,7 @@ describe("groupByTimeBlock", () => {
 	it("treats active cooldown as not actionable", () => {
 		const result = groupByTimeBlock([
 			{
-				block: block("b1", "1"),
+				block: block("b1", 1),
 				entry: entry({ cooldown: { remainingMs: 5000, logId: "log1" } }),
 				hasLog: false,
 			},

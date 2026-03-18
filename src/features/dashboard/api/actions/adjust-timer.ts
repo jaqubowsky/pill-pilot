@@ -1,11 +1,9 @@
 "use server";
 
-import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { db } from "@/shared/db/client";
-import { dailyLogs } from "@/shared/db/schema";
 import { authActionClient } from "@/shared/lib/safe-action";
+import { dailyLogRepository } from "@/shared/repositories/daily-log-repository";
 
 const schema = z.object({
 	logId: z.string(),
@@ -14,16 +12,13 @@ const schema = z.object({
 
 export const adjustTimer = authActionClient
 	.inputSchema(schema)
-	.action(async ({ parsedInput: { logId, adjustmentMinutes } }) => {
-		const rows = await db.select().from(dailyLogs).where(eq(dailyLogs.id, logId));
-		const log = rows[0];
-		if (!log) return;
+	.action(async ({ parsedInput: { logId, adjustmentMinutes }, ctx }) => {
+		const log = await dailyLogRepository.findOwnedById(logId, ctx.userId);
 
 		const current = log.timerAdjustmentMinutes ?? 0;
-		await db
-			.update(dailyLogs)
-			.set({ timerAdjustmentMinutes: current + adjustmentMinutes })
-			.where(eq(dailyLogs.id, logId));
+		await dailyLogRepository.updateById(logId, {
+			timerAdjustmentMinutes: current + adjustmentMinutes,
+		});
 
 		revalidatePath("/dashboard");
 	});

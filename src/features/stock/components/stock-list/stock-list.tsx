@@ -21,6 +21,7 @@ type StockListProps = {
 
 export function StockListView({ data, shops }: StockListProps) {
 	const t = useTranslations();
+
 	const { isEmpty, addOpen, setAddOpen, openAddSheet, navigateToNewProtocol } = useStockList(data);
 
 	if (isEmpty) {

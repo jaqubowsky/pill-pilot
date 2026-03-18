@@ -1,4 +1,4 @@
-type SiblingLog = {
+export type SiblingLog = {
 	takenAt: Date;
 	timerAdjustmentMinutes: number | null;
 	cooldownSkippedAt: Date | null;

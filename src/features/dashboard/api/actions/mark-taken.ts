@@ -1,11 +1,8 @@
 "use server";
 
-import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { isCooldownActive } from "@/features/dashboard/lib/cooldown";
-import { db } from "@/shared/db/client";
-import { dailyLogs, supplementSchedules } from "@/shared/db/schema";
 import { ActionError, ActionErrorCode, authActionClient } from "@/shared/lib/safe-action";
 import { dailyLogRepository } from "@/shared/repositories/daily-log-repository";
 import { supplementRepository } from "@/shared/repositories/supplement-repository";
@@ -17,6 +14,19 @@ const schema = z.object({
 	skipTimer: z.boolean().optional(),
 });
 
+async function enforceCooldown(protocolId: string, supplementId: string, date: string) {
+	const siblings = await supplementScheduleRepository.findSiblings(protocolId, supplementId);
+	const first = siblings[0];
+	if (!first?.dosageIntervalMinutes) return;
+
+	const ids = siblings.map((s) => s.id);
+	const siblingLogs = await dailyLogRepository.findByDateAndScheduleIds(date, ids);
+	if (siblingLogs.length === 0) return;
+
+	if (isCooldownActive(siblingLogs, first.dosageIntervalMinutes, Date.now())) {
+		throw new ActionError(ActionErrorCode.COOLDOWN_ACTIVE);
+	}
+}
 export const markTaken = authActionClient
 	.inputSchema(schema)
 	.action(async ({ parsedInput: { scheduleId, date, skipTimer }, ctx }) => {
@@ -50,6 +60,7 @@ export const markTaken = authActionClient
 
 		if (schedule.finishPackage) {
 			const updated = await supplementRepository.findById(schedule.supplementId);
+
 			if (updated && updated.currentStock !== null && parseFloat(updated.currentStock) <= 0) {
 				await supplementScheduleRepository.deactivateFinishPackageBySupplementId(
 					schedule.supplementId,
@@ -61,45 +72,3 @@ export const markTaken = authActionClient
 
 		return { logId: log.id };
 	});
-
-async function enforceCooldown(protocolId: string, supplementId: string, date: string) {
-	const [first] = await db
-		.select({ dosageIntervalMinutes: supplementSchedules.dosageIntervalMinutes })
-		.from(supplementSchedules)
-		.where(
-			and(
-				eq(supplementSchedules.protocolId, protocolId),
-				eq(supplementSchedules.supplementId, supplementId),
-			),
-		);
-
-	if (!first?.dosageIntervalMinutes) return;
-
-	const siblingScheduleIds = await db
-		.select({ id: supplementSchedules.id })
-		.from(supplementSchedules)
-		.where(
-			and(
-				eq(supplementSchedules.protocolId, protocolId),
-				eq(supplementSchedules.supplementId, supplementId),
-			),
-		);
-
-	const ids = siblingScheduleIds.map((s) => s.id);
-	if (ids.length === 0) return;
-
-	const siblingLogs = await db
-		.select({
-			takenAt: dailyLogs.takenAt,
-			timerAdjustmentMinutes: dailyLogs.timerAdjustmentMinutes,
-			cooldownSkippedAt: dailyLogs.cooldownSkippedAt,
-		})
-		.from(dailyLogs)
-		.where(and(eq(dailyLogs.date, date), inArray(dailyLogs.scheduleId, ids)));
-
-	if (siblingLogs.length === 0) return;
-
-	if (isCooldownActive(siblingLogs, first.dosageIntervalMinutes, Date.now())) {
-		throw new ActionError(ActionErrorCode.COOLDOWN_ACTIVE);
-	}
-}

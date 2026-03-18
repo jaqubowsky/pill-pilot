@@ -16,16 +16,13 @@ import { useCheckAll } from "./use-check-all";
 type Props = {
 	scheduleIds: string[];
 	uncheckedIds: string[];
-	date: string;
-	onCheckChange?: () => void;
 };
 
-export function CheckAllButton({ scheduleIds, uncheckedIds, date, onCheckChange }: Props) {
+export function CheckAllButton({ scheduleIds, uncheckedIds }: Props) {
 	const t = useTranslations("dashboard");
+
 	const { confirmOpen, isPending, openConfirm, closeConfirm, handleConfirm } = useCheckAll({
 		scheduleIds,
-		date,
-		onCheckChange,
 	});
 
 	if (uncheckedIds.length === 0) return null;

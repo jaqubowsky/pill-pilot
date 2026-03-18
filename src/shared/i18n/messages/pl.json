@@ -85,6 +85,8 @@
 			"week": "Tydzień",
 			"month": "Miesiąc"
 		},
+		"prevDay": "Poprzedni dzień",
+		"nextDay": "Następny dzień",
 		"weeklyView": {
 			"prevWeek": "Poprzedni tydzień",
 			"nextWeek": "Następny tydzień",
@@ -100,7 +102,14 @@
 		"monthlyView": {
 			"prevMonth": "Poprzedni miesiąc",
 			"nextMonth": "Następny miesiąc",
-			"perfectDays": "Dni ze 100% wykonaniem"
+			"perfectDays": "Dni ze 100% wykonaniem",
+			"mon": "Pn",
+			"tue": "Wt",
+			"wed": "Śr",
+			"thu": "Cz",
+			"fri": "Pt",
+			"sat": "Sb",
+			"sun": "Nd"
 		},
 		"units": {
 			"capsule": "kaps.",

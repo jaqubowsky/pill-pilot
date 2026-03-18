@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import { DM_Serif_Display, Plus_Jakarta_Sans } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { ServiceWorkerRegistrar } from "@/shared/components/service-worker-registrar";
 import { cn } from "@/shared/lib/utils";
 import "./globals.css";
+import { Toaster } from "sonner";
 
 const dmSerif = DM_Serif_Display({
 	weight: "400",
@@ -58,10 +60,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 					"font-body bg-surface text-content overflow-x-hidden",
 				)}
 			>
-				<NextIntlClientProvider messages={messages}>
-					<ServiceWorkerRegistrar />
-					{children}
-				</NextIntlClientProvider>
+				<NuqsAdapter>
+					<NextIntlClientProvider messages={messages}>
+						<ServiceWorkerRegistrar />
+						<Toaster richColors />
+						{children}
+					</NextIntlClientProvider>
+				</NuqsAdapter>
 			</body>
 		</html>
 	);

@@ -5,22 +5,15 @@ import { useCheckSupplement } from "./use-check-supplement";
 
 type Params = {
 	scheduleId: string;
-	date: string;
 	initialChecked: boolean;
 	hasTimer: boolean;
-	onCheckChange?: () => void;
 };
 
-export function useSupplementRow({
-	scheduleId,
-	date,
-	initialChecked,
-	hasTimer,
-	onCheckChange,
-}: Params) {
+export function useSupplementRow({ scheduleId, initialChecked, hasTimer }: Params) {
 	const [confirmOpen, setConfirmOpen] = useState(false);
 	const [timerPromptOpen, setTimerPromptOpen] = useState(false);
-	const { checked, pending, check, uncheck } = useCheckSupplement(initialChecked, onCheckChange);
+
+	const { checked, pending, check, uncheck } = useCheckSupplement(initialChecked);
 
 	function handleClick() {
 		if (checked) {
@@ -28,22 +21,18 @@ export function useSupplementRow({
 		} else if (hasTimer) {
 			setTimerPromptOpen(true);
 		} else {
-			check(scheduleId, date);
+			check(scheduleId);
 		}
 	}
 
 	function handleTimerConfirm(skipTimer: boolean) {
 		setTimerPromptOpen(false);
-		check(scheduleId, date, skipTimer);
+		check(scheduleId, skipTimer);
 	}
 
 	function handleConfirmUncheck() {
 		setConfirmOpen(false);
-		uncheck(scheduleId, date);
-	}
-
-	function handleCloseConfirm() {
-		setConfirmOpen(false);
+		uncheck(scheduleId);
 	}
 
 	return {
@@ -56,6 +45,5 @@ export function useSupplementRow({
 		handleClick,
 		handleTimerConfirm,
 		handleConfirmUncheck,
-		handleCloseConfirm,
 	};
 }

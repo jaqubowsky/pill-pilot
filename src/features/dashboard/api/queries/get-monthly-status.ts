@@ -1,15 +1,11 @@
-import { and, eq, gte, inArray, lte } from "drizzle-orm";
-import { getCycleStatus } from "@/features/dashboard/lib/cycling";
-import { getPhaseStatus } from "@/features/dashboard/lib/phase-status";
+import { groupLogsByDate, isScheduleActionable } from "@/features/dashboard/lib/schedule-filters";
 import { db } from "@/shared/db/client";
+import { protocols, supplementSchedules, supplements, timeBlocks } from "@/shared/db/schema";
 import {
-	dailyLogs,
-	ProtocolStatus,
-	protocols,
-	supplementSchedules,
-	supplements,
-	timeBlocks,
-} from "@/shared/db/schema";
+	activeScheduleJoins,
+	activeScheduleWhere,
+	fetchLogsByDateRange,
+} from "./active-schedules-query";
 
 export type MonthlyDay = {
 	date: string;
@@ -46,18 +42,10 @@ export async function getMonthlyStatus(userId: string, yearMonth: string): Promi
 			protocolStartDate: protocols.startDate,
 		})
 		.from(supplementSchedules)
-		.innerJoin(supplements, eq(supplementSchedules.supplementId, supplements.id))
-		.innerJoin(protocols, eq(supplementSchedules.protocolId, protocols.id))
-		.innerJoin(timeBlocks, eq(supplementSchedules.timeBlockId, timeBlocks.id))
-		.where(
-			and(
-				eq(protocols.userId, userId),
-				eq(protocols.status, ProtocolStatus.active),
-				eq(supplementSchedules.active, true),
-				eq(supplements.active, true),
-				eq(timeBlocks.active, true),
-			),
-		);
+		.innerJoin(supplements, activeScheduleJoins.supplements())
+		.innerJoin(protocols, activeScheduleJoins.protocols())
+		.innerJoin(timeBlocks, activeScheduleJoins.timeBlocks())
+		.where(activeScheduleWhere(userId));
 
 	if (activeSchedules.length === 0) {
 		return {
@@ -71,75 +59,19 @@ export async function getMonthlyStatus(userId: string, yearMonth: string): Promi
 	}
 
 	const scheduleIds = activeSchedules.map((s) => s.scheduleId);
-	const logs = await db
-		.select({
-			scheduleId: dailyLogs.scheduleId,
-			date: dailyLogs.date,
-		})
-		.from(dailyLogs)
-		.where(
-			and(
-				inArray(dailyLogs.scheduleId, scheduleIds),
-				gte(dailyLogs.date, startDate),
-				lte(dailyLogs.date, endDate),
-			),
-		);
-
-	const logsByDate = new Map<string, Set<string>>();
-	for (const log of logs) {
-		if (!logsByDate.has(log.date)) {
-			logsByDate.set(log.date, new Set());
-		}
-		logsByDate.get(log.date)!.add(log.scheduleId);
-	}
+	const logs = await fetchLogsByDateRange(scheduleIds, startDate, endDate);
+	const logsByDate = groupLogsByDate(logs);
 
 	const days: MonthlyDay[] = dates.map((date) => {
 		const completedSet = logsByDate.get(date) ?? new Set<string>();
-
-		const actionable = activeSchedules.filter((s) => isActionable(s, date));
+		const actionable = activeSchedules.filter((s) => isScheduleActionable(s, date));
 		const totalSchedules = actionable.length;
 		const completedCount = actionable.filter((s) => completedSet.has(s.scheduleId)).length;
 		const completionPercent =
 			totalSchedules > 0 ? Math.round((completedCount / totalSchedules) * 100) : 0;
 
-		return {
-			date,
-			totalSchedules,
-			completedCount,
-			completionPercent,
-		};
+		return { date, totalSchedules, completedCount, completionPercent };
 	});
 
 	return { days };
-}
-
-function isActionable(
-	schedule: {
-		cycleDaysOn: number | null;
-		cycleDaysOff: number | null;
-		startDayOffset: number;
-		durationDays: number | null;
-		protocolStartDate: string | null;
-	},
-	date: string,
-): boolean {
-	const dep = getPhaseStatus(
-		schedule.startDayOffset,
-		schedule.durationDays,
-		schedule.protocolStartDate,
-		date,
-	);
-	if (dep.isExpired) return false;
-	if (dep.isPhased && !dep.isUnlocked) return false;
-
-	const cycle = getCycleStatus(
-		schedule.protocolStartDate,
-		schedule.cycleDaysOn,
-		schedule.cycleDaysOff,
-		date,
-		schedule.startDayOffset,
-	);
-	if (cycle.isCycling && !cycle.isOnPhase) return false;
-
-	return true;
 }

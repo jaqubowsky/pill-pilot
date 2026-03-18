@@ -20,6 +20,7 @@ export function useTimeBlock({ block, defaultOpen }: Params) {
 		if (e.cooldown !== null && e.cooldown.remainingMs > 0) return false;
 		return true;
 	});
+
 	const uncheckedIds = checkableEntries.filter((e) => !e.logId).map((e) => e.scheduleId);
 	const allScheduleIds = checkableEntries.map((e) => e.scheduleId);
 

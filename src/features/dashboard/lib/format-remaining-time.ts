@@ -8,7 +8,9 @@ export function formatRemainingTime(ms: number): string {
 
 	if (hours > 0 && minutes > 0) return `${hours}h ${minutes} min`;
 	if (hours > 0) return `${hours}h`;
+
 	if (minutes > 0 && seconds > 0) return `${minutes}:${String(seconds).padStart(2, "0")}`;
 	if (minutes > 0) return `${minutes} min`;
+
 	return `${seconds}s`;
 }

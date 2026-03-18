@@ -1,11 +1,11 @@
 import type { ScheduleEntry, TimeBlockStatus } from "../api/queries/get-daily-status";
 
-type BlockInfo = {
+export type BlockInfo = {
 	blockId: string;
 	blockName: string;
 	blockIcon: string;
 	startTime: string;
-	blockSortOrder: string;
+	blockSortOrder: number;
 };
 
 function isActionable(entry: ScheduleEntry): boolean {
@@ -23,8 +23,9 @@ export function groupByTimeBlock(
 	const blockMap = new Map<string, TimeBlockStatus>();
 
 	for (const { block: info, entry, hasLog } of entries) {
-		if (!blockMap.has(info.blockId)) {
-			blockMap.set(info.blockId, {
+		let block = blockMap.get(info.blockId);
+		if (!block) {
+			block = {
 				blockId: info.blockId,
 				blockName: info.blockName,
 				blockIcon: info.blockIcon,
@@ -33,10 +34,10 @@ export function groupByTimeBlock(
 				entries: [],
 				completedCount: 0,
 				actionableCount: 0,
-			});
+			};
+			blockMap.set(info.blockId, block);
 		}
 
-		const block = blockMap.get(info.blockId)!;
 		block.entries.push(entry);
 		if (isActionable(entry)) {
 			block.actionableCount += 1;
@@ -52,5 +53,5 @@ export function groupByTimeBlock(
 		);
 	}
 
-	return Array.from(blockMap.values()).sort((a, b) => a.sortOrder.localeCompare(b.sortOrder));
+	return Array.from(blockMap.values()).sort((a, b) => a.sortOrder - b.sortOrder);
 }

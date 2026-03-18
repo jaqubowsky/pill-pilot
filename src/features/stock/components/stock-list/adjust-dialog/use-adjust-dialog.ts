@@ -1,7 +1,7 @@
 "use client";
 
 import { useAction } from "next-safe-action/hooks";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { updateStock } from "@/features/stock/api/actions/update-stock";
 
@@ -25,7 +25,6 @@ export function useAdjustDialog({
 	onOpenChange,
 }: UseAdjustDialogParams) {
 	const [value, setValue] = useState(() => formatStock(currentStock));
-	const inputRef = useRef<HTMLInputElement>(null);
 
 	const { execute, isPending } = useAction(updateStock, {
 		onSuccess: () => {
@@ -37,12 +36,12 @@ export function useAdjustDialog({
 	useEffect(() => {
 		if (open) {
 			setValue(formatStock(currentStock));
-			setTimeout(() => inputRef.current?.focus(), 100);
 		}
 	}, [open, currentStock]);
 
 	function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
+
 		const parsed = parseFloat(value);
 		if (!Number.isNaN(parsed) && parsed >= 0) {
 			execute({ supplementId, newValue: parsed });
@@ -52,7 +51,6 @@ export function useAdjustDialog({
 	return {
 		value,
 		setValue,
-		inputRef,
 		isPending,
 		handleSubmit,
 	};

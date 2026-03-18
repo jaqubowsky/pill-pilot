@@ -1,5 +1,5 @@
 import { useTranslations } from "next-intl";
-import { formatMinutes } from "@/shared/lib/format-minutes";
+import { formatMinutes } from "@/shared/lib/format-time";
 import { DetailRow, type DetailRowDef } from "./detail-row";
 
 type Props = {

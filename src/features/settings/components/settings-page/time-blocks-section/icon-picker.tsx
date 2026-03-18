@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { ICON_MAP } from "@/features/settings/lib/time-block-icons";
 import {
 	Select,
 	SelectContent,
@@ -8,7 +9,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/shared/components/ui/select";
-import { ICON_MAP } from "@/shared/lib/time-block-icons";
 
 const TIME_BLOCK_ICONS = Object.keys(ICON_MAP);
 

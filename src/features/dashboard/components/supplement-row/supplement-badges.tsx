@@ -12,7 +12,7 @@ import {
 import { useTranslations } from "next-intl";
 import type { ScheduleEntry } from "@/features/dashboard/api/queries/get-daily-status";
 import { IconBadge } from "@/shared/components/icon-badge";
-import { formatMinutes } from "@/shared/lib/format-minutes";
+import { formatMinutes } from "@/shared/lib/format-time";
 import { formatRemainingTime } from "../../lib/format-remaining-time";
 
 type BadgeDef = {

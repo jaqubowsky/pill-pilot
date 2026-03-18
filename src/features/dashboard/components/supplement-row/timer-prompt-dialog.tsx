@@ -8,7 +8,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/shared/components/ui/dialog";
-import { formatMinutes } from "@/shared/lib/format-minutes";
+import { formatMinutes } from "@/shared/lib/format-time";
 
 type Props = {
 	open: boolean;

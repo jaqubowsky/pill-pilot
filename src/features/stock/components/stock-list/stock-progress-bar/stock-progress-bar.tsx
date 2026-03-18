@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useStockProgressBar } from "./use-stock-progress-bar";
 
 type StockProgressBarProps = {
 	currentStock: number;
@@ -16,32 +17,31 @@ export function StockProgressBar({
 	packageSize,
 }: StockProgressBarProps) {
 	const t = useTranslations("stock");
+	const { hasUsage, percent } = useStockProgressBar({
+		currentStock,
+		daysInStock,
+		dailyUsage,
+		packageSize,
+	});
 
-	const hasUsage = dailyUsage > 0;
-	const maxStock = packageSize ?? (hasUsage ? dailyUsage * 30 : currentStock);
-	const percent = maxStock > 0 ? Math.min(100, Math.round((currentStock / maxStock) * 100)) : 0;
-
-	const fillColor = !hasUsage
-		? "bg-brand-500"
-		: daysInStock < 3
-			? "bg-danger"
-			: daysInStock < 7
-				? "bg-warning"
-				: "bg-brand-500";
-
-	const daysLabel = currentStock > 0 && daysInStock === 0 ? "<1" : `~${daysInStock}`;
+	function getFillColor() {
+		if (!hasUsage) return "bg-brand-500";
+		if (daysInStock < 3) return "bg-danger";
+		if (daysInStock < 7) return "bg-warning";
+		return "bg-brand-500";
+	}
 
 	return (
 		<div className="flex items-center gap-sm">
 			<div className="flex-1 h-2 rounded-full bg-brand-100 overflow-hidden">
 				<div
-					className={`h-full rounded-full transition-all duration-300 ${fillColor}`}
+					className={`h-full rounded-full transition-all duration-300 ${getFillColor()}`}
 					style={{ width: `${percent}%` }}
 				/>
 			</div>
 			{hasUsage && (
 				<span className="text-xs text-content-muted whitespace-nowrap">
-					{daysLabel} {t("days")}
+					{currentStock > 0 && daysInStock === 0 ? "<1" : `~${daysInStock}`} {t("days")}
 				</span>
 			)}
 		</div>

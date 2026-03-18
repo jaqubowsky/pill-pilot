@@ -8,7 +8,7 @@ import type {
 	ExistingSupplementSummary,
 	TimeBlockSummary,
 } from "@/features/protocol-wizard/types";
-import { BackButton } from "@/shared/components/back-button";
+import { BackButton } from "@/features/protocol-wizard/components/back-button";
 import { Button } from "@/shared/components/ui/button";
 import {
 	Dialog,

@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { StockCalculator } from "@/features/stock/components/stock-list/stock-calculator";
-import { InfoHint } from "@/shared/components/info-hint";
+import { InfoHint } from "@/features/supplements/components/info-hint";
 import { LabeledInput } from "@/shared/components/labeled-input";
 import { LabeledSelect } from "@/shared/components/labeled-select";
 import { Input } from "@/shared/components/ui/input";

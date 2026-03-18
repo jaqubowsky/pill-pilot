@@ -9,7 +9,7 @@ import {
 	timeBlocks,
 } from "@/shared/db/schema";
 import { toDateString, toTimeString } from "@/shared/lib/date";
-import { sendPushNotification } from "@/shared/lib/web-push";
+import { sendPushNotification } from "@/features/settings/lib/web-push";
 
 export async function POST(request: Request) {
 	const authHeader = request.headers.get("authorization");

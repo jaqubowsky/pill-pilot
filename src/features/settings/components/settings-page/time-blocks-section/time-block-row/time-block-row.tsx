@@ -2,8 +2,8 @@
 
 import { Clock } from "lucide-react";
 import type { UserTimeBlock } from "@/features/settings/api/queries/get-user-time-blocks";
+import { ICON_MAP } from "@/features/settings/lib/time-block-icons";
 import { Button } from "@/shared/components/ui/button";
-import { ICON_MAP } from "@/shared/lib/time-block-icons";
 import { TimeBlockEditSheet } from "../time-block-edit-sheet";
 import { useTimeBlockRow } from "./use-time-block-row";
 

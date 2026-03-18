@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { PillBottleIcon } from "@/shared/components/pill-bottle-icon";
+import { PillBottleIcon } from "@/features/dashboard/components/pill-bottle-icon";
 
 type Props = {
 	hasDraft?: boolean;

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { calculateRemainingStock } from "@/features/stock/api/actions/calculate-remaining-stock";
@@ -16,6 +17,7 @@ export function useStockCalculator({
 	packageSize,
 	onApply,
 }: UseStockCalculatorParams) {
+	const t = useTranslations("stock");
 	const [open, setOpen] = useState(false);
 	const [size, setSize] = useState("");
 	const [startDate, setStartDate] = useState("");
@@ -57,7 +59,7 @@ export function useStockCalculator({
 				toast.error(res.serverError);
 			}
 		} catch {
-			toast.error("Błąd obliczania");
+			toast.error(t("calculatorError"));
 		} finally {
 			setIsPending(false);
 		}

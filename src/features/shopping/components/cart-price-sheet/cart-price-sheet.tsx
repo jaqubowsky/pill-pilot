@@ -83,7 +83,7 @@ function SupplementPicker({
 	const [isCreating, setIsCreating] = useState(false);
 	const [open, setOpen] = useState(false);
 	const [query, setQuery] = useState("");
-	const searchRef = useRef<HTMLInputElement>(null);
+
 
 	const selected = value ? supplements.find((s) => s.id === value) : null;
 	const filtered = query
@@ -97,10 +97,7 @@ function SupplementPicker({
 		return (
 			<button
 				type="button"
-				onClick={() => {
-					setOpen(true);
-					setTimeout(() => searchRef.current?.focus(), 0);
-				}}
+				onClick={() => setOpen(true)}
 				className="flex-1 flex items-center justify-between min-h-11 px-sm text-sm bg-surface-sunken border border-edge rounded-lg text-left min-w-0"
 			>
 				<span className={`truncate ${selected ? "text-content" : "text-content-faint"}`}>
@@ -116,7 +113,6 @@ function SupplementPicker({
 			<div className="flex items-center gap-sm border border-edge rounded-lg px-sm py-xs bg-surface-sunken">
 				<Search className="size-4 text-content-faint shrink-0" />
 				<input
-					ref={searchRef}
 					type="text"
 					value={query}
 					onChange={(e) => setQuery(e.target.value)}

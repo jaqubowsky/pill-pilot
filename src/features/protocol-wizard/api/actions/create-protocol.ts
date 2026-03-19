@@ -39,12 +39,12 @@ export const createProtocol = authActionClient
 			});
 		}
 
-		const supplementMap = await resolveSupplements(parsed.supplements, userId);
+		const resolvedSupplements = await resolveSupplements(parsed.supplements, userId);
 		const userTimeBlocks = await timeBlockRepository.findByUserId(userId);
 		const validTimeBlockIds = new Set(userTimeBlocks.map((tb) => tb.id));
 		const schedules = buildScheduleDataList(
 			parsed.supplements,
-			supplementMap,
+			resolvedSupplements,
 			protocolId,
 			validTimeBlockIds,
 		);
@@ -58,9 +58,7 @@ export const createProtocol = authActionClient
 			startDate,
 		});
 
-		const newSupplementIds = Object.values(supplementMap)
-			.filter((s) => s.isNew)
-			.map((s) => s.supplementId);
+		const newSupplementIds = resolvedSupplements.filter((s) => s.isNew).map((s) => s.supplementId);
 
 		return { newSupplementIds };
 	});

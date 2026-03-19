@@ -1,13 +1,11 @@
 "use server";
 
-import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { supplementFormSchema } from "@/features/supplements/components/supplement-form/supplement-form.schema";
-import { db } from "@/shared/db/client";
-import { supplementSchedules } from "@/shared/db/schema";
 import { authActionClient } from "@/shared/lib/safe-action";
 import { supplementRepository } from "@/shared/repositories/supplement-repository";
+import { supplementScheduleRepository } from "@/shared/repositories/supplement-schedule-repository";
 
 const schema = supplementFormSchema.extend({
 	supplementId: z.string().min(1),
@@ -33,10 +31,10 @@ export const updateSupplement = authActionClient
 		});
 
 		if (existing.stockUnit !== parsedInput.stockUnit) {
-			await db
-				.update(supplementSchedules)
-				.set({ dosageUnit: parsedInput.stockUnit })
-				.where(eq(supplementSchedules.supplementId, parsedInput.supplementId));
+			await supplementScheduleRepository.updateDosageUnitBySupplementId(
+				parsedInput.supplementId,
+				parsedInput.stockUnit,
+			);
 		}
 
 		revalidatePath("/stock");

@@ -25,6 +25,10 @@ interface ISupplementScheduleRepository {
 		supplementId: string,
 		data: Partial<NewSupplementSchedule>,
 	): Promise<void>;
+	updateDosageUnitBySupplementId(
+		supplementId: string,
+		dosageUnit: NewSupplementSchedule["dosageUnit"],
+	): Promise<void>;
 }
 
 class SupplementScheduleRepository implements ISupplementScheduleRepository {
@@ -165,6 +169,15 @@ class SupplementScheduleRepository implements ISupplementScheduleRepository {
 					eq(supplementSchedules.supplementId, supplementId),
 				),
 			);
+	}
+	async updateDosageUnitBySupplementId(
+		supplementId: string,
+		dosageUnit: NewSupplementSchedule["dosageUnit"],
+	): Promise<void> {
+		await db
+			.update(supplementSchedules)
+			.set({ dosageUnit })
+			.where(eq(supplementSchedules.supplementId, supplementId));
 	}
 }
 

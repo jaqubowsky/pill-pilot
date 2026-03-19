@@ -7,7 +7,7 @@ import type { ShopOption } from "@/shared/types";
 import { AdjustDialog } from "../adjust-dialog";
 import { RestockDialog } from "../restock-dialog";
 import { StockProgressBar } from "../stock-progress-bar";
-import { SupplementEditSheet } from "../supplement-edit-sheet";
+import { SupplementEditSheet } from "@/features/supplements";
 import { StockQuantity } from "./stock-quantity";
 import { useStockItem } from "./use-stock-item";
 

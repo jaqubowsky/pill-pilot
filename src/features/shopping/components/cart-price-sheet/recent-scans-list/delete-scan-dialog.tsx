@@ -1,3 +1,5 @@
+"use client";
+
 import { useTranslations } from "next-intl";
 import { deleteCartScan } from "@/features/shopping/api/actions/delete-cart-scan";
 import {

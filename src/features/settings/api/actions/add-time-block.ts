@@ -14,15 +14,11 @@ const schema = z.object({
 export const addTimeBlock = authActionClient
 	.inputSchema(schema)
 	.action(async ({ parsedInput: { name, icon, startTime }, ctx: { userId } }) => {
-		const existing = await timeBlockRepository.findByUserId(userId);
-		const sortOrder = existing.length;
-
 		await timeBlockRepository.create({
 			userId,
 			name,
 			icon,
 			startTime,
-			sortOrder,
 		});
 
 		revalidatePath("/settings");

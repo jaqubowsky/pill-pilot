@@ -73,6 +73,20 @@ describe("buildStockList", () => {
 		expect(result.untracked).toEqual([]);
 	});
 
+	it("breaks daysInStock tie by stock percentage ascending", () => {
+		const result = buildStockList(
+			[
+				row("s1", { currentStock: "30", packageSize: 60 }),
+				row("s2", { currentStock: "30", packageSize: 120 }),
+			],
+			[schedule("s1"), schedule("s2")],
+			"2025-03-01",
+		);
+
+		expect(result.tracked[0].id).toBe("s2");
+		expect(result.tracked[1].id).toBe("s1");
+	});
+
 	it("handles supplement with no active schedules", () => {
 		const result = buildStockList([row("s1", { currentStock: "10" })], [], "2025-03-01");
 

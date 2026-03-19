@@ -1,6 +1,6 @@
 import type { z } from "zod";
 import type { parsedProtocolSchema } from "@/features/protocol-wizard/schemas/parsed-protocol-schema";
-import type { DosageUnit } from "@/shared/db/schema";
+import { DosageUnit } from "@/shared/db/schema";
 import { ActionError, ActionErrorCode } from "@/shared/lib/safe-action";
 import { supplementRepository } from "@/shared/repositories/supplement-repository";
 import { resolveScheduleFields } from "./resolve-schedule-fields";
@@ -16,26 +16,26 @@ export type ResolvedSupplement = {
 export async function resolveSupplements(
 	supplements: ParsedSupplement[],
 	userId: string,
-): Promise<Record<string, ResolvedSupplement>> {
-	const result: Record<string, ResolvedSupplement> = {};
+): Promise<ResolvedSupplement[]> {
+	const results: ResolvedSupplement[] = [];
 
 	for (const item of supplements) {
 		if (item.existingSupplementId) {
 			await supplementRepository.findByIdAndUserId(item.existingSupplementId, userId);
-			result[item.name] = { supplementId: item.existingSupplementId, isNew: false };
+			results.push({ supplementId: item.existingSupplementId, isNew: false });
 		} else {
 			const created = await supplementRepository.create({
 				userId,
 				name: item.name,
 				brandName: item.brandName ?? null,
 				category: item.category,
-				stockUnit: item.schedules[0]?.dosageUnit ?? "capsule",
+				stockUnit: item.schedules[0]?.dosageUnit ?? DosageUnit.capsule,
 			});
-			result[item.name] = { supplementId: created.id, isNew: true };
+			results.push({ supplementId: created.id, isNew: true });
 		}
 	}
 
-	return result;
+	return results;
 }
 
 export type ScheduleData = {
@@ -43,7 +43,7 @@ export type ScheduleData = {
 	supplementId: string;
 	timeBlockId: string;
 	dosageAmount: string;
-	dosageUnit: DosageUnit;
+	dosageUnit: (typeof DosageUnit)[keyof typeof DosageUnit];
 	sortOrder: number;
 	notes: string | null;
 	isCritical: boolean;
@@ -58,15 +58,16 @@ export type ScheduleData = {
 
 export function buildScheduleDataList(
 	supplements: ParsedSupplement[],
-	supplementMap: Record<string, ResolvedSupplement>,
+	resolvedSupplements: ResolvedSupplement[],
 	protocolId: string,
 	validTimeBlockIds: Set<string>,
 ): ScheduleData[] {
 	const schedules: ScheduleData[] = [];
 	let sortOrder = 0;
 
-	for (const item of supplements) {
-		const supplementId = supplementMap[item.name].supplementId;
+	for (let i = 0; i < supplements.length; i++) {
+		const item = supplements[i];
+		const supplementId = resolvedSupplements[i].supplementId;
 
 		for (const schedule of item.schedules) {
 			if (!validTimeBlockIds.has(schedule.timeBlockId)) {

@@ -7,10 +7,10 @@ import { markBlockTaken } from "@/features/dashboard/api/actions/mark-block-take
 import { dashboardSearchParams } from "@/features/dashboard/search-params";
 
 type UseCheckAllParams = {
-	scheduleIds: string[];
+	uncheckedIds: string[];
 };
 
-export function useCheckAll({ scheduleIds }: UseCheckAllParams) {
+export function useCheckAll({ uncheckedIds }: UseCheckAllParams) {
 	const [date] = useQueryState("date", dashboardSearchParams.date);
 
 	const [confirmOpen, setConfirmOpen] = useState(false);
@@ -28,7 +28,7 @@ export function useCheckAll({ scheduleIds }: UseCheckAllParams) {
 		setConfirmOpen(false);
 
 		startTransition(async () => {
-			const result = await markBlockTaken({ scheduleIds, date });
+			const result = await markBlockTaken({ scheduleIds: uncheckedIds, date });
 			if (result?.serverError) {
 				toast.error(result.serverError);
 			}

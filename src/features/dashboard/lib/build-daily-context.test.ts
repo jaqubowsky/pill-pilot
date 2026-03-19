@@ -146,7 +146,6 @@ const block = {
 	blockName: "Morning",
 	blockIcon: "sun",
 	startTime: "08:00",
-	blockSortOrder: 0,
 };
 
 const entry = (overrides: Partial<ScheduleEntry> = {}): ScheduleEntry => ({

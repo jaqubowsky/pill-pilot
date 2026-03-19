@@ -17,7 +17,7 @@ export function InfoHint({ text }: InfoHintProps) {
 				type="button"
 				className="text-content-faint hover:text-content-muted transition-colors"
 				onClick={() => setOpen(!open)}
-				aria-label="Info"
+				aria-label="Informacja"
 			>
 				<Info className="size-4" />
 			</button>

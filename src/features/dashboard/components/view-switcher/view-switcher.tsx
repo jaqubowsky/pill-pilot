@@ -5,15 +5,16 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { cn } from "@/shared/lib/utils";
 
-const DAY_VIEW = { key: "day" as const, href: "/dashboard" };
-const WEEK_VIEW = { key: "week" as const, href: "/dashboard/weekly" };
-const MONTH_VIEW = { key: "month" as const, href: "/dashboard/monthly" };
+const VIEWS = [
+	{ key: "day", href: "/dashboard" },
+	{ key: "week", href: "/dashboard/weekly" },
+	{ key: "month", href: "/dashboard/monthly" },
+] as const;
 
-const VIEWS = [DAY_VIEW, WEEK_VIEW, MONTH_VIEW];
-
-function getActiveKey(pathname: string) {
-	const activeView = VIEWS.find((view) => pathname.startsWith(view.href));
-	return activeView?.key ?? "day";
+export function getActiveKey(pathname: string) {
+	if (pathname.startsWith("/dashboard/monthly")) return "month";
+	if (pathname.startsWith("/dashboard/weekly")) return "week";
+	return "day";
 }
 
 export function ViewSwitcher() {

@@ -1,25 +1,25 @@
+import type { ComponentType } from "react";
 import { redirect } from "next/navigation";
 import { getPriceList } from "@/shared/api/queries/get-price-list";
-import { supplementRepository } from "@/shared/repositories/supplement-repository";
-import { timeBlockRepository } from "@/shared/repositories/time-block-repository";
+import type { PriceSheetComponentProps } from "./components/parsed-preview/parsed-preview";
 import { getProtocolForPreview } from "./api/queries/get-protocol-for-preview";
+import { getSupplementSummaries } from "./api/queries/get-supplement-summaries";
+import { getTimeBlockSummaries } from "./api/queries/get-time-block-summaries";
 import { ParsedPreview } from "./components/parsed-preview";
 
 type Props = {
 	userId: string;
 	protocolId: string;
+	PriceSheetComponent?: ComponentType<PriceSheetComponentProps>;
 };
 
-export async function ProtocolPreviewPage({ userId, protocolId }: Props) {
+export async function ProtocolPreviewPage({ userId, protocolId, PriceSheetComponent }: Props) {
 	const draft = await getProtocolForPreview(protocolId, userId);
-
-	if (!draft) {
-		redirect("/settings");
-	}
+	if (!draft) redirect("/settings");
 
 	const [timeBlocks, supplements, priceListData] = await Promise.all([
-		timeBlockRepository.findByUserId(userId),
-		supplementRepository.findByUserId(userId),
+		getTimeBlockSummaries(userId),
+		getSupplementSummaries(userId),
 		getPriceList(userId),
 	]);
 
@@ -27,19 +27,11 @@ export async function ProtocolPreviewPage({ userId, protocolId }: Props) {
 		<ParsedPreview
 			protocolId={draft.protocol.id}
 			initialParsed={draft.parsed}
-			timeBlocks={timeBlocks.map((tb) => ({
-				id: tb.id,
-				name: tb.name,
-				startTime: tb.startTime,
-			}))}
-			existingSupplements={supplements.map((s) => ({
-				id: s.id,
-				name: s.name,
-				brandName: s.brandName,
-				packageSize: s.packageSize,
-			}))}
+			timeBlocks={timeBlocks}
+			existingSupplements={supplements}
 			priceListItems={priceListData.items}
 			priceListShopOptions={priceListData.shopOptions}
+			PriceSheetComponent={PriceSheetComponent}
 		/>
 	);
 }

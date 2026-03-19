@@ -19,7 +19,6 @@ export type ShoppingItem = {
 	packageSize: number | null;
 	shopId: string | null;
 	stockUnit: string;
-	stockWarningThreshold: number;
 	daysRemaining: number;
 	depletionDate: string;
 	isMustBuy: boolean;
@@ -35,7 +34,6 @@ type RawSupplement = {
 	name: string;
 	currentStock: string | null;
 	stockUnit: string;
-	stockWarningThreshold: number | null;
 	packagePrice: string | null;
 	packageSize: number | null;
 	shopId: string | null;
@@ -96,7 +94,7 @@ export function buildShoppingList(
 		if (isFinishPackageOnly(schedules)) continue;
 
 		const stock = Number(row.currentStock);
-		const threshold = row.stockWarningThreshold ?? 7;
+		const threshold = 7;
 		const effectiveThreshold = threshold + DELIVERY_BUFFER_DAYS;
 
 		const daysRemaining = forecastDaysInStock(
@@ -124,7 +122,6 @@ export function buildShoppingList(
 			packageSize: row.packageSize,
 			shopId: row.shopId,
 			stockUnit: row.stockUnit,
-			stockWarningThreshold: threshold,
 			daysRemaining,
 			depletionDate,
 			isMustBuy: daysRemaining <= effectiveThreshold,

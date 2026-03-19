@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { ProtocolPreviewPage } from "@/features/protocol-wizard";
+import { PriceSheet } from "@/features/shopping";
 import { auth } from "@/shared/lib/auth";
 
 type Props = {
@@ -16,5 +17,11 @@ export default async function ProtocolNewPreviewByIdRoute({ params }: Props) {
 
 	const { id } = await params;
 
-	return <ProtocolPreviewPage userId={session.user.id} protocolId={id} />;
+	return (
+		<ProtocolPreviewPage
+			userId={session.user.id}
+			protocolId={id}
+			PriceSheetComponent={PriceSheet}
+		/>
+	);
 }

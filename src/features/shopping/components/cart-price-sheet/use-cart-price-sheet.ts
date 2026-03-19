@@ -88,7 +88,13 @@ export function useCartPriceSheet({ supplements, cartItems, cartShop }: Params) 
 			}
 
 			const updates = buildPriceUpdates(cartItems.items, shopId);
-			if (updates.length > 0) await execUpdatePrices({ updates });
+			if (updates.length > 0) {
+				const result = await execUpdatePrices({ updates });
+				if (result?.serverError) {
+					toast.error(t("saveError"));
+					return;
+				}
+			}
 			if (loadedScanId) await execDeleteScan({ scanId: loadedScanId });
 
 			closeSheet();

@@ -1,6 +1,5 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
 	buildScheduleDataList,
@@ -33,12 +32,12 @@ export const updateProtocol = authActionClient
 			existingSchedules.map((s) => [`${s.supplementId}:${s.timeBlockId}`, s]),
 		);
 
-		const supplementMap = await resolveSupplements(parsed.supplements, userId);
+		const resolvedSupplements = await resolveSupplements(parsed.supplements, userId);
 		const userTimeBlocks = await timeBlockRepository.findByUserId(userId);
 		const validTimeBlockIds = new Set(userTimeBlocks.map((tb) => tb.id));
 		const schedules = buildScheduleDataList(
 			parsed.supplements,
-			supplementMap,
+			resolvedSupplements,
 			protocolId,
 			validTimeBlockIds,
 		);
@@ -69,6 +68,4 @@ export const updateProtocol = authActionClient
 			parsedData,
 			startDate,
 		});
-
-		redirect("/settings");
 	});

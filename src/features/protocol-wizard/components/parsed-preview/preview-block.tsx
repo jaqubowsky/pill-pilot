@@ -3,22 +3,15 @@
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Package, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
 import type { ExistingSupplementSummary, TimeBlockSummary } from "@/features/protocol-wizard/types";
 import { Button } from "@/shared/components/ui/button";
-import { DosageUnit, SupplementCategory } from "@/shared/db/schema";
-import { ExistingSupplementPicker } from "../manual-protocol-form/existing-supplement-picker";
-import type { EditedSupplement } from "./parsed-preview.schema";
+import { useSheetState } from "../../hooks/use-sheet-state";
+import { findPackageSize, findScheduleIndex } from "../../lib/supplement-defaults";
+import type { IdentifiedSupplement } from "../../lib/supplement-serialization";
+import { ConnectedSupplementSheet } from "../protocol-base/connected-supplement-sheet";
+import { ExistingSupplementPicker } from "../protocol-base/existing-supplement-picker";
+import type { EditedSupplement } from "../protocol-base/parsed-preview.schema";
 import { PreviewSupplementRow } from "./preview-supplement-row";
-import { PreviewSupplementSheet } from "./preview-supplement-sheet";
-import type { IdentifiedSupplement } from "./use-parsed-preview";
-
-type SheetState = {
-	supplement: IdentifiedSupplement | null;
-	scheduleIndex: number;
-	defaultTimeBlockId?: string;
-	fromExisting?: boolean;
-} | null;
 
 type PreviewBlockProps = {
 	timeBlock: TimeBlockSummary;
@@ -46,8 +39,17 @@ export function PreviewBlock({
 	onMoveToBlock,
 }: PreviewBlockProps) {
 	const t = useTranslations();
-	const [sheetState, setSheetState] = useState<SheetState>(null);
-	const [pickerOpen, setPickerOpen] = useState(false);
+
+	const {
+		sheetState,
+		pickerOpen,
+		setPickerOpen,
+		openAddSheet,
+		openPicker,
+		openAddFromExisting,
+		openEditSheet,
+		closeSheet,
+	} = useSheetState(timeBlock.id);
 
 	function handleSheetSave(edited: EditedSupplement) {
 		if (sheetState === null) return;
@@ -58,49 +60,6 @@ export function PreviewBlock({
 			onUpdateSupplement(sheetState.supplement._id, edited);
 		}
 	}
-
-	const handlePickExisting = useCallback(
-		(existing: ExistingSupplementSummary) => {
-			setPickerOpen(false);
-			const prefilled: IdentifiedSupplement = {
-				name: existing.name,
-				existingSupplementId: existing.id,
-				brandName: existing.brandName,
-				category: SupplementCategory.supplement,
-				isCritical: false,
-				notes: null,
-				cycleDaysOn: null,
-				cycleDaysOff: null,
-				startDayOffset: 0,
-				durationDays: null,
-				dosageIntervalMinutes: null,
-				waitAfterTakingMinutes: null,
-				confidence: 1,
-				uncertaintyReason: null,
-				schedules: [
-					{
-						dosageAmount: 1,
-						dosageUnit: DosageUnit.capsule,
-						timeBlockId: timeBlock.id,
-						notes: null,
-						isCritical: false,
-						waitAfterTakingMinutes: null,
-						cycleDaysOn: null,
-						cycleDaysOff: null,
-						startDayOffset: 0,
-						durationDays: null,
-					},
-				],
-				_id: crypto.randomUUID(),
-			};
-			setSheetState({
-				supplement: prefilled,
-				scheduleIndex: 0,
-				fromExisting: true,
-			});
-		},
-		[timeBlock.id],
-	);
 
 	const sortableIds = supplements.map((s) => `${timeBlock.id}:${s._id}`);
 	const hasExisting = existingSupplements.length > 0;
@@ -117,9 +76,7 @@ export function PreviewBlock({
 			<SortableContext id={timeBlock.id} items={sortableIds} strategy={verticalListSortingStrategy}>
 				<div className="flex flex-col divide-y divide-edge-subtle min-h-[2rem]">
 					{supplements.map((supplement) => {
-						const scheduleIndex = supplement.schedules.findIndex(
-							(s) => s.timeBlockId === timeBlock.id,
-						);
+						const scheduleIndex = findScheduleIndex(supplement.schedules, timeBlock.id);
 						if (scheduleIndex === -1) return null;
 
 						return (
@@ -130,13 +87,8 @@ export function PreviewBlock({
 								scheduleIndex={scheduleIndex}
 								timeBlockId={timeBlock.id}
 								allTimeBlocks={allTimeBlocks}
-								packageSize={
-									supplement.existingSupplementId
-										? (existingSupplements.find((s) => s.id === supplement.existingSupplementId)
-												?.packageSize ?? null)
-										: null
-								}
-								onEdit={() => setSheetState({ supplement, scheduleIndex })}
+								packageSize={findPackageSize(supplement.existingSupplementId, existingSupplements)}
+								onEdit={() => openEditSheet(supplement, scheduleIndex)}
 								onDelete={() => onDeleteSupplement(supplement._id)}
 								onRestore={() => onRestoreSupplement(supplement._id)}
 								onVerify={() => onVerifySupplement(supplement._id)}
@@ -151,13 +103,7 @@ export function PreviewBlock({
 				<Button
 					variant="ghost"
 					size="sm"
-					onClick={() =>
-						setSheetState({
-							supplement: null,
-							scheduleIndex: 0,
-							defaultTimeBlockId: timeBlock.id,
-						})
-					}
+					onClick={() => openAddSheet()}
 					className="text-brand-600 min-h-11 flex-1"
 				>
 					<Plus className="size-4 stroke-[1.5]" />
@@ -169,7 +115,7 @@ export function PreviewBlock({
 						<Button
 							variant="ghost"
 							size="sm"
-							onClick={() => setPickerOpen(true)}
+							onClick={openPicker}
 							className="text-brand-600 min-h-11 flex-1"
 						>
 							<Package className="size-4 stroke-[1.5]" />
@@ -179,30 +125,12 @@ export function PreviewBlock({
 				)}
 			</div>
 
-			<PreviewSupplementSheet
-				supplement={sheetState?.supplement ?? null}
-				scheduleIndex={sheetState?.scheduleIndex ?? 0}
-				defaultTimeBlockId={sheetState?.defaultTimeBlockId}
+			<ConnectedSupplementSheet
+				sheetState={sheetState}
+				existingSupplements={existingSupplements}
 				timeBlocks={allTimeBlocks}
-				packageSize={
-					sheetState?.supplement?.existingSupplementId
-						? (existingSupplements.find((s) => s.id === sheetState.supplement?.existingSupplementId)
-								?.packageSize ?? null)
-						: null
-				}
-				totalDailyDosage={
-					sheetState?.supplement
-						? sheetState.supplement.schedules.reduce((sum, s) => sum + s.dosageAmount, 0)
-						: undefined
-				}
-				open={sheetState !== null}
-				onOpenChange={(open) => {
-					if (!open) setSheetState(null);
-				}}
+				onClose={closeSheet}
 				onSave={handleSheetSave}
-				title={
-					sheetState?.fromExisting ? t("protocolWizard.configureExistingSupplement") : undefined
-				}
 			/>
 
 			{hasExisting && (
@@ -210,7 +138,7 @@ export function PreviewBlock({
 					supplements={existingSupplements}
 					open={pickerOpen}
 					onOpenChange={setPickerOpen}
-					onPick={handlePickExisting}
+					onPick={(existing) => openAddFromExisting(existing)}
 				/>
 			)}
 		</div>

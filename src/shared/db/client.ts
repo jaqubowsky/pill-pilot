@@ -1,5 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
+import * as relations from "./relations";
 import * as schema from "./schema";
 
 const pool = new Pool({
@@ -7,4 +8,4 @@ const pool = new Pool({
 	ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: false } : undefined,
 });
 
-export const db = drizzle(pool, { schema });
+export const db = drizzle(pool, { schema: { ...schema, ...relations } });

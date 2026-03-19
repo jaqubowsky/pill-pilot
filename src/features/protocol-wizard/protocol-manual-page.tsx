@@ -1,26 +1,12 @@
-import { supplementRepository } from "@/shared/repositories/supplement-repository";
-import { timeBlockRepository } from "@/shared/repositories/time-block-repository";
+import { getSupplementSummaries } from "./api/queries/get-supplement-summaries";
+import { getTimeBlockSummaries } from "./api/queries/get-time-block-summaries";
 import { ManualProtocolForm } from "./components/manual-protocol-form";
 
 export async function ProtocolManualPage({ userId }: { userId: string }) {
 	const [timeBlocks, supplements] = await Promise.all([
-		timeBlockRepository.findByUserId(userId),
-		supplementRepository.findByUserId(userId),
+		getTimeBlockSummaries(userId),
+		getSupplementSummaries(userId),
 	]);
 
-	return (
-		<ManualProtocolForm
-			supplements={supplements.map((s) => ({
-				id: s.id,
-				name: s.name,
-				brandName: s.brandName,
-				packageSize: s.packageSize,
-			}))}
-			timeBlocks={timeBlocks.map((tb) => ({
-				id: tb.id,
-				name: tb.name,
-				startTime: tb.startTime,
-			}))}
-		/>
-	);
+	return <ManualProtocolForm supplements={supplements} timeBlocks={timeBlocks} />;
 }

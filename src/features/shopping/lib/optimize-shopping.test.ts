@@ -10,7 +10,6 @@ function item(overrides?: Partial<ShoppingItem>): ShoppingItem {
 		packageSize: 90,
 		shopId: null,
 		stockUnit: "capsule",
-		stockWarningThreshold: 7,
 		daysRemaining: 5,
 		depletionDate: "2026-03-22",
 		isMustBuy: true,

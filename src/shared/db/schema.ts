@@ -120,7 +120,6 @@ export const timeBlocks = pgTable("time_blocks", {
 	name: text("name").notNull(),
 	icon: text("icon").notNull(),
 	startTime: text("start_time").notNull(),
-	sortOrder: integer("sort_order").notNull(),
 	active: boolean("active").notNull().default(true),
 	createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -151,7 +150,6 @@ export const supplements = pgTable("supplements", {
 	category: supplementCategoryEnum("category").notNull().default("supplement"),
 	stockUnit: dosageUnitEnum("stock_unit").notNull().default("capsule"),
 	currentStock: decimal("current_stock", { precision: 10, scale: 2 }),
-	stockWarningThreshold: integer("stock_warning_threshold"),
 	packageSize: integer("package_size"),
 	packagePrice: decimal("package_price", { precision: 10, scale: 2 }),
 	active: boolean("active").notNull().default(true),

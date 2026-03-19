@@ -20,17 +20,13 @@ export function useUploadStep({ supplements, timeBlocks, activeProtocols }: UseU
 	const [pendingFile, setPendingFile] = useState<File | null>(null);
 	const [userInstructions, setUserInstructions] = useState("");
 
-	const {
-		status,
-		errorKey,
-		parseFile: rawParseFile,
-	} = useParseProtocol({
+	const { state, parseFile: rawParseFile } = useParseProtocol({
 		supplements,
 		timeBlocks,
 		activeProtocols,
 	});
 
-	const isParsing = status === "uploading";
+	const isParsing = state.status === "uploading";
 
 	function selectFile(file: File) {
 		setFileName(file.name);
@@ -71,7 +67,7 @@ export function useUploadStep({ supplements, timeBlocks, activeProtocols }: UseU
 		pendingFile,
 		userInstructions,
 		setUserInstructions,
-		errorKey,
+		errorKey: state.status === "error" ? state.errorKey : null,
 		selectFile,
 		confirmUpload,
 		skipUpload,

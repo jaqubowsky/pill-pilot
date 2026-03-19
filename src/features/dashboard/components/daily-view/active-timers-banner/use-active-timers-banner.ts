@@ -3,55 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ScheduleEntry } from "@/features/dashboard/api/queries/get-daily-status";
-
-export type ActiveTimer = {
-	scheduleId: string;
-	supplementName: string;
-	type: "cooldown" | "wait";
-	remainingMs: number;
-	logId: string | null;
-	protocolId: string | null;
-	supplementId: string | null;
-};
-
-function collectTimers(entries: ScheduleEntry[]): ActiveTimer[] {
-	const timers: ActiveTimer[] = [];
-	const seenCooldowns = new Set<string>();
-
-	for (const entry of entries) {
-		if (!entry.cooldown && !entry.waitTimer) continue;
-
-		if (entry.cooldown && entry.cooldown.remainingMs > 0) {
-			const key = `${entry.protocolId}:${entry.supplementId}`;
-			if (!seenCooldowns.has(key)) {
-				seenCooldowns.add(key);
-				timers.push({
-					scheduleId: entry.scheduleId,
-					supplementName: entry.supplementName,
-					type: "cooldown",
-					remainingMs: entry.cooldown.remainingMs,
-					logId: entry.cooldown.logId,
-					protocolId: entry.protocolId,
-					supplementId: entry.supplementId,
-				});
-			}
-		}
-
-		if (entry.waitTimer && entry.waitTimer.remainingMs > 0) {
-			timers.push({
-				scheduleId: entry.scheduleId,
-				supplementName: entry.supplementName,
-				type: "wait",
-				remainingMs: entry.waitTimer.remainingMs,
-				logId: entry.logId,
-				protocolId: null,
-				supplementId: null,
-			});
-		}
-	}
-
-	return timers.sort((a, b) => a.remainingMs - b.remainingMs);
-}
+import { collectTimers } from "@/features/dashboard/lib/collect-timers";
 
 type Params = {
 	allEntries: ScheduleEntry[];
@@ -65,9 +17,12 @@ export function useActiveTimersBanner({ allEntries }: Params) {
 
 	const baseTimers = useMemo(() => collectTimers(allEntries), [allEntries]);
 
+	const refreshedRef = useRef(false);
+
 	useEffect(() => {
 		startRef.current = Date.now();
 		setElapsedMs(0);
+		refreshedRef.current = false;
 
 		if (baseTimers.length === 0) return;
 
@@ -87,7 +42,9 @@ export function useActiveTimersBanner({ allEntries }: Params) {
 
 	useEffect(() => {
 		if (baseTimers.length === 0) return;
+		if (refreshedRef.current) return;
 		if (baseTimers.some((t) => t.remainingMs - elapsedMs <= 0)) {
+			refreshedRef.current = true;
 			router.refresh();
 		}
 	}, [elapsedMs, baseTimers, router]);

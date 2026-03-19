@@ -10,7 +10,10 @@ import type {
 	TimeBlockSummary,
 } from "@/features/protocol-wizard/types";
 
-type ParseStatus = "idle" | "uploading" | "error";
+type ParseState =
+	| { status: "idle" }
+	| { status: "uploading" }
+	| { status: "error"; errorKey: string };
 
 type UseParseProtocolParams = {
 	supplements: ExistingSupplementSummary[];
@@ -23,23 +26,23 @@ export function useParseProtocol({
 	timeBlocks,
 	activeProtocols,
 }: UseParseProtocolParams) {
-	const [status, setStatus] = useState<ParseStatus>("idle");
-	const [errorKey, setErrorKey] = useState<string | null>(null);
+	const [state, setState] = useState<ParseState>({ status: "idle" });
+
 	const router = useRouter();
 	const t = useTranslations();
 
 	async function parseFile(file: File, userInstructions: string) {
-		setStatus("uploading");
-		setErrorKey(null);
+		setState({ status: "uploading" });
 
 		const formData = new FormData();
 		formData.append("file", file);
 		formData.append("supplements", JSON.stringify(supplements));
 		formData.append("timeBlocks", JSON.stringify(timeBlocks));
 
+		formData.append("activeProtocols", JSON.stringify(activeProtocols));
+
 		if (userInstructions) {
 			formData.append("userInstructions", userInstructions);
-			formData.append("activeProtocols", JSON.stringify(activeProtocols));
 		}
 
 		try {
@@ -51,18 +54,19 @@ export function useParseProtocol({
 			if (!res.ok) {
 				const json = await res.json().catch(() => ({}));
 				const errorCode = json?.error ?? "ai_error";
-				setStatus("error");
-				setErrorKey(`protocolWizard.errors.${errorCode}`);
+				setState({
+					status: "error",
+					errorKey: `protocolWizard.errors.${errorCode}`,
+				});
 				return;
 			}
 
 			toast.success(t("protocolWizard.uploadSuccess"));
 			router.push("/settings");
 		} catch {
-			setStatus("error");
-			setErrorKey("errors.generic");
+			setState({ status: "error", errorKey: "errors.generic" });
 		}
 	}
 
-	return { status, errorKey, parseFile };
+	return { state, parseFile };
 }

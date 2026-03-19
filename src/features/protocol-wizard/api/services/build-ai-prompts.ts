@@ -1,4 +1,4 @@
-import { CONFIDENCE_THRESHOLD } from "@/features/protocol-wizard";
+import { CONFIDENCE_THRESHOLD } from "../../schemas/parsed-protocol-schema";
 
 export function buildExtractionPrompt(): string {
 	return `You are a medical document parser. Extract ALL supplements and medications from the provided document (typically in Polish).

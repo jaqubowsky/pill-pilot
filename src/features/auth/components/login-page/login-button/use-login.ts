@@ -1,9 +1,12 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { toast } from "sonner";
 import { authClient } from "@/shared/lib/auth-client";
 
 export function useLogin() {
+	const t = useTranslations();
 	const [isLoading, setIsLoading] = useState(false);
 
 	async function handleGoogleLogin() {
@@ -16,6 +19,7 @@ export function useLogin() {
 			});
 		} catch {
 			setIsLoading(false);
+			toast.error(t("auth.loginError"));
 		}
 	}
 

@@ -1,12 +1,12 @@
 import { useTranslations } from "next-intl";
 import { formatRemainingTime } from "@/features/dashboard/lib/format-remaining-time";
-import type { ActiveTimer } from "../use-active-timers-banner";
+import type { ActiveTimer } from "@/features/dashboard/lib/collect-timers";
 
 type TimerSupplementRowProps = {
 	timer: ActiveTimer;
 };
 
-export const TimerSupplementRow = ({ timer }: TimerSupplementRowProps) => {
+export function TimerSupplementRow({ timer }: TimerSupplementRowProps) {
 	const t = useTranslations("dashboard");
 
 	const timeLeft = formatRemainingTime(timer.remainingMs);
@@ -19,4 +19,4 @@ export const TimerSupplementRow = ({ timer }: TimerSupplementRowProps) => {
 			<span className="text-xs text-content-faint">{label}</span>
 		</div>
 	);
-};
+}

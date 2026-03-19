@@ -42,7 +42,8 @@
 	},
 	"auth": {
 		"continueWithGoogle": "Kontynuuj przez Google",
-		"tagline": "Twój dzienny pilot suplementów"
+		"tagline": "Twój dzienny pilot suplementów",
+		"loginError": "Nie udało się zalogować. Spróbuj ponownie."
 	},
 	"dashboard": {
 		"title": "Dziś",

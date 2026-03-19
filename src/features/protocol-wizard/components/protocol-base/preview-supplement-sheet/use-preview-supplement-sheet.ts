@@ -4,8 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { DosageUnit, SupplementCategory } from "@/shared/db/schema";
+import type { IdentifiedSupplement } from "../../../lib/supplement-serialization";
 import type { EditedSupplement } from "../parsed-preview.schema";
-import type { IdentifiedSupplement } from "../use-parsed-preview";
 import {
 	type PreviewSupplementSheetValues,
 	previewSupplementSheetSchema,

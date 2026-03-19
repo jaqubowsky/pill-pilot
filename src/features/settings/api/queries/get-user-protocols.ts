@@ -55,53 +55,53 @@ export async function getUserProtocols(userId: string): Promise<ProtocolWithSche
 			sql`CASE WHEN ${protocols.status} = 'processing' THEN 0 WHEN ${protocols.status} = 'failed' THEN 1 WHEN ${protocols.status} = 'draft' THEN 2 WHEN ${protocols.status} = 'active' THEN 3 ELSE 4 END`,
 		);
 
-	const result: ProtocolWithSchedules[] = [];
+	const protocolIds = userProtocols
+		.filter((p) => p.status !== "processing" && p.status !== "failed")
+		.map((p) => p.id);
 
-	for (const protocol of userProtocols) {
-		if (protocol.status === "processing" || protocol.status === "failed") {
-			result.push({
-				id: protocol.id,
-				name: protocol.name,
-				status: protocol.status,
-				schedules: [],
-			});
-			continue;
-		}
+	const scheduleRows =
+		protocolIds.length > 0
+			? await db
+					.select({
+						protocolId: supplementSchedules.protocolId,
+						id: supplementSchedules.id,
+						dosageAmount: supplementSchedules.dosageAmount,
+						dosageUnit: supplementSchedules.dosageUnit,
+						notes: supplementSchedules.notes,
+						active: supplementSchedules.active,
+						sortOrder: supplementSchedules.sortOrder,
+						cycleDaysOn: supplementSchedules.cycleDaysOn,
+						cycleDaysOff: supplementSchedules.cycleDaysOff,
+						supplement: {
+							id: supplements.id,
+							name: supplements.name,
+							isCritical: supplementSchedules.isCritical,
+						},
+						timeBlock: {
+							id: timeBlocks.id,
+							name: timeBlocks.name,
+							icon: timeBlocks.icon,
+						},
+						timeBlockStartTime: timeBlocks.startTime,
+					})
+					.from(supplementSchedules)
+					.innerJoin(supplements, eq(supplementSchedules.supplementId, supplements.id))
+					.innerJoin(timeBlocks, eq(supplementSchedules.timeBlockId, timeBlocks.id))
+					.where(inArray(supplementSchedules.protocolId, protocolIds))
+					.orderBy(asc(timeBlocks.startTime), asc(supplementSchedules.sortOrder))
+			: [];
 
-		const scheduleRows = await db
-			.select({
-				id: supplementSchedules.id,
-				dosageAmount: supplementSchedules.dosageAmount,
-				dosageUnit: supplementSchedules.dosageUnit,
-				notes: supplementSchedules.notes,
-				active: supplementSchedules.active,
-				sortOrder: supplementSchedules.sortOrder,
-				cycleDaysOn: supplementSchedules.cycleDaysOn,
-				cycleDaysOff: supplementSchedules.cycleDaysOff,
-				supplement: {
-					id: supplements.id,
-					name: supplements.name,
-					isCritical: supplementSchedules.isCritical,
-				},
-				timeBlock: {
-					id: timeBlocks.id,
-					name: timeBlocks.name,
-					icon: timeBlocks.icon,
-				},
-			})
-			.from(supplementSchedules)
-			.innerJoin(supplements, eq(supplementSchedules.supplementId, supplements.id))
-			.innerJoin(timeBlocks, eq(supplementSchedules.timeBlockId, timeBlocks.id))
-			.where(eq(supplementSchedules.protocolId, protocol.id))
-			.orderBy(asc(timeBlocks.startTime), asc(supplementSchedules.sortOrder));
-
-		result.push({
-			id: protocol.id,
-			name: protocol.name,
-			status: protocol.status,
-			schedules: scheduleRows,
-		});
+	const schedulesByProtocol = new Map<string, ProtocolWithSchedules["schedules"]>();
+	for (const row of scheduleRows) {
+		const list = schedulesByProtocol.get(row.protocolId) ?? [];
+		list.push(row);
+		schedulesByProtocol.set(row.protocolId, list);
 	}
 
-	return result;
+	return userProtocols.map((protocol) => ({
+		id: protocol.id,
+		name: protocol.name,
+		status: protocol.status,
+		schedules: schedulesByProtocol.get(protocol.id) ?? [],
+	}));
 }

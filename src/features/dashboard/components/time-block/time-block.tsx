@@ -20,7 +20,7 @@ type Props = {
 };
 
 export function TimeBlock({ block, defaultOpen, protocolColors, timeBlocks }: Props) {
-	const { isOpen, uncheckedIds, allScheduleIds, toggleOpen } = useTimeBlock({ block, defaultOpen });
+	const { isOpen, uncheckedIds, toggleOpen } = useTimeBlock({ block, defaultOpen });
 
 	return (
 		<div className="overflow-hidden rounded-xl bg-surface-raised shadow-sm">
@@ -57,7 +57,7 @@ export function TimeBlock({ block, defaultOpen, protocolColors, timeBlocks }: Pr
 							/>
 						))}
 
-						<CheckAllButton scheduleIds={allScheduleIds} uncheckedIds={uncheckedIds} />
+						<CheckAllButton uncheckedIds={uncheckedIds} />
 					</div>
 				</div>
 			</div>

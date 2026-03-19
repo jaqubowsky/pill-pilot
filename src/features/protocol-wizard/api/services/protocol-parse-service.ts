@@ -1,12 +1,12 @@
 import { generateText, Output } from "ai";
 import mammoth from "mammoth";
 import { revalidatePath } from "next/cache";
-import { parsedProtocolSchema, rawExtractionSchema } from "@/features/protocol-wizard";
 import { extractTextFromExcel } from "@/features/protocol-wizard/lib/excel-extraction";
 import { isDocx, isExcel, isImage, isText } from "@/features/protocol-wizard/lib/file-detection";
 import { anthropic } from "@/shared/lib/ai";
 import { type CompressedImage, compressImageWithMediaType } from "@/shared/lib/image-compression";
 import { protocolRepository } from "@/shared/repositories/protocol-repository";
+import { parsedProtocolSchema, rawExtractionSchema } from "../../schemas/parsed-protocol-schema";
 import { buildEnrichmentContent, buildExtractionContent } from "./build-ai-content";
 import { buildEnrichmentPrompt, buildExtractionPrompt } from "./build-ai-prompts";
 
@@ -92,8 +92,7 @@ export async function runParsePipeline(
 			status: "draft",
 		});
 		revalidatePath("/settings");
-	} catch (err) {
-		console.error("[protocol/parse] AI generation failed:", err);
+	} catch {
 		await protocolRepository.updateStatus(protocolId, "failed");
 		revalidatePath("/settings");
 	}

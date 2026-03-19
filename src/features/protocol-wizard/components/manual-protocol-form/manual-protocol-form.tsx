@@ -6,8 +6,8 @@ import { BackButton } from "@/features/protocol-wizard/components/back-button";
 import type { ExistingSupplementSummary, TimeBlockSummary } from "@/features/protocol-wizard/types";
 import { LabeledInput } from "@/shared/components/labeled-input";
 import { Button } from "@/shared/components/ui/button";
-import { PreviewSupplementSheet } from "../parsed-preview/preview-supplement-sheet";
-import { ExistingSupplementPicker } from "./existing-supplement-picker";
+import { ConnectedSupplementSheet } from "../protocol-base/connected-supplement-sheet";
+import { ExistingSupplementPicker } from "../protocol-base/existing-supplement-picker";
 import { SupplementRow } from "./supplement-row";
 import { useManualProtocolForm } from "./use-manual-protocol-form";
 
@@ -21,8 +21,6 @@ export function ManualProtocolForm({ supplements, timeBlocks }: ManualProtocolFo
 
 	const {
 		protocolName,
-		setProtocolName,
-		protocolNameError,
 		supplements: addedSupplements,
 		sheetState,
 		pickerOpen,
@@ -36,10 +34,7 @@ export function ManualProtocolForm({ supplements, timeBlocks }: ManualProtocolFo
 		handleSheetSave,
 		deleteSupplement,
 		handleSubmit,
-	} = useManualProtocolForm({
-		timeBlocks,
-		t: (key: string) => t(key as Parameters<typeof t>[0]),
-	});
+	} = useManualProtocolForm({ timeBlocks });
 
 	const hasExisting = supplements.length > 0;
 
@@ -53,10 +48,10 @@ export function ManualProtocolForm({ supplements, timeBlocks }: ManualProtocolFo
 
 			<LabeledInput
 				label={t("protocolWizard.manual.protocolName")}
-				value={protocolName}
-				onChange={(e) => setProtocolName(e.target.value)}
+				value={protocolName.name}
+				onChange={(e) => protocolName.setName(e.target.value)}
 				placeholder={t("protocolWizard.manual.protocolNamePlaceholder")}
-				error={protocolNameError ?? undefined}
+				error={protocolName.error ?? undefined}
 			/>
 
 			<div className="flex flex-col gap-md">
@@ -85,7 +80,7 @@ export function ManualProtocolForm({ supplements, timeBlocks }: ManualProtocolFo
 				<Button
 					type="button"
 					variant="outline"
-					onClick={openAddSheet}
+					onClick={() => openAddSheet()}
 					className="w-full flex items-center justify-center gap-sm rounded-xl border-edge border-dashed bg-surface-raised p-md h-12"
 				>
 					<Plus className="size-4 text-brand-500" />
@@ -137,30 +132,12 @@ export function ManualProtocolForm({ supplements, timeBlocks }: ManualProtocolFo
 				/>
 			)}
 
-			<PreviewSupplementSheet
-				supplement={sheetState?.supplement ?? null}
-				scheduleIndex={sheetState?.scheduleIndex ?? 0}
-				defaultTimeBlockId={sheetState?.defaultTimeBlockId}
+			<ConnectedSupplementSheet
+				sheetState={sheetState}
+				existingSupplements={supplements}
 				timeBlocks={timeBlocks}
-				packageSize={
-					sheetState?.supplement?.existingSupplementId
-						? (supplements.find((s) => s.id === sheetState.supplement?.existingSupplementId)
-								?.packageSize ?? null)
-						: null
-				}
-				totalDailyDosage={
-					sheetState?.supplement
-						? sheetState.supplement.schedules.reduce((sum, s) => sum + s.dosageAmount, 0)
-						: undefined
-				}
-				open={sheetState !== null}
-				onOpenChange={(open) => {
-					if (!open) closeSheet();
-				}}
+				onClose={closeSheet}
 				onSave={handleSheetSave}
-				title={
-					sheetState?.fromExisting ? t("protocolWizard.configureExistingSupplement") : undefined
-				}
 			/>
 		</div>
 	);

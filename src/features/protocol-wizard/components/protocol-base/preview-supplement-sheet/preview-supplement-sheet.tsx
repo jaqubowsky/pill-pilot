@@ -5,8 +5,8 @@ import { FormProvider } from "react-hook-form";
 import type { TimeBlockSummary } from "@/features/protocol-wizard/types";
 import { BottomSheet } from "@/shared/components/bottom-sheet";
 import { Button } from "@/shared/components/ui/button";
+import type { IdentifiedSupplement } from "../../../lib/supplement-serialization";
 import type { EditedSupplement } from "../parsed-preview.schema";
-import type { IdentifiedSupplement } from "../use-parsed-preview";
 import { PreviewSupplementSheetFields } from "./preview-supplement-sheet-fields";
 import { usePreviewSupplementSheet } from "./use-preview-supplement-sheet";
 

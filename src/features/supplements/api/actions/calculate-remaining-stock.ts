@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { getActiveSchedulesForSupplement } from "@/features/stock/api/queries/get-active-schedules-for-supplement";
+import { getActiveSchedulesForSupplement } from "../queries/get-active-schedules-for-supplement";
 import { toDateString } from "@/shared/lib/date";
 import { authActionClient } from "@/shared/lib/safe-action";
 import { calculateConsumedUnits } from "@/shared/lib/stock-forecast";

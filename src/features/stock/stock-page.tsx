@@ -1,21 +1,15 @@
 import { getTranslations } from "next-intl/server";
-import { shopRepository } from "@/shared/repositories/shop-repository";
+import { getShopOptions } from "./api/queries/get-shop-options";
 import { getStockList } from "./api/queries/get-stock-list";
 import { StockListView } from "./components/stock-list";
-
-function mapShopOptions(shops: { id: string; name: string }[]) {
-	return shops.map((s) => ({ id: s.id, name: s.name }));
-}
 
 export async function StockPage({ userId }: { userId: string }) {
 	const t = await getTranslations();
 
-	const [stockData, shops] = await Promise.all([
+	const [stockData, shopOptions] = await Promise.all([
 		getStockList(userId),
-		shopRepository.findByUserId(userId),
+		getShopOptions(userId),
 	]);
-
-	const shopOptions = mapShopOptions(shops);
 
 	return (
 		<div className="px-md pt-2xl pb-3xl">

@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
+import type { DosageUnit } from "@/shared/db/schema";
 import { CalculatorInputStep } from "./calculator-input-step";
 import { CalculatorResultStep } from "./calculator-result-step";
 import { CalculatorTrigger } from "./calculator-trigger";
@@ -10,7 +11,7 @@ import { useStockCalculator } from "./use-stock-calculator";
 type StockCalculatorProps = {
 	supplementId: string;
 	packageSize: number | null;
-	stockUnit: string;
+	stockUnit: DosageUnit;
 	onApply: (remaining: number) => void;
 };
 

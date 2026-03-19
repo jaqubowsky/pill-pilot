@@ -7,7 +7,12 @@ import {
 	shiftDate,
 	shiftYearMonth,
 	toDateString,
+	toLongDate,
 	toMonthLabel,
+	toShortDate,
+	toShortMonth,
+	toShortWeekday,
+	toTimeString,
 	toYearMonth,
 } from "./date";
 
@@ -20,6 +25,18 @@ describe("toDateString", () => {
 	it("zero-pads month and day", () => {
 		const result = toDateString(new Date(2026, 0, 5));
 		expect(result).toBe("2026-01-05");
+	});
+});
+
+describe("toTimeString", () => {
+	it("formats time as HH:MM", () => {
+		const date = new Date(2026, 2, 19, 14, 5);
+		expect(toTimeString(date)).toBe("14:05");
+	});
+
+	it("formats midnight", () => {
+		const date = new Date(2026, 2, 19, 0, 0);
+		expect(toTimeString(date)).toBe("00:00");
 	});
 });
 
@@ -94,6 +111,37 @@ describe("getMondayOfWeek", () => {
 		const originalTime = original.getTime();
 		getMondayOfWeek(original);
 		expect(original.getTime()).toBe(originalTime);
+	});
+});
+
+describe("toShortWeekday", () => {
+	it("returns abbreviated weekday in Polish", () => {
+		const monday = new Date(2026, 2, 16);
+		expect(toShortWeekday(monday)).toBe("pon.");
+	});
+});
+
+describe("toShortMonth", () => {
+	it("returns abbreviated month in Polish", () => {
+		const march = new Date(2026, 2, 1);
+		expect(toShortMonth(march)).toBe("mar");
+	});
+});
+
+describe("toLongDate", () => {
+	it("returns capitalized weekday with day and month", () => {
+		const date = new Date(2026, 2, 19);
+		const result = toLongDate(date);
+		expect(result).toMatch(/^[A-ZŹŻ]/);
+		expect(result).toContain("19");
+	});
+});
+
+describe("toShortDate", () => {
+	it("returns day with abbreviated month", () => {
+		const date = new Date(2026, 2, 19);
+		const result = toShortDate(date);
+		expect(result).toContain("19");
 	});
 });
 

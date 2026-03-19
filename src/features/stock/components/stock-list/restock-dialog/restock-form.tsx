@@ -1,22 +1,10 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { useAction } from "next-safe-action/hooks";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
-import { replenishStock } from "@/features/stock/api/actions/replenish-stock";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-
-const restockSchema = z.object({
-	amount: z.number().positive(),
-	packagePrice: z.number().positive().optional(),
-});
-
-type RestockValues = z.infer<typeof restockSchema>;
+import { useRestockForm } from "./use-restock-form";
 
 type Props = {
 	supplementId: string;
@@ -28,34 +16,13 @@ export function RestockForm({ supplementId, stockUnit, onClose }: Props) {
 	const t = useTranslations();
 	const unitLabel = t(`schedule.units.${stockUnit}`);
 
-	const {
-		register,
-		handleSubmit,
-		reset,
-		formState: { isValid },
-	} = useForm<RestockValues>({
-		resolver: zodResolver(restockSchema),
-		mode: "onChange",
+	const { register, handleSubmit, isValid, isPending } = useRestockForm({
+		supplementId,
+		onClose,
 	});
-
-	const { execute, isPending } = useAction(replenishStock, {
-		onSuccess: () => {
-			reset();
-			onClose();
-		},
-		onError: ({ error }) => toast.error(error.serverError),
-	});
-
-	function onSubmit(values: RestockValues) {
-		execute({
-			supplementId,
-			amount: values.amount,
-			packagePrice: values.packagePrice,
-		});
-	}
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-md">
+		<form onSubmit={handleSubmit} className="flex flex-col gap-md">
 			<div className="flex flex-col gap-xs">
 				<Label className="text-sm text-content-muted">
 					{t("stock.howManyBoughtUnit", { unit: unitLabel })}
@@ -79,7 +46,7 @@ export function RestockForm({ supplementId, stockUnit, onClose }: Props) {
 					<Input
 						{...register("packagePrice", { valueAsNumber: true })}
 						type="number"
-						min={0}
+						min={0.01}
 						step={0.01}
 						className="flex-1 bg-surface-sunken border-edge rounded-lg px-md py-sm text-base placeholder:text-content-faint focus-visible:border-brand-400 focus-visible:ring-focus-ring"
 						placeholder={t("stock.restockPricePlaceholder")}

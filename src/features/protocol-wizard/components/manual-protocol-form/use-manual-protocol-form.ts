@@ -1,105 +1,20 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useAction } from "next-safe-action/hooks";
-import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import type { ParsedProtocol } from "@/features/protocol-wizard/schemas/parsed-protocol-schema";
-import type { ExistingSupplementSummary, TimeBlockSummary } from "@/features/protocol-wizard/types";
-import { DosageUnit, SupplementCategory } from "@/shared/db/schema";
+import type { TimeBlockSummary } from "@/features/protocol-wizard/types";
 import { createDraftProtocol } from "../../api/actions/create-draft-protocol";
-import type { EditedSupplement } from "../parsed-preview/parsed-preview.schema";
-import type { IdentifiedSupplement } from "../parsed-preview/use-parsed-preview";
+import { toSerializedProtocol } from "../../lib/supplement-serialization";
+import { useProtocolName } from "./use-protocol-name";
+import { useSupplementSheet } from "./use-supplement-sheet";
 
-type SheetState = {
-	supplement: IdentifiedSupplement | null;
-	scheduleIndex: number;
-	defaultTimeBlockId?: string;
-	fromExisting?: boolean;
-} | null;
-
-type UseManualProtocolFormParams = {
-	timeBlocks: TimeBlockSummary[];
-	t: (key: string) => string;
-};
-
-function buildDefaultSupplement(timeBlockId: string): EditedSupplement {
-	return {
-		name: "",
-		existingSupplementId: null,
-		brandName: null,
-		category: SupplementCategory.supplement,
-		isCritical: false,
-		notes: null,
-		cycleDaysOn: null,
-		cycleDaysOff: null,
-		startDayOffset: 0,
-		durationDays: null,
-		dosageIntervalMinutes: null,
-		waitAfterTakingMinutes: null,
-		confidence: 1,
-		uncertaintyReason: null,
-		schedules: [
-			{
-				dosageAmount: 1,
-				dosageUnit: DosageUnit.capsule,
-				timeBlockId,
-				notes: null,
-				isCritical: false,
-				waitAfterTakingMinutes: null,
-				cycleDaysOn: null,
-				cycleDaysOff: null,
-				startDayOffset: 0,
-				durationDays: null,
-			},
-		],
-	};
-}
-
-function toProtocolJson(protocolName: string, supplements: IdentifiedSupplement[]): ParsedProtocol {
-	return {
-		protocolName,
-		supplements: supplements.map((s) => ({
-			name: s.name,
-			existingSupplementId: s.existingSupplementId,
-			brandName: s.brandName,
-			category: s.category,
-			isCritical: s.isCritical,
-			notes: s.notes,
-			cycleDaysOn: s.cycleDaysOn,
-			cycleDaysOff: s.cycleDaysOff,
-			startDayOffset: s.startDayOffset,
-			durationDays: s.durationDays,
-			dosageIntervalMinutes: s.dosageIntervalMinutes ?? null,
-			waitAfterTakingMinutes: s.waitAfterTakingMinutes ?? null,
-			confidence: s.confidence,
-			uncertaintyReason: s.uncertaintyReason,
-			schedules: s.schedules.map((sch) => ({
-				dosageAmount: sch.dosageAmount,
-				dosageUnit: sch.dosageUnit,
-				timeBlockId: sch.timeBlockId,
-				notes: sch.notes ?? s.notes ?? null,
-				isCritical: sch.isCritical ?? s.isCritical,
-				waitAfterTakingMinutes: sch.waitAfterTakingMinutes ?? s.waitAfterTakingMinutes ?? null,
-				cycleDaysOn: sch.cycleDaysOn ?? s.cycleDaysOn ?? null,
-				cycleDaysOff: sch.cycleDaysOff ?? s.cycleDaysOff ?? null,
-				startDayOffset: sch.startDayOffset ?? s.startDayOffset ?? 0,
-				durationDays: sch.durationDays ?? s.durationDays ?? null,
-				finishPackage: sch.finishPackage ?? false,
-			})),
-		})),
-	};
-}
-
-export function useManualProtocolForm({ timeBlocks, t }: UseManualProtocolFormParams) {
+export function useManualProtocolForm({ timeBlocks }: { timeBlocks: TimeBlockSummary[] }) {
+	const t = useTranslations();
 	const router = useRouter();
-	const defaultTimeBlockId = timeBlocks[0]?.id ?? "";
-
-	const [protocolName, setProtocolName] = useState("");
-	const [supplements, setSupplements] = useState<IdentifiedSupplement[]>([]);
-	const [sheetState, setSheetState] = useState<SheetState>(null);
-	const [pickerOpen, setPickerOpen] = useState(false);
-	const [protocolNameError, setProtocolNameError] = useState<string | null>(null);
+	const protocolName = useProtocolName();
+	const sheet = useSupplementSheet({ timeBlocks });
 
 	const { execute: executeSave, isPending } = useAction(createDraftProtocol, {
 		onSuccess: ({ data }) => {
@@ -113,104 +28,24 @@ export function useManualProtocolForm({ timeBlocks, t }: UseManualProtocolFormPa
 		},
 	});
 
-	const openAddSheet = useCallback(() => {
-		setSheetState({
-			supplement: null,
-			scheduleIndex: 0,
-			defaultTimeBlockId,
-		});
-	}, [defaultTimeBlockId]);
-
-	const openPicker = useCallback(() => {
-		setPickerOpen(true);
-	}, []);
-
-	const openAddFromExisting = useCallback(
-		(existing: ExistingSupplementSummary) => {
-			setPickerOpen(false);
-			const prefilled: IdentifiedSupplement = {
-				...buildDefaultSupplement(defaultTimeBlockId),
-				name: existing.name,
-				brandName: existing.brandName,
-				existingSupplementId: existing.id,
-				_id: crypto.randomUUID(),
-			};
-			setSheetState({
-				supplement: prefilled,
-				scheduleIndex: 0,
-				fromExisting: true,
-			});
-		},
-		[defaultTimeBlockId],
-	);
-
-	const openEditSheet = useCallback((supplement: IdentifiedSupplement) => {
-		setSheetState({
-			supplement,
-			scheduleIndex: 0,
-		});
-	}, []);
-
-	const closeSheet = useCallback(() => {
-		setSheetState(null);
-	}, []);
-
-	function handleSheetSave(edited: EditedSupplement) {
-		if (sheetState === null) return;
-
-		if (sheetState.supplement === null) {
-			setSupplements((prev) => [...prev, { ...edited, _id: crypto.randomUUID() }]);
-		} else {
-			const id = sheetState.supplement._id;
-			const exists = supplements.some((s) => s._id === id);
-			if (exists) {
-				setSupplements((prev) => prev.map((s) => (s._id === id ? { ...edited, _id: id } : s)));
-			} else {
-				setSupplements((prev) => [...prev, { ...edited, _id: id }]);
-			}
-		}
-	}
-
-	function deleteSupplement(id: string) {
-		setSupplements((prev) => prev.filter((s) => s._id !== id));
-	}
-
 	function handleSubmit() {
-		setProtocolNameError(null);
+		if (!protocolName.validate()) return;
 
-		if (!protocolName.trim()) {
-			setProtocolNameError(t("protocolWizard.manual.protocolNameRequired"));
-			return;
-		}
-
-		if (supplements.length === 0) {
+		if (sheet.supplements.length === 0) {
 			toast.error(t("protocolWizard.manual.addAtLeastOneSupplement"));
 			return;
 		}
 
-		const parsed = toProtocolJson(protocolName, supplements);
 		executeSave({
-			name: protocolName,
-			parsedData: JSON.stringify(parsed),
+			name: protocolName.name,
+			parsedData: toSerializedProtocol(protocolName.name, sheet.supplements),
 		});
 	}
 
 	return {
 		protocolName,
-		setProtocolName,
-		protocolNameError,
-		supplements,
-		sheetState,
 		isPending,
-		pickerOpen,
-		setPickerOpen,
-		openPicker,
-		openAddSheet,
-		openAddFromExisting,
-		openEditSheet,
-		closeSheet,
-		handleSheetSave,
-		deleteSupplement,
 		handleSubmit,
+		...sheet,
 	};
 }

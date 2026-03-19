@@ -2,17 +2,19 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ArrowUpDown, GripVertical, Pencil, RotateCcw, ShieldAlert, Trash2 } from "lucide-react";
+import { ArrowUpDown, GripVertical, Pencil, ShieldAlert, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { CONFIDENCE_THRESHOLD } from "@/features/protocol-wizard/schemas/parsed-protocol-schema";
 import type { TimeBlockSummary } from "@/features/protocol-wizard/types";
 import { IconBadge } from "@/shared/components/icon-badge";
 import { SupplementInfo } from "@/shared/components/supplement-info";
 import { Button } from "@/shared/components/ui/button";
-import type { IdentifiedSupplement } from "../use-parsed-preview";
-import { ConfidenceBadge } from "./confidence-badge";
-import { SupplementBadges } from "./supplement-badges";
-import { SupplementLinkBadge } from "./supplement-link-badge";
+import { getTotalDailyDosage } from "../../../lib/supplement-defaults";
+import type { IdentifiedSupplement } from "../../../lib/supplement-serialization";
+import { ConfidenceBadge } from "../../protocol-base/confidence-badge";
+import { SupplementBadges } from "../../protocol-base/supplement-badges";
+import { SupplementLinkBadge } from "../../protocol-base/supplement-link-badge";
+import { RemovedSupplementRow } from "./removed-supplement-row";
 
 type PreviewSupplementRowProps = {
 	id: string;
@@ -60,23 +62,12 @@ export function PreviewSupplementRow({
 
 	if (supplement._removed) {
 		return (
-			<div
-				ref={setNodeRef}
+			<RemovedSupplementRow
+				name={supplement.name}
+				onRestore={onRestore}
 				style={style}
-				className="flex items-center justify-between py-xs opacity-40"
-			>
-				<span className="text-sm text-content-muted line-through truncate flex-1 min-w-0">
-					{supplement.name}
-				</span>
-				<Button
-					variant="ghost"
-					size="icon-sm"
-					onClick={onRestore}
-					className="active:scale-[0.98] transition-transform"
-				>
-					<RotateCcw className="size-4 text-brand-600 stroke-[1.5]" />
-				</Button>
-			</div>
+				nodeRef={setNodeRef}
+			/>
 		);
 	}
 
@@ -124,7 +115,7 @@ export function PreviewSupplementRow({
 							schedule={schedule}
 							finishPackage={schedule.finishPackage}
 							packageSize={packageSize}
-							totalDailyDosage={supplement.schedules.reduce((sum, s) => sum + s.dosageAmount, 0)}
+							totalDailyDosage={getTotalDailyDosage(supplement.schedules)}
 						/>
 					</>
 				}

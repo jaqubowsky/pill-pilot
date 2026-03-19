@@ -7,7 +7,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Separator } from "@/shared/components/ui/separator";
 import type { ShopOption } from "@/shared/types";
 import { StockItem } from "./stock-item";
-import { SupplementEditSheet } from "./supplement-edit-sheet";
+import { SupplementEditSheet } from "@/features/supplements";
 import { useStockList } from "./use-stock-list";
 
 type StockListProps = {

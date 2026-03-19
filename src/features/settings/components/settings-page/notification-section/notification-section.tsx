@@ -58,8 +58,12 @@ export function NotificationSection({ timeBlocks, initialSettings }: Notificatio
 								</div>
 								<Input
 									type="time"
-									value={setting.notifyAt}
-									onChange={(e) => handleTimeChange(setting.timeBlockId, e.target.value)}
+									defaultValue={setting.notifyAt}
+									onBlur={(e) => {
+										if (e.target.value && e.target.value !== setting.notifyAt) {
+											handleTimeChange(setting.timeBlockId, e.target.value);
+										}
+									}}
 									disabled={!setting.enabled}
 									className="w-24 text-center"
 								/>

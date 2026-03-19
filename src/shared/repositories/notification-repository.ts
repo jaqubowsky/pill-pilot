@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/shared/db/client";
 import { notificationSettings, pushSubscriptions } from "@/shared/db/schema";
 
@@ -111,18 +111,25 @@ class NotificationRepository implements INotificationRepository {
 				),
 			);
 
-		const results: (NotificationSetting & { subscriptions: PushSubscription[] })[] = [];
+		if (settings.length === 0) return [];
 
-		for (const setting of settings) {
-			const subscriptions = await db
-				.select()
-				.from(pushSubscriptions)
-				.where(eq(pushSubscriptions.userId, setting.userId));
+		const userIds = [...new Set(settings.map((s) => s.userId))];
+		const allSubscriptions = await db
+			.select()
+			.from(pushSubscriptions)
+			.where(inArray(pushSubscriptions.userId, userIds));
 
-			results.push({ ...setting, subscriptions });
+		const subscriptionsByUser = new Map<string, PushSubscription[]>();
+		for (const sub of allSubscriptions) {
+			const list = subscriptionsByUser.get(sub.userId) ?? [];
+			list.push(sub);
+			subscriptionsByUser.set(sub.userId, list);
 		}
 
-		return results;
+		return settings.map((setting) => ({
+			...setting,
+			subscriptions: subscriptionsByUser.get(setting.userId) ?? [],
+		}));
 	}
 
 	async syncNotifyAtForTimeBlock(

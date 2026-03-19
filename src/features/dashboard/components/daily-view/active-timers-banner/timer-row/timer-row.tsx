@@ -2,7 +2,7 @@
 
 import { Minus, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import type { ActiveTimer } from "../use-active-timers-banner";
+import type { ActiveTimer } from "@/features/dashboard/lib/collect-timers";
 import { TimerButton } from "./timer-button";
 import { TimerSupplementRow } from "./timer-supplement-row";
 import { useTimerRow } from "./use-timer-row";

@@ -5,7 +5,6 @@ export type BlockInfo = {
 	blockName: string;
 	blockIcon: string;
 	startTime: string;
-	blockSortOrder: number;
 };
 
 function isActionable(entry: ScheduleEntry): boolean {
@@ -30,7 +29,6 @@ export function groupByTimeBlock(
 				blockName: info.blockName,
 				blockIcon: info.blockIcon,
 				startTime: info.startTime,
-				sortOrder: info.blockSortOrder,
 				entries: [],
 				completedCount: 0,
 				actionableCount: 0,
@@ -53,5 +51,5 @@ export function groupByTimeBlock(
 		);
 	}
 
-	return Array.from(blockMap.values()).sort((a, b) => a.sortOrder - b.sortOrder);
+	return Array.from(blockMap.values()).sort((a, b) => a.startTime.localeCompare(b.startTime));
 }

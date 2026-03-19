@@ -7,7 +7,6 @@ const supplement = (id: string, overrides = {}) => ({
 	name: `Supplement ${id}`,
 	currentStock: "30",
 	stockUnit: "capsule",
-	stockWarningThreshold: 7,
 	packagePrice: "49.99",
 	packageSize: 60,
 	shopId: null as string | null,
@@ -68,7 +67,7 @@ describe("buildShoppingList", () => {
 
 	it("marks items as mustBuy when below threshold + buffer", () => {
 		const result = buildShoppingList(
-			[supplement("s1", { currentStock: "3", stockWarningThreshold: 7 })],
+			[supplement("s1", { currentStock: "3" })],
 			[schedule("s1", 1)],
 			shopMap,
 			"2025-03-01",

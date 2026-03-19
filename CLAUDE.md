@@ -66,10 +66,18 @@ pnpm lint                       # biome check
 pnpm lint:fix                   # biome check --fix
 pnpm format                     # biome format --write
 
+# Test (Vitest)
+pnpm test                       # single run
+pnpm test:watch                 # watch mode
+pnpm test -- src/features/dashboard/lib/cycling.test.ts  # single file
+
 # DB
 pnpm drizzle-kit generate   # generate migration
 pnpm drizzle-kit migrate    # apply migration
 pnpm drizzle-kit studio     # DB browser
+
+# Unused exports
+pnpm knip
 ```
 
 ## Stack
@@ -85,6 +93,7 @@ Next.js 16 (App Router), PostgreSQL (self-hosted) + Drizzle, Better Auth (Google
 - Co-location: Level 1 (component-local) → Level 2 (feature-shared) → Level 3 (app-shared). Start Level 1, promote when needed.
 - Mutations: Server Actions via next-safe-action (`features/*/api/actions/`)
 - Reads: Cache Components in RSC (`features/*/api/queries/`)
+- AI integration: service files in `features/*/api/services/` (prompt building, response parsing)
 - External integrations: API Routes (`app/api/`)
 - Repository pattern: interface + implementation co-located per file
 - index.ts: only barrel re-exports
@@ -93,8 +102,8 @@ Next.js 16 (App Router), PostgreSQL (self-hosted) + Drizzle, Better Auth (Google
   - Component + hook (or other child files) → MUST be in a named folder with barrel `index.ts`
   - Both directions matter: don't wrap single files, DO wrap components that have hooks/sub-files
 - Feature public API: each feature has a root `index.ts` exporting only its page-level RSC. App routes import from `@/features/<name>`, not deep paths. See `tech-stack.md` > Feature public API.
-  - Exception: `protocol-wizard/index.ts` also exports schemas (`parsedProtocolSchema`, `rawExtractionSchema`, `CONFIDENCE_THRESHOLD`)
-  - Exception: `supplements/index.ts` also exports `SupplementForm`, actions, and types
+  - Exception: `supplements/index.ts` also exports `SupplementForm`, `SupplementEditSheet`, `SupplementEditData`, actions (`addSupplement`, `deleteSupplement`, `updateSupplement`), and types
+  - Exception: `shopping/index.ts` also exports `PriceSheet`
 
 ## Architecture
 
@@ -113,19 +122,23 @@ src/
         protocol/new/preview/   # AI-parsed protocol preview
         protocol/new/manual/    # Manual protocol form
         protocol/edit/[id]/     # Edit existing protocol
+        shopping/               # Shopping list, price comparison
     api/                        # Route handlers (auth, AI parsing)
 
   features/                     # Feature modules (co-located)
     auth/                       # Login page, Google OAuth
     dashboard/                  # Daily/weekly/monthly views, supplement rows, check actions
     protocol-wizard/            # Upload step, parsed preview, manual form, draft management
-    stock/                      # Stock list, replenish/update/calculator actions
-    supplements/                # Supplement + schedule forms and CRUD
+      components/protocol-base/ # Shared components between manual form and parsed preview
+      hooks/                    # Shared hooks (use-block-ordering, use-sheet-state, use-supplement-crud)
+    shopping/                   # Shopping list, cart scanning, shop management, price comparison
+    stock/                      # Stock list, restock dialog
+    supplements/                # Supplement + schedule forms, CRUD, stock calculator, edit sheet
     settings/                   # Protocol/time-block/account management
 
   shared/
     components/ui/              # shadcn/ui primitives (base-ui based)
-    db/                         # schema.ts, client.ts, migrations/
+    db/                         # schema.ts, relations.ts, client.ts, migrations/
     repositories/               # Per-entity: interface + impl in one file
     lib/                        # auth.ts, ai.ts, safe-action.ts, stock-forecast.ts, date.ts
     hooks/                      # use-current-user.ts
@@ -134,14 +147,17 @@ src/
 
 ### Key domain concepts
 
-- **Supplement** = inventory item (one box in the cabinet), owns `currentStock`, `stockUnit`
-- **SupplementSchedule** = the core join table: links Protocol ↔ Supplement ↔ TimeBlock. Holds ALL per-schedule fields: `dosageAmount`, `dosageUnit`, `notes`, `isCritical`, `cycleDaysOn/Off`, `startDayOffset`, `durationDays`, `dosageIntervalMinutes`, `waitAfterTakingMinutes`, `sortOrder`, `active`
-- **DailyLog** = check mark per schedule per day
+- **Supplement** = inventory item (one box in the cabinet), owns `currentStock`, `stockUnit`, `packageSize`, `packagePrice`, optional `shopId`
+- **SupplementSchedule** = the core join table: links Protocol ↔ Supplement ↔ TimeBlock. Holds ALL per-schedule fields: `dosageAmount`, `dosageUnit`, `notes`, `isCritical`, `cycleDaysOn/Off`, `startDayOffset`, `durationDays`, `dosageIntervalMinutes`, `waitAfterTakingMinutes`, `sortOrder`, `active`, `finishPackage`
+- **DailyLog** = check mark per schedule per day. Also tracks timer state: `timerNotifiedAt`, `timerAdjustmentMinutes`, `cooldownSkippedAt`
 - **TimeBlock** = time of day (Na czczo, Śniadanie, etc.), seeded on registration
+- **Shop** = store where supplements are purchased (`deliveryCost`, `freeDeliveryThreshold`)
+- **CartScan** = AI-parsed shopping cart receipt (status: processing|completed|failed, items JSON)
 - There is NO `ProtocolSupplement` table — `SupplementSchedule` is the direct link
 - `stockUnit` on Supplement is the source of truth for units. Dashboard dosage unit is read-only, derived from `stockUnit`. Changing `stockUnit` via supplement edit cascades to all schedule `dosageUnit` values.
 - Stock forecast: `shared/lib/stock-forecast.ts` — `forecastDaysInStock()` simulates day-by-day consumption respecting cycling, startDayOffset, durationDays. Used in dashboard, stock page, and low-stock warnings.
 - AI parsing: two-step (extraction → enrichment), receives user's existing Supplements + TimeBlocks (with IDs), links by ID, confidence 0-1. Per-schedule fields (notes, cycling, etc.) are set on each schedule object, not at supplement level.
+- Drizzle relations are in `shared/db/relations.ts` (separate from `schema.ts`)
 
 ### View transitions
 

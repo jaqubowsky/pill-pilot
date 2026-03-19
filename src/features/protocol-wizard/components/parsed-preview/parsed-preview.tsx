@@ -13,24 +13,25 @@ import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useTranslations } from "next-intl";
 import { BackButton } from "@/features/protocol-wizard/components/back-button";
-import { PriceSheet } from "@/features/protocol-wizard/components/price-sheet";
 import type { ParsedProtocol } from "@/features/protocol-wizard/schemas/parsed-protocol-schema";
 import type { ExistingSupplementSummary, TimeBlockSummary } from "@/features/protocol-wizard/types";
+import type { ComponentType } from "react";
 import type { PriceListItem, ShopWithDelivery } from "@/shared/api/queries/get-price-list";
 import { LabeledInput } from "@/shared/components/labeled-input";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "@/shared/components/ui/alert-dialog";
 import { Button } from "@/shared/components/ui/button";
+import { ApproveButton } from "./approve-button";
+import { DiscardConfirmDialog } from "./discard-confirm-dialog";
 import { PreviewBlock } from "./preview-block";
 import { PreviewMode, useParsedPreview } from "./use-parsed-preview";
+import { VerificationBanner } from "./verification-banner";
+
+export type PriceSheetComponentProps = {
+	open: boolean;
+	supplementIds: string[];
+	items: PriceListItem[];
+	shopOptions: ShopWithDelivery[];
+	onClose: () => void;
+};
 
 type ParsedPreviewProps = {
 	protocolId: string;
@@ -41,6 +42,7 @@ type ParsedPreviewProps = {
 	initialStartDate?: string;
 	priceListItems?: PriceListItem[];
 	priceListShopOptions?: ShopWithDelivery[];
+	PriceSheetComponent?: ComponentType<PriceSheetComponentProps>;
 };
 
 const MODIFIERS = [restrictToVerticalAxis];
@@ -54,6 +56,7 @@ export function ParsedPreview({
 	initialStartDate,
 	priceListItems = [],
 	priceListShopOptions = [],
+	PriceSheetComponent,
 }: ParsedPreviewProps) {
 	const t = useTranslations();
 	const {
@@ -65,18 +68,18 @@ export function ParsedPreview({
 		isApproving,
 		blockMap,
 		orderedBlocks,
-		handleUpdateSupplement,
-		handleAddSupplement,
-		handleDeleteSupplement,
-		handleRestoreSupplement,
-		handleVerifySupplement,
+		updateSupplement,
+		addSupplement,
+		deleteSupplement,
+		restoreSupplement,
+		verifySupplement,
 		handleApprove,
 		discardOpen,
 		setDiscardOpen,
 		isDiscarding,
 		handleDiscard,
 		handleDragEnd,
-		handleMoveToBlock,
+		moveToBlock,
 		priceSheetOpen,
 		newSupplementIds,
 		handlePriceSheetClose,
@@ -93,6 +96,8 @@ export function ParsedPreview({
 		useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
 		useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
 	);
+
+	const isCreateMode = mode === PreviewMode.create;
 
 	return (
 		<>
@@ -117,61 +122,40 @@ export function ParsedPreview({
 					onDragEnd={handleDragEnd}
 				>
 					<div className="flex flex-col gap-md">
-						{orderedBlocks.map((tb) => {
-							const blockSupplements = blockMap.get(tb.id) ?? [];
-							return (
-								<PreviewBlock
-									key={tb.id}
-									timeBlock={tb}
-									supplements={blockSupplements}
-									allTimeBlocks={timeBlocks}
-									existingSupplements={existingSupplements}
-									onUpdateSupplement={handleUpdateSupplement}
-									onAddSupplement={handleAddSupplement}
-									onDeleteSupplement={handleDeleteSupplement}
-									onRestoreSupplement={handleRestoreSupplement}
-									onVerifySupplement={handleVerifySupplement}
-									onMoveToBlock={handleMoveToBlock}
-								/>
-							);
-						})}
+						{orderedBlocks.map((tb) => (
+							<PreviewBlock
+								key={tb.id}
+								timeBlock={tb}
+								supplements={blockMap.get(tb.id) ?? []}
+								allTimeBlocks={timeBlocks}
+								existingSupplements={existingSupplements}
+								onUpdateSupplement={updateSupplement}
+								onAddSupplement={addSupplement}
+								onDeleteSupplement={deleteSupplement}
+								onRestoreSupplement={restoreSupplement}
+								onVerifySupplement={verifySupplement}
+								onMoveToBlock={moveToBlock}
+							/>
+						))}
 					</div>
 				</DndContext>
 
 				<div className="flex flex-col gap-md">
-					{mode === PreviewMode.create && unverifiedCount > 0 && (
-						<button
-							type="button"
-							onClick={() => {
-								if (!firstUnverifiedId) return;
-								document
-									.querySelector(`[data-supplement-id="${firstUnverifiedId}"]`)
-									?.scrollIntoView({ behavior: "smooth", block: "center" });
-							}}
-							className="w-full rounded-xl bg-warning-bg border border-warning/20 p-md text-left active:scale-[0.99] transition-transform"
-						>
-							<p className="text-sm text-warning-text">
-								{unverifiedCount === 1
-									? t("protocolWizard.requiresVerification", { count: unverifiedCount })
-									: t("protocolWizard.requiresVerificationMany", { count: unverifiedCount })}
-								<span className="ml-xs">&darr;</span>
-							</p>
-						</button>
+					{isCreateMode && (
+						<VerificationBanner
+							unverifiedCount={unverifiedCount}
+							firstUnverifiedId={firstUnverifiedId}
+						/>
 					)}
 
-					<Button
+					<ApproveButton
+						mode={mode}
+						isApproving={isApproving}
+						disabled={isCreateMode && unverifiedCount > 0}
 						onClick={handleApprove}
-						disabled={(mode === PreviewMode.create && unverifiedCount > 0) || isApproving}
-						className="w-full"
-					>
-						{isApproving
-							? t("common.loading")
-							: mode === PreviewMode.edit
-								? t("common.saveChanges")
-								: t("protocolWizard.approveProtocol")}
-					</Button>
+					/>
 
-					{mode === PreviewMode.create && (
+					{isCreateMode && (
 						<Button variant="outline" onClick={() => setDiscardOpen(true)} className="w-full">
 							{t("protocolWizard.discardDraft")}
 						</Button>
@@ -179,25 +163,15 @@ export function ParsedPreview({
 				</div>
 			</div>
 
-			<AlertDialog open={discardOpen} onOpenChange={setDiscardOpen}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>{t("protocolWizard.discardConfirmTitle")}</AlertDialogTitle>
-						<AlertDialogDescription>
-							{t("protocolWizard.discardConfirmDescription")}
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-						<AlertDialogAction onClick={handleDiscard} disabled={isDiscarding}>
-							{t("protocolWizard.discardDraft")}
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+			<DiscardConfirmDialog
+				open={discardOpen}
+				onOpenChange={setDiscardOpen}
+				onConfirm={handleDiscard}
+				isDiscarding={isDiscarding}
+			/>
 
-			{mode === PreviewMode.create && (
-				<PriceSheet
+			{isCreateMode && PriceSheetComponent && (
+				<PriceSheetComponent
 					open={priceSheetOpen}
 					supplementIds={newSupplementIds}
 					items={priceListItems}

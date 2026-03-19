@@ -34,10 +34,10 @@ const supplement = (name: string, overrides = {}) => ({
 	...overrides,
 });
 
-const supplementMap: Record<string, ResolvedSupplement> = {
-	"Vitamin D": { supplementId: "s1", isNew: true },
-	Magnesium: { supplementId: "s2", isNew: false },
-};
+const resolvedSupplements: ResolvedSupplement[] = [
+	{ supplementId: "s1", isNew: true },
+	{ supplementId: "s2", isNew: false },
+];
 
 const validTimeBlockIds = new Set(["tb1", "tb2"]);
 
@@ -45,7 +45,7 @@ describe("buildScheduleDataList", () => {
 	it("builds schedule data from parsed supplements", () => {
 		const result = buildScheduleDataList(
 			[supplement("Vitamin D")],
-			supplementMap,
+			resolvedSupplements,
 			"p1",
 			validTimeBlockIds,
 		);
@@ -83,7 +83,7 @@ describe("buildScheduleDataList", () => {
 					],
 				}),
 			],
-			supplementMap,
+			resolvedSupplements,
 			"p1",
 			validTimeBlockIds,
 		);
@@ -113,7 +113,7 @@ describe("buildScheduleDataList", () => {
 		});
 
 		expect(() =>
-			buildScheduleDataList([invalidSupplement], supplementMap, "p1", validTimeBlockIds),
+			buildScheduleDataList([invalidSupplement], resolvedSupplements, "p1", validTimeBlockIds),
 		).toThrow(ActionError);
 	});
 
@@ -140,7 +140,7 @@ describe("buildScheduleDataList", () => {
 					],
 				}),
 			],
-			supplementMap,
+			resolvedSupplements,
 			"p1",
 			validTimeBlockIds,
 		);
@@ -150,7 +150,7 @@ describe("buildScheduleDataList", () => {
 	});
 
 	it("returns empty array for empty supplements", () => {
-		expect(buildScheduleDataList([], supplementMap, "p1", validTimeBlockIds)).toEqual([]);
+		expect(buildScheduleDataList([], resolvedSupplements, "p1", validTimeBlockIds)).toEqual([]);
 	});
 
 	it("handles multiple schedules per supplement", () => {
@@ -187,7 +187,7 @@ describe("buildScheduleDataList", () => {
 					],
 				}),
 			],
-			supplementMap,
+			resolvedSupplements,
 			"p1",
 			validTimeBlockIds,
 		);

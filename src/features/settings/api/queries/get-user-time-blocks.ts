@@ -5,7 +5,6 @@ export type UserTimeBlock = {
 	name: string;
 	icon: string;
 	startTime: string;
-	sortOrder: number;
 	active: boolean;
 };
 

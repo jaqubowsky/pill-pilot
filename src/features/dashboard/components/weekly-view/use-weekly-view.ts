@@ -8,7 +8,10 @@ import { getMondayOfWeek, parseDate, shiftDate, toDateString } from "@/shared/li
 
 export function useWeeklyView() {
 	const router = useRouter();
-	const [start, setStart] = useQueryState("start", weeklySearchParams.start);
+	const [start, setStart] = useQueryState("start", {
+		...weeklySearchParams.start,
+		shallow: false,
+	});
 
 	const parsedStart = useMemo(() => parseDate(start), [start]);
 

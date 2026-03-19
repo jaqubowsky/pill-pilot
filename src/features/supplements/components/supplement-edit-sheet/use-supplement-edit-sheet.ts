@@ -3,16 +3,26 @@
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
-import type { StockListItem } from "@/features/stock/api/queries/get-stock-list";
-import {
-	addSupplement,
-	deleteSupplement,
-	type SupplementFormValues,
-	updateSupplement,
-} from "@/features/supplements";
+import type { DosageUnit, SupplementCategory } from "@/shared/db/schema";
+import { addSupplement } from "../../api/actions/add-supplement";
+import { deleteSupplement } from "../../api/actions/delete-supplement";
+import { updateSupplement } from "../../api/actions/update-supplement";
+import type { SupplementFormValues } from "../supplement-form";
+
+export type SupplementEditData = {
+	id: string;
+	name: string;
+	brandName: string | null;
+	shopId: string | null;
+	category: SupplementCategory;
+	stockUnit: DosageUnit;
+	currentStock: string | null;
+	packageSize: number | null;
+	packagePrice: string | null;
+};
 
 type UseSupplementEditSheetParams = {
-	supplement: StockListItem | null;
+	supplement: SupplementEditData | null;
 	onOpenChange: (open: boolean) => void;
 };
 

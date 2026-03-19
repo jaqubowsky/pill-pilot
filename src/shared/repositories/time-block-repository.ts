@@ -13,7 +13,6 @@ interface ITimeBlockRepository {
 	create(data: NewTimeBlock): Promise<TimeBlock>;
 	update(id: string, data: Partial<NewTimeBlock>): Promise<TimeBlock>;
 	softDelete(id: string): Promise<void>;
-	reorder(updates: { id: string; sortOrder: number }[]): Promise<void>;
 }
 
 class TimeBlockRepository implements ITimeBlockRepository {
@@ -54,14 +53,6 @@ class TimeBlockRepository implements ITimeBlockRepository {
 
 	async softDelete(id: string): Promise<void> {
 		await db.update(timeBlocks).set({ active: false }).where(eq(timeBlocks.id, id));
-	}
-
-	async reorder(updates: { id: string; sortOrder: number }[]): Promise<void> {
-		await Promise.all(
-			updates.map(({ id, sortOrder }) =>
-				db.update(timeBlocks).set({ sortOrder }).where(eq(timeBlocks.id, id)),
-			),
-		);
 	}
 }
 

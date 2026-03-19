@@ -2,8 +2,8 @@
 
 import { useTranslations } from "next-intl";
 import { Button } from "@/shared/components/ui/button";
-import { useLogin } from "../use-login";
 import { GoogleIcon } from "./google-icon";
+import { useLogin } from "./use-login";
 
 export const LoginButton = () => {
 	const t = useTranslations();

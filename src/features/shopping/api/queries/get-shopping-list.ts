@@ -24,7 +24,6 @@ export async function getShoppingList(userId: string): Promise<ShoppingGroup[]> 
 			name: supplements.name,
 			currentStock: supplements.currentStock,
 			stockUnit: supplements.stockUnit,
-			stockWarningThreshold: supplements.stockWarningThreshold,
 			packagePrice: supplements.packagePrice,
 			packageSize: supplements.packageSize,
 			shopId: supplements.shopId,

@@ -1,7 +1,6 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { InfoHint } from "@/features/supplements/components/info-hint";
 import { StockCalculator } from "@/features/supplements/components/stock-calculator";
 import { LabeledInput } from "@/shared/components/labeled-input";
 import { LabeledSelect } from "@/shared/components/labeled-select";
@@ -16,6 +15,7 @@ import {
 } from "@/shared/components/ui/select";
 import { DOSAGE_UNITS, SUPPLEMENT_CATEGORIES } from "@/shared/db/schema";
 import type { ShopOption } from "@/shared/types";
+import { InfoHint } from "./info-hint";
 import { useSupplementFields } from "./use-supplement-fields";
 
 type SupplementFieldsProps = {

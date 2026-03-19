@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { StockPage } from "@/features/stock";
+import { StockPage } from "@/features/stock/stock-page";
 import { auth } from "@/shared/lib/auth";
 
 export default async function StockRoute() {

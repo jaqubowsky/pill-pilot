@@ -84,7 +84,6 @@ export type TimeBlockStatus = {
 	blockName: string;
 	blockIcon: string;
 	startTime: string;
-	sortOrder: number;
 	entries: ScheduleEntry[];
 	completedCount: number;
 	actionableCount: number;
@@ -131,7 +130,6 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 			blockName: timeBlocks.name,
 			blockIcon: timeBlocks.icon,
 			startTime: timeBlocks.startTime,
-			blockSortOrder: timeBlocks.sortOrder,
 			cycleDaysOn: supplementSchedules.cycleDaysOn,
 			cycleDaysOff: supplementSchedules.cycleDaysOff,
 			startDayOffset: supplementSchedules.startDayOffset,
@@ -170,7 +168,6 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 			blockName: row.blockName,
 			blockIcon: row.blockIcon,
 			startTime: row.startTime,
-			blockSortOrder: row.blockSortOrder,
 		},
 		...buildScheduleEntry(row, ctx),
 	}));

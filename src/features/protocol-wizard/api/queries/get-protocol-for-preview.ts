@@ -17,8 +17,7 @@ export async function getProtocolForPreview(protocolId: string, userId: string) 
 	try {
 		const parsed = parsedProtocolSchema.parse(JSON.parse(protocol.parsedData));
 		return { protocol, parsed };
-	} catch (err) {
-		console.error("[get-protocol-for-preview] Failed to parse data:", err);
+	} catch {
 		return null;
 	}
 }

@@ -11,7 +11,10 @@ type Params = {
 };
 
 export function useDailyView({ status }: Params) {
-	const [date, setDate] = useQueryState("date", dashboardSearchParams.date);
+	const [date, setDate] = useQueryState("date", {
+		...dashboardSearchParams.date,
+		shallow: false,
+	});
 
 	const parsedDate = useMemo(() => parseDate(date), [date]);
 

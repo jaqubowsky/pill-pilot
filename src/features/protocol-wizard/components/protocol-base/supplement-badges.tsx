@@ -2,10 +2,10 @@
 
 import { Hourglass, Lock, PackageCheck, Repeat, Timer } from "lucide-react";
 import { useTranslations } from "next-intl";
-import type { EditedSupplement } from "@/features/protocol-wizard/components/parsed-preview/parsed-preview.schema";
 import { IconBadge } from "@/shared/components/icon-badge";
 import { formatMinutes } from "@/shared/lib/format-time";
-import type { IdentifiedSupplement } from "../use-parsed-preview";
+import type { IdentifiedSupplement } from "../../lib/supplement-serialization";
+import type { EditedSupplement } from "./parsed-preview.schema";
 
 type SupplementBadgesProps = {
 	supplement: IdentifiedSupplement;

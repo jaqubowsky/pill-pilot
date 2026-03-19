@@ -14,7 +14,10 @@ import {
 
 export function useMonthlyView() {
 	const router = useRouter();
-	const [yearMonth, setYearMonth] = useQueryState("month", monthlySearchParams.month);
+	const [yearMonth, setYearMonth] = useQueryState("month", {
+		...monthlySearchParams.month,
+		shallow: false,
+	});
 
 	const isCurrentMonth = useMemo(() => toYearMonth(new Date()) === yearMonth, [yearMonth]);
 	const monthLabel = useMemo(() => toMonthLabel(yearMonth), [yearMonth]);

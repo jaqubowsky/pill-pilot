@@ -77,6 +77,7 @@ export function usePushSubscription() {
 			const subscription = await registration.pushManager.getSubscription();
 
 			if (subscription) {
+				await subscription.unsubscribe();
 				await fetch("/api/push/subscribe", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
@@ -85,7 +86,6 @@ export function usePushSubscription() {
 						action: "unsubscribe",
 					}),
 				});
-				await subscription.unsubscribe();
 			}
 
 			setIsSubscribed(false);

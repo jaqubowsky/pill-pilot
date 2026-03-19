@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import type { RecentScan } from "@/features/shopping/api/queries/get-recent-scans";
 import { CartPriceSheet } from "@/features/shopping/components/cart-price-sheet";
 import { ShopEditSheet } from "@/features/shopping/components/shop-edit-sheet";
-import { SupplementEditSheet } from "@/features/stock/components/stock-list/supplement-edit-sheet";
+import { SupplementEditSheet } from "@/features/supplements";
 import type { PriceListItem, ShopWithDelivery } from "@/shared/api/queries/get-price-list";
 import { PriceGroup } from "./price-group";
 import { usePriceList } from "./use-price-list";
@@ -18,23 +18,6 @@ type Props = {
 };
 
 const NO_SHOP_VALUE = "__none__";
-
-function toEditSheetItem(item: PriceListItem) {
-	return {
-		id: item.id,
-		name: item.name,
-		brandName: item.brandName,
-		shopId: item.shopId,
-		category: item.category,
-		stockUnit: item.stockUnit,
-		isCritical: false,
-		currentStock: item.currentStock,
-		packageSize: item.packageSize,
-		packagePrice: item.packagePrice,
-		dailyUsage: 0,
-		daysInStock: 0,
-	};
-}
 
 export function PriceList({ items, shopOptions, filterIds, recentScans }: Props) {
 	const t = useTranslations();
@@ -96,7 +79,7 @@ export function PriceList({ items, shopOptions, filterIds, recentScans }: Props)
 			/>
 
 			<SupplementEditSheet
-				supplement={editItem ? toEditSheetItem(editItem) : null}
+				supplement={editItem ?? null}
 				open={editItem !== null}
 				onOpenChange={handleEditItemClose}
 				shops={shopsForCart}

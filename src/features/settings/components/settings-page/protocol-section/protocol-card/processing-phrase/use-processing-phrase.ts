@@ -9,14 +9,18 @@ export function useProcessingPhrase() {
 	const [fading, setFading] = useState(false);
 
 	useEffect(() => {
+		let timeoutId: ReturnType<typeof setTimeout>;
 		const interval = setInterval(() => {
 			setFading(true);
-			setTimeout(() => {
+			timeoutId = setTimeout(() => {
 				setIndex((prev) => (prev + 1) % PHRASE_COUNT);
 				setFading(false);
 			}, 300);
 		}, 3000);
-		return () => clearInterval(interval);
+		return () => {
+			clearInterval(interval);
+			clearTimeout(timeoutId);
+		};
 	}, []);
 
 	return { index, fading };

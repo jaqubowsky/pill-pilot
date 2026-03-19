@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { PriceList } from "@/features/shopping/components/price-list";
+import { PriceList } from "../price-list";
 import type { PriceListItem, ShopWithDelivery } from "@/shared/api/queries/get-price-list";
 import { Button } from "@/shared/components/ui/button";
 import {

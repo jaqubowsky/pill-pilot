@@ -2,9 +2,9 @@
 
 import { Search } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import type { ExistingSupplementSummary } from "@/features/protocol-wizard/types";
 import { BottomSheet } from "@/shared/components/bottom-sheet";
+import { useExistingSupplementPicker } from "./use-existing-supplement-picker";
 
 type ExistingSupplementPickerProps = {
 	supplements: ExistingSupplementSummary[];
@@ -20,22 +20,16 @@ export function ExistingSupplementPicker({
 	onPick,
 }: ExistingSupplementPickerProps) {
 	const t = useTranslations();
-	const [query, setQuery] = useState("");
-
-	const filtered = query
-		? supplements.filter((s) => {
-				const label = s.name + (s.brandName ?? "");
-				return label.toLowerCase().includes(query.toLowerCase());
-			})
-		: supplements;
+	const { query, setQuery, filtered, handleOpenChange, handlePick } = useExistingSupplementPicker({
+		supplements,
+		onOpenChange,
+		onPick,
+	});
 
 	return (
 		<BottomSheet
 			open={open}
-			onOpenChange={(next) => {
-				onOpenChange(next);
-				if (!next) setQuery("");
-			}}
+			onOpenChange={handleOpenChange}
 			title={t("protocolWizard.manual.pickExisting")}
 			scrollable
 		>
@@ -61,10 +55,7 @@ export function ExistingSupplementPicker({
 								key={s.id}
 								type="button"
 								className="flex flex-col gap-0.5 w-full text-left rounded-lg px-sm py-sm hover:bg-surface-sunken transition-colors"
-								onClick={() => {
-									onPick(s);
-									setQuery("");
-								}}
+								onClick={() => handlePick(s)}
 							>
 								<span className="text-sm font-medium text-content">{s.name}</span>
 								{s.brandName && <span className="text-xs text-content-faint">{s.brandName}</span>}

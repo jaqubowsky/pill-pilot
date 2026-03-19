@@ -141,7 +141,13 @@ describe("buildSiblingTakenAtMap", () => {
 	});
 });
 
-const block = { blockId: "b1", blockName: "Morning", blockIcon: "sun", startTime: "08:00", blockSortOrder: 0 };
+const block = {
+	blockId: "b1",
+	blockName: "Morning",
+	blockIcon: "sun",
+	startTime: "08:00",
+	blockSortOrder: 0,
+};
 
 const entry = (overrides: Partial<ScheduleEntry> = {}): ScheduleEntry => ({
 	scheduleId: "s1",
@@ -179,9 +185,7 @@ const entry = (overrides: Partial<ScheduleEntry> = {}): ScheduleEntry => ({
 
 describe("filterVisibleEntries", () => {
 	it("keeps entries with null notStartedDays", () => {
-		const result = filterVisibleEntries([
-			{ block, entry: entry(), hasLog: false },
-		]);
+		const result = filterVisibleEntries([{ block, entry: entry(), hasLog: false }]);
 		expect(result).toHaveLength(1);
 	});
 
@@ -211,9 +215,7 @@ describe("countActionable", () => {
 	});
 
 	it("excludes expired entries", () => {
-		const result = countActionable([
-			{ block, entry: entry({ isExpired: true }), hasLog: true },
-		]);
+		const result = countActionable([{ block, entry: entry({ isExpired: true }), hasLog: true }]);
 		expect(result.totalSchedules).toBe(0);
 		expect(result.completedCount).toBe(0);
 	});

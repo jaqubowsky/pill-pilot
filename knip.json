@@ -1,7 +1,7 @@
 {
 	"entry": ["src/app/**/*.{ts,tsx}", "src/shared/i18n/*.ts", "scripts/*.mjs", "public/*.js"],
 	"project": ["src/**/*.{ts,tsx}"],
-	"ignoreDependencies": ["shadcn", "tw-animate-css", "tailwindcss"],
+	"ignoreDependencies": ["shadcn", "tw-animate-css", "tailwindcss", "@vitest/coverage-v8"],
 	"ignore": ["src/shared/components/ui/**"],
 	"ignoreExportsUsedInFile": true
 }

@@ -52,7 +52,9 @@ export function ExistingSupplementPicker({
 				</div>
 				<div className="flex flex-col">
 					{filtered.length === 0 ? (
-						<p className="text-xs text-content-faint text-center py-md">Brak wyników</p>
+						<p className="text-xs text-content-faint text-center py-md">
+							{t("protocolWizard.manual.noResults")}
+						</p>
 					) : (
 						filtered.map((s) => (
 							<button

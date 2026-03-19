@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover";
 import type { DosageUnit } from "@/shared/db/schema";
-import { formatQuantity } from "@/shared/lib/format";
+import { formatQuantity } from "@/shared/lib/format-currency";
 import { cn } from "@/shared/lib/utils";
 import { TruncatedNote } from "./truncated-note";
 

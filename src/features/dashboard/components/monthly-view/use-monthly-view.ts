@@ -20,8 +20,14 @@ export function useMonthlyView() {
 	const monthLabel = useMemo(() => toMonthLabel(yearMonth), [yearMonth]);
 	const firstDayOfWeek = useMemo(() => getFirstDayOfWeek(yearMonth), [yearMonth]);
 
-	const goToPrevMonth = useCallback(() => setYearMonth(shiftYearMonth(yearMonth, -1)), [yearMonth, setYearMonth]);
-	const goToNextMonth = useCallback(() => setYearMonth(shiftYearMonth(yearMonth, 1)), [yearMonth, setYearMonth]);
+	const goToPrevMonth = useCallback(
+		() => setYearMonth(shiftYearMonth(yearMonth, -1)),
+		[yearMonth, setYearMonth],
+	);
+	const goToNextMonth = useCallback(
+		() => setYearMonth(shiftYearMonth(yearMonth, 1)),
+		[yearMonth, setYearMonth],
+	);
 
 	const navigateToDay = useCallback(
 		(date: string) => {

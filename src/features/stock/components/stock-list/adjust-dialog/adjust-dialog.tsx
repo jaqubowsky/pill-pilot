@@ -2,12 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Button } from "@/shared/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-} from "@/shared/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
 import { Input } from "@/shared/components/ui/input";
 import { useAdjustDialog } from "./use-adjust-dialog";
 

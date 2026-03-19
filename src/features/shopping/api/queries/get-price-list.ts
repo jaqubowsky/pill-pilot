@@ -15,7 +15,7 @@ export type PriceListItem = {
 	shopName: string | null;
 };
 
-export type ShopOption = {
+export type ShopWithDelivery = {
 	id: string;
 	name: string;
 	deliveryCost: string | null;
@@ -24,7 +24,7 @@ export type ShopOption = {
 
 export type PriceListData = {
 	items: PriceListItem[];
-	shopOptions: ShopOption[];
+	shopOptions: ShopWithDelivery[];
 };
 
 export async function getPriceList(userId: string): Promise<PriceListData> {

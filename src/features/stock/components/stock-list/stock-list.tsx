@@ -5,14 +5,10 @@ import { useTranslations } from "next-intl";
 import type { StockList } from "@/features/stock/api/queries/get-stock-list";
 import { Button } from "@/shared/components/ui/button";
 import { Separator } from "@/shared/components/ui/separator";
+import type { ShopOption } from "@/shared/types";
 import { StockItem } from "./stock-item";
 import { SupplementEditSheet } from "./supplement-edit-sheet";
 import { useStockList } from "./use-stock-list";
-
-type ShopOption = {
-	id: string;
-	name: string;
-};
 
 type StockListProps = {
 	data: StockList;

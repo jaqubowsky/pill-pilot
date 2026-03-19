@@ -1,7 +1,13 @@
 import { and, eq, inArray } from "drizzle-orm";
+import {
+	buildSiblingTakenAtMap,
+	buildStockForecastMap,
+	buildTotalDailyDosageMap,
+	countActionable,
+	filterVisibleEntries,
+} from "@/features/dashboard/lib/build-daily-context";
 import { buildScheduleEntry } from "@/features/dashboard/lib/build-schedule-entry";
 import { groupByTimeBlock } from "@/features/dashboard/lib/group-by-time-block";
-import { assignProtocolColors } from "@/shared/lib/protocol-colors";
 import { db } from "@/shared/db/client";
 import {
 	type DosageUnit,
@@ -12,7 +18,7 @@ import {
 	supplements,
 	timeBlocks,
 } from "@/shared/db/schema";
-import { forecastDaysInStock, type ScheduleConsumption } from "@/shared/lib/stock-forecast";
+import { assignProtocolColors } from "@/shared/lib/protocol-colors";
 import { activeScheduleJoins, activeScheduleWhere } from "./active-schedules-query";
 
 export type StockStatus = {
@@ -152,93 +158,30 @@ export async function getDailyStatus(userId: string, date: string): Promise<Dail
 		.where(and(eq(dailyLogs.date, date), inArray(dailyLogs.scheduleId, scheduleIds)));
 
 	const logMap = new Map(logs.map((l) => [l.scheduleId, l]));
-
-	const schedulesPerSupplement = new Map<string, ScheduleConsumption[]>();
-	const stockPerSupplement = new Map<string, string | null>();
-
-	for (const row of activeSchedules) {
-		const arr = schedulesPerSupplement.get(row.supplementId) ?? [];
-		arr.push({
-			dosageAmount: parseFloat(row.dosageAmount),
-			cycleDaysOn: row.cycleDaysOn,
-			cycleDaysOff: row.cycleDaysOff,
-			startDayOffset: row.startDayOffset,
-			durationDays: row.durationDays,
-			protocolStartDate: row.protocolStartDate,
-		});
-		schedulesPerSupplement.set(row.supplementId, arr);
-		if (!stockPerSupplement.has(row.supplementId)) {
-			stockPerSupplement.set(row.supplementId, row.currentStock);
-		}
-	}
-
-	const totalDailyDosageMap = new Map<string, number>();
-	for (const row of activeSchedules) {
-		totalDailyDosageMap.set(
-			row.supplementId,
-			(totalDailyDosageMap.get(row.supplementId) ?? 0) + parseFloat(row.dosageAmount),
-		);
-	}
-
-	const stockForecastMap = new Map<string, number>();
-	for (const [supplementId, schedules] of schedulesPerSupplement) {
-		const stock = stockPerSupplement.get(supplementId);
-		if (stock === null || stock === undefined) continue;
-		stockForecastMap.set(supplementId, forecastDaysInStock(parseFloat(stock), schedules, date));
-	}
-
-	const siblingTakenAtMap = new Map<string, SiblingTakenAt>();
-	for (const row of activeSchedules) {
-		if (!row.dosageIntervalMinutes) continue;
-
-		const log = logMap.get(row.scheduleId);
-		if (!log) continue;
-
-		const key = `${row.protocolId}:${row.supplementId}`;
-
-		const existing = siblingTakenAtMap.get(key);
-		if (!existing || log.takenAt > existing.takenAt) {
-			siblingTakenAtMap.set(key, {
-				logId: log.id,
-				takenAt: log.takenAt,
-				adjustmentMinutes: log.timerAdjustmentMinutes ?? 0,
-				cooldownSkipped: log.cooldownSkippedAt !== null,
-			});
-		}
-	}
+	const stockForecastMap = buildStockForecastMap(activeSchedules, date);
+	const totalDailyDosageMap = buildTotalDailyDosageMap(activeSchedules);
+	const siblingTakenAtMap = buildSiblingTakenAtMap(activeSchedules, logMap);
 
 	const ctx = { logMap, stockForecastMap, date, siblingTakenAtMap, totalDailyDosageMap };
 
-	const grouped = activeSchedules
-		.map((row) => ({
-			block: {
-				blockId: row.blockId,
-				blockName: row.blockName,
-				blockIcon: row.blockIcon,
-				startTime: row.startTime,
-				blockSortOrder: row.blockSortOrder,
-			},
-			...buildScheduleEntry(row, ctx),
-		}))
-		.filter((row) => row.entry.notStartedDays === null || row.hasLog);
+	const allEntries = activeSchedules.map((row) => ({
+		block: {
+			blockId: row.blockId,
+			blockName: row.blockName,
+			blockIcon: row.blockIcon,
+			startTime: row.startTime,
+			blockSortOrder: row.blockSortOrder,
+		},
+		...buildScheduleEntry(row, ctx),
+	}));
 
-	const sortedBlocks = groupByTimeBlock(grouped);
-	const protocolColors = assignProtocolColors(activeSchedules.map((s) => s.protocolId));
-
-	const actionable = grouped.filter((row) => {
-		const e = row.entry;
-		if (e.isExpired) return false;
-		if (e.phase && !e.phase.isUnlocked) return false;
-		if (e.cycling && !e.cycling.isOnPhase) return false;
-		return true;
-	});
-	const visibleCount = actionable.length;
-	const visibleCompleted = actionable.filter((row) => row.hasLog).length;
+	const visible = filterVisibleEntries(allEntries);
+	const { totalSchedules, completedCount } = countActionable(visible);
 
 	return {
-		timeBlocks: sortedBlocks,
-		totalSchedules: visibleCount,
-		completedCount: visibleCompleted,
-		protocolColors,
+		timeBlocks: groupByTimeBlock(visible),
+		totalSchedules,
+		completedCount,
+		protocolColors: assignProtocolColors(activeSchedules.map((s) => s.protocolId)),
 	};
 }

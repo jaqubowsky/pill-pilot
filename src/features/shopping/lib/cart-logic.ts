@@ -1,4 +1,5 @@
 import type { CartItem } from "@/features/shopping/schemas/cart-parse-schema";
+import type { ShopOption } from "@/shared/types";
 
 export const CART_CONFIDENCE_THRESHOLD = 0.8;
 
@@ -8,10 +9,7 @@ export type CartItemState = CartItem & {
 	skipped: boolean;
 };
 
-export type ShopOption = {
-	id: string;
-	name: string;
-};
+export type { ShopOption } from "@/shared/types";
 
 export function toCartItemStates(items: CartItem[]): CartItemState[] {
 	return items.map((item, i) => ({
@@ -42,9 +40,12 @@ export function buildPriceUpdates(
 	shopId: string | null,
 ): { supplementId: string; packagePrice: number; shopId?: string }[] {
 	return items
-		.filter((item) => !item.skipped && item.matchedSupplementId)
+		.filter(
+			(item): item is CartItemState & { matchedSupplementId: string } =>
+				!item.skipped && !!item.matchedSupplementId,
+		)
 		.map((item) => ({
-			supplementId: item.matchedSupplementId as string,
+			supplementId: item.matchedSupplementId,
 			packagePrice: item.price,
 			...(shopId ? { shopId } : {}),
 		}));

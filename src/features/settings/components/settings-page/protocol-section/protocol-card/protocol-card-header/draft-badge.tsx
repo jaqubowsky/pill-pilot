@@ -5,7 +5,7 @@ export function DraftBadge() {
 	const t = useTranslations();
 
 	return (
-		<Badge className="rounded-lg px-sm py-xs text-xs font-semibold uppercase tracking-wide bg-warning-bg text-[#8B6914]">
+		<Badge className="rounded-lg px-sm py-xs text-xs font-semibold uppercase tracking-wide bg-warning-bg text-warning-text">
 			{t("settings.statusDraft")}
 		</Badge>
 	);

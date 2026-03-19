@@ -2,8 +2,8 @@
 
 import { getTranslations } from "next-intl/server";
 import { z } from "zod";
-import { authActionClient } from "@/shared/lib/safe-action";
 import { sendPushNotification } from "@/features/settings/lib/web-push";
+import { authActionClient } from "@/shared/lib/safe-action";
 import { notificationRepository } from "@/shared/repositories/notification-repository";
 
 export const sendTestNotification = authActionClient

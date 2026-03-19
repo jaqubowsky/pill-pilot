@@ -3,21 +3,14 @@
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { supplementFormSchema } from "@/features/supplements/components/supplement-form/supplement-form.schema";
 import { db } from "@/shared/db/client";
-import { DOSAGE_UNITS, SUPPLEMENT_CATEGORIES, supplementSchedules } from "@/shared/db/schema";
+import { supplementSchedules } from "@/shared/db/schema";
 import { authActionClient } from "@/shared/lib/safe-action";
 import { supplementRepository } from "@/shared/repositories/supplement-repository";
 
-const schema = z.object({
+const schema = supplementFormSchema.extend({
 	supplementId: z.string().min(1),
-	name: z.string().min(1),
-	brandName: z.string().optional(),
-	shopId: z.string().optional(),
-	category: z.enum(SUPPLEMENT_CATEGORIES),
-	stockUnit: z.enum(DOSAGE_UNITS),
-	currentStock: z.number().nonnegative().optional(),
-	packageSize: z.number().positive().optional(),
-	packagePrice: z.number().positive().optional(),
 });
 
 export const updateSupplement = authActionClient

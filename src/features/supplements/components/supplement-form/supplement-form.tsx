@@ -1,14 +1,10 @@
 "use client";
 
 import { FormProvider, type SubmitHandler } from "react-hook-form";
+import type { ShopOption } from "@/shared/types";
 import { SupplementFields } from "./supplement-fields";
 import type { SupplementFormValues } from "./supplement-form.schema";
 import { useSupplementForm } from "./use-supplement-form";
-
-type ShopOption = {
-	id: string;
-	name: string;
-};
 
 type SupplementFormProps = {
 	defaultValues?: Partial<SupplementFormValues>;

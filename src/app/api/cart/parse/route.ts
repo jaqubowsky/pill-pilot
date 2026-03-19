@@ -1,99 +1,18 @@
-import { generateText, Output } from "ai";
-import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import type { NextRequest } from "next/server";
 import { after } from "next/server";
-import sharp from "sharp";
 import { z } from "zod";
-import { cartParseSchema } from "@/features/shopping/schemas/cart-parse-schema";
+import { supplementContextSchema } from "@/features/shopping/api/services/build-cart-prompt";
+import { runCartParsePipeline } from "@/features/shopping/api/services/cart-parse-service";
 import { db } from "@/shared/db/client";
 import { cartScans } from "@/shared/db/schema";
-import { anthropic } from "@/shared/lib/ai";
 import { auth } from "@/shared/lib/auth";
+import { compressImageToBuffer } from "@/shared/lib/image-compression";
+import { createRateLimiter } from "@/shared/lib/rate-limit";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-const MAX_IMAGE_BYTES = 4.5 * 1024 * 1024;
-const RATE_LIMIT_WINDOW_MS = 60_000;
-const RATE_LIMIT_MAX_REQUESTS = 10;
-
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-
-function isRateLimited(userId: string): boolean {
-	const now = Date.now();
-	const entry = rateLimitMap.get(userId);
-
-	if (!entry || now > entry.resetAt) {
-		rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-		return false;
-	}
-
-	entry.count++;
-	return entry.count > RATE_LIMIT_MAX_REQUESTS;
-}
-
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-
-function isImage(file: File) {
-	return IMAGE_TYPES.includes(file.type);
-}
-
-async function compressImage(buffer: Buffer): Promise<Buffer> {
-	if (buffer.byteLength <= MAX_IMAGE_BYTES) {
-		return buffer;
-	}
-
-	const image = sharp(buffer);
-	const meta = await image.metadata();
-	const maxDim = 2048;
-
-	let pipeline = image;
-	if (meta.width && meta.height && (meta.width > maxDim || meta.height > maxDim)) {
-		pipeline = pipeline.resize(maxDim, maxDim, { fit: "inside", withoutEnlargement: true });
-	}
-
-	const compressed = await pipeline.jpeg({ quality: 80 }).toBuffer();
-	if (compressed.byteLength <= MAX_IMAGE_BYTES) {
-		return compressed;
-	}
-
-	return sharp(buffer)
-		.resize(maxDim, maxDim, { fit: "inside", withoutEnlargement: true })
-		.jpeg({ quality: 50 })
-		.toBuffer();
-}
-
-const supplementContextSchema = z.object({
-	id: z.string().max(128),
-	name: z.string().max(200),
-	brandName: z.string().max(200).nullable().optional(),
-});
-
-function buildPrompt(supplements: z.infer<typeof supplementContextSchema>[]): string {
-	const supplementList = supplements
-		.map((s) => `- id: ${s.id}, name: ${s.name}${s.brandName ? `, brand: ${s.brandName}` : ""}`)
-		.join("\n");
-
-	return `You are a shopping cart parser. The user uploaded a screenshot of an online shop cart. Extract all products with prices.
-
-<user_supplements>
-${supplementList || "(none)"}
-</user_supplements>
-
-<instructions>
-- Extract every product line from the cart.
-- productName: product name as shown in the cart.
-- price: price per unit as a number (e.g. 29.99). Use the unit price, not the line total if quantity > 1.
-- quantity: quantity in cart if visible. null if not shown.
-- matchedSupplementId: if the product clearly matches one of the user's supplements above, set this to the supplement's id. null if no match.
-- confidence: 0.0–1.0 confidence that matchedSupplementId is correct. 0 if matchedSupplementId is null.
-- shopName: detect the shop name from the screenshot (logo, URL, header). null if not visible.
-
-Match conservatively — only match when product name clearly corresponds to the supplement name. When in doubt, set matchedSupplementId to null and confidence to 0.
-</instructions>
-
-Return ONLY the structured JSON. No prose.`;
-}
+const isRateLimited = createRateLimiter({ maxRequests: 10 });
 
 export async function POST(request: NextRequest) {
 	const session = await auth.api.getSession({
@@ -122,7 +41,7 @@ export async function POST(request: NextRequest) {
 		return Response.json({ error: "file_too_large" }, { status: 400 });
 	}
 
-	if (!isImage(file)) {
+	if (!IMAGE_TYPES.includes(file.type)) {
 		return Response.json({ error: "unsupported_file_type" }, { status: 400 });
 	}
 
@@ -136,7 +55,7 @@ export async function POST(request: NextRequest) {
 	}
 
 	const buffer = Buffer.from(await file.arrayBuffer());
-	const compressedData = await compressImage(buffer);
+	const compressedData = await compressImageToBuffer(buffer);
 
 	const [scan] = await db
 		.insert(cartScans)
@@ -149,48 +68,7 @@ export async function POST(request: NextRequest) {
 		.returning({ id: cartScans.id });
 
 	after(async () => {
-		try {
-			const { output } = await generateText({
-				model: anthropic("claude-haiku-4-5"),
-				output: Output.object({ schema: cartParseSchema }),
-				system: buildPrompt(supplements),
-				messages: [
-					{
-						role: "user",
-						content: [
-							{
-								type: "image",
-								image: compressedData,
-							},
-							{
-								type: "text",
-								text: "Extract all products and prices from this shopping cart screenshot.",
-							},
-						],
-					},
-				],
-			});
-
-			if (!output) {
-				await db.update(cartScans).set({ status: "failed" }).where(eq(cartScans.id, scan.id));
-				revalidatePath("/shopping");
-				return;
-			}
-
-			await db
-				.update(cartScans)
-				.set({
-					status: "completed",
-					shopName: output.shopName ?? null,
-					items: output.items,
-				})
-				.where(eq(cartScans.id, scan.id));
-			revalidatePath("/shopping");
-		} catch (e) {
-			console.error("[cart/parse] AI error:", e);
-			await db.update(cartScans).set({ status: "failed" }).where(eq(cartScans.id, scan.id));
-			revalidatePath("/shopping");
-		}
+		await runCartParsePipeline(scan.id, compressedData, supplements);
 	});
 
 	return Response.json({ scanId: scan.id });

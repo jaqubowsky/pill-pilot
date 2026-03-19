@@ -13,7 +13,7 @@ type IconBadgeProps = {
 const variantStyles = {
 	default: "bg-brand-50 text-content-faint",
 	brand: "bg-brand-100 text-brand-700",
-	amber: "bg-warning-bg text-[#8B6914]",
+	amber: "bg-warning-bg text-warning-text",
 	muted: "bg-brand-50 text-content-muted",
 	danger: "bg-danger-bg text-danger",
 	info: "bg-info-bg text-[#2D6070]",

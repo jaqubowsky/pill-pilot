@@ -9,10 +9,14 @@ export function useLogin() {
 	async function handleGoogleLogin() {
 		if (isLoading) return;
 		setIsLoading(true);
-		await authClient.signIn.social({
-			provider: "google",
-			callbackURL: "/dashboard",
-		});
+		try {
+			await authClient.signIn.social({
+				provider: "google",
+				callbackURL: "/dashboard",
+			});
+		} catch {
+			setIsLoading(false);
+		}
 	}
 
 	return { handleGoogleLogin, isLoading };

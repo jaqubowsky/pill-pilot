@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getPriceList } from "@/features/shopping/api/queries/get-price-list";
+import { getPriceList } from "@/features/shopping";
 import { supplementRepository } from "@/shared/repositories/supplement-repository";
 import { timeBlockRepository } from "@/shared/repositories/time-block-repository";
 import { getProtocolForPreview } from "./api/queries/get-protocol-for-preview";

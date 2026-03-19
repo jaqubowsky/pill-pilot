@@ -3,12 +3,12 @@
 import { Camera, FileText, Loader2, PenLine } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { BackButton } from "@/features/protocol-wizard/components/back-button";
 import type {
 	ActiveProtocolSummary,
 	ExistingSupplementSummary,
 	TimeBlockSummary,
 } from "@/features/protocol-wizard/types";
-import { BackButton } from "@/features/protocol-wizard/components/back-button";
 import { Button } from "@/shared/components/ui/button";
 import {
 	Dialog,

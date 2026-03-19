@@ -1,4 +1,10 @@
 import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import {
+	buildShoppingList,
+	type ShopInfo,
+	type ShoppingGroup,
+	type ShoppingItem,
+} from "@/features/shopping/lib/build-shopping-list";
 import { db } from "@/shared/db/client";
 import {
 	ProtocolStatus,
@@ -8,55 +14,8 @@ import {
 	supplements,
 } from "@/shared/db/schema";
 import { toDateString } from "@/shared/lib/date";
-import { DELIVERY_BUFFER_DAYS, forecastDaysInStock } from "@/shared/lib/stock-forecast";
 
-export type ShopInfo = {
-	id: string;
-	name: string;
-	deliveryCost: string | null;
-	freeDeliveryThreshold: string | null;
-};
-
-export type ShoppingItem = {
-	id: string;
-	name: string;
-	packagePrice: string | null;
-	packageSize: number | null;
-	shopId: string | null;
-	stockUnit: string;
-	stockWarningThreshold: number;
-	daysRemaining: number;
-	depletionDate: string;
-	isMustBuy: boolean;
-};
-
-export type ShoppingGroup = {
-	shop: ShopInfo | null;
-	items: ShoppingItem[];
-};
-
-type ScheduleRow = {
-	supplementId: string;
-	dosageAmount: string;
-	cycleDaysOn: number | null;
-	cycleDaysOff: number | null;
-	startDayOffset: number;
-	durationDays: number | null;
-	protocolStartDate: string | null;
-	finishPackage: boolean;
-};
-
-const SUGGEST_ADD_DAYS = 30;
-
-function isOneTimeSupplement(schedules: ScheduleRow[]): boolean {
-	if (schedules.length === 0) return false;
-	return schedules.every((s) => s.durationDays !== null);
-}
-
-function isFinishPackageOnly(schedules: ScheduleRow[]): boolean {
-	if (schedules.length === 0) return false;
-	return schedules.every((s) => s.finishPackage);
-}
+export type { ShopInfo, ShoppingGroup, ShoppingItem };
 
 export async function getShoppingList(userId: string): Promise<ShoppingGroup[]> {
 	const rows = await db
@@ -69,11 +28,6 @@ export async function getShoppingList(userId: string): Promise<ShoppingGroup[]> 
 			packagePrice: supplements.packagePrice,
 			packageSize: supplements.packageSize,
 			shopId: supplements.shopId,
-			hasActiveSchedules: sql<number>`COALESCE(SUM(
-				CASE WHEN ${supplementSchedules.active} = true AND ${protocols.status} = ${ProtocolStatus.active}
-				THEN 1
-				ELSE 0 END
-			), 0)`,
 		})
 		.from(supplements)
 		.leftJoin(supplementSchedules, eq(supplementSchedules.supplementId, supplements.id))
@@ -119,72 +73,9 @@ export async function getShoppingList(userId: string): Promise<ShoppingGroup[]> 
 			),
 		);
 
-	const schedulesPerSupplement = new Map<string, ScheduleRow[]>();
-	for (const row of scheduleRows) {
-		const arr = schedulesPerSupplement.get(row.supplementId) ?? [];
-		arr.push(row);
-		schedulesPerSupplement.set(row.supplementId, arr);
-	}
-
-	const today = toDateString(new Date());
-	const todayMs = new Date(today).getTime();
-	const MS_PER_DAY = 86_400_000;
-
-	const mustBuyItems: ShoppingItem[] = [];
-	const suggestAddItems: ShoppingItem[] = [];
-	const shopIdsNeeded = new Set<string>();
-
-	for (const row of rows) {
-		const schedules = schedulesPerSupplement.get(row.id) ?? [];
-
-		if (isOneTimeSupplement(schedules)) continue;
-		if (isFinishPackageOnly(schedules)) continue;
-
-		const stock = Number(row.currentStock);
-		const threshold = row.stockWarningThreshold ?? 7;
-		const effectiveThreshold = threshold + DELIVERY_BUFFER_DAYS;
-
-		const daysRemaining = forecastDaysInStock(
-			stock,
-			schedules.map((s) => ({
-				dosageAmount: parseFloat(s.dosageAmount),
-				cycleDaysOn: s.cycleDaysOn,
-				cycleDaysOff: s.cycleDaysOff,
-				startDayOffset: s.startDayOffset,
-				durationDays: s.durationDays,
-				protocolStartDate: s.protocolStartDate,
-			})),
-			today,
-		);
-
-		if (daysRemaining === Number.POSITIVE_INFINITY) continue;
-
-		const depletionDate = toDateString(new Date(todayMs + daysRemaining * MS_PER_DAY));
-
-		if (row.shopId) shopIdsNeeded.add(row.shopId);
-
-		const item: ShoppingItem = {
-			id: row.id,
-			name: row.name,
-			packagePrice: row.packagePrice,
-			packageSize: row.packageSize,
-			shopId: row.shopId,
-			stockUnit: row.stockUnit,
-			stockWarningThreshold: threshold,
-			daysRemaining,
-			depletionDate,
-			isMustBuy: daysRemaining <= effectiveThreshold,
-		};
-
-		if (daysRemaining <= effectiveThreshold) {
-			mustBuyItems.push(item);
-		} else if (daysRemaining <= SUGGEST_ADD_DAYS) {
-			suggestAddItems.push(item);
-		}
-	}
-
+	const shopIds = [...new Set(rows.map((r) => r.shopId).filter((id): id is string => id !== null))];
 	const shopsData =
-		shopIdsNeeded.size > 0
+		shopIds.length > 0
 			? await db
 					.select({
 						id: shops.id,
@@ -193,35 +84,18 @@ export async function getShoppingList(userId: string): Promise<ShoppingGroup[]> 
 						freeDeliveryThreshold: shops.freeDeliveryThreshold,
 					})
 					.from(shops)
-					.where(inArray(shops.id, [...shopIdsNeeded]))
+					.where(inArray(shops.id, shopIds))
 			: [];
 
 	const shopMap = new Map<string, ShopInfo>(shopsData.map((s) => [s.id, s]));
 
-	const allItems = [...mustBuyItems, ...suggestAddItems];
-	allItems.sort((a, b) => a.daysRemaining - b.daysRemaining);
-
-	const groupMap = new Map<string | null, ShoppingItem[]>();
-
-	for (const item of allItems) {
-		const key = item.shopId ?? null;
-		const arr = groupMap.get(key) ?? [];
-		arr.push(item);
-		groupMap.set(key, arr);
-	}
-
-	const groups: ShoppingGroup[] = [];
-
-	for (const [shopId, items] of groupMap.entries()) {
-		const shop = shopId ? (shopMap.get(shopId) ?? null) : null;
-		groups.push({ shop, items });
-	}
-
-	groups.sort((a, b) => {
-		if (a.shop === null) return 1;
-		if (b.shop === null) return -1;
-		return a.shop.name.localeCompare(b.shop.name, "pl");
-	});
-
-	return groups;
+	return buildShoppingList(
+		rows,
+		scheduleRows.map((s) => ({
+			...s,
+			dosageAmount: parseFloat(s.dosageAmount),
+		})),
+		shopMap,
+		toDateString(new Date()),
+	);
 }

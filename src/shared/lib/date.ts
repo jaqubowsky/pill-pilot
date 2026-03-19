@@ -90,3 +90,9 @@ export function getFirstDayOfWeek(yearMonth: string): number {
 	const day = new Date(y, m - 1, 1).getDay();
 	return day === 0 ? 6 : day - 1;
 }
+
+const shortDateFormatter = new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "short" });
+
+export function toShortDate(date: Date): string {
+	return shortDateFormatter.format(date);
+}

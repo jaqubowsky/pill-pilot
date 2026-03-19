@@ -1,5 +1,5 @@
 import { useTranslations } from "next-intl";
-import { formatQuantity } from "@/shared/lib/format";
+import { formatQuantity } from "@/shared/lib/format-currency";
 
 type StockQuantityProps = {
 	currentStock: string;

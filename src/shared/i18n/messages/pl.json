@@ -37,7 +37,8 @@
 		"addProtocol": "Dodaj nowy protokół",
 		"restock": "Uzupełnij",
 		"adjust": "Korekta",
-		"setUp": "Skonfiguruj"
+		"setUp": "Skonfiguruj",
+		"currency": "zł"
 	},
 	"auth": {
 		"continueWithGoogle": "Kontynuuj przez Google",
@@ -195,7 +196,10 @@
 			"testSuccess": "Powiadomienie testowe wysłane",
 			"testError": "Nie udało się wysłać powiadomienia",
 			"noSubscriptions": "Brak aktywnych subskrypcji push",
-			"testPushBody": "Powiadomienie testowe działa!"
+			"testPushBody": "Powiadomienie testowe działa!",
+			"pushTimeBlock": "Czas na suplementy: {timeBlockName}",
+			"pushNextDose": "Następna dawka: {supplements}",
+			"pushWaitOver": "Czas oczekiwania minął: {supplements}"
 		}
 	},
 	"protocolWizard": {
@@ -242,6 +246,7 @@
 			"protocolNameRequired": "Nazwa protokołu jest wymagana",
 			"supplementsSection": "Suplementy",
 			"supplementNumber": "Suplement #{number}",
+			"noResults": "Brak wyników",
 			"linkToExisting": "Powiąż z istniejącym suplementem",
 			"createNew": "Utwórz nowy",
 			"nameRequired": "Nazwa suplementu jest wymagana",
@@ -474,7 +479,18 @@
 			"scanFailed": "Błąd analizy",
 			"deleteScanTitle": "Usunąć skan?",
 			"deleteScanDescription": "Skan zostanie trwale usunięty.",
-			"items": "{count, plural, one {# pozycja} few {# pozycje} other {# pozycji}}"
+			"items": "{count, plural, one {# pozycja} few {# pozycje} other {# pozycji}}",
+			"done": "Gotowe",
+			"supplementLabel": "Suplement",
+			"priceLabel": "Cena",
+			"or": "lub",
+			"creating": "Tworzę...",
+			"addSupplement": "Dodaj \u201E{name}\u201D",
+			"newSupplement": "Nowy suplement",
+			"uploadError": "Nie udało się rozpocząć analizy. Spróbuj ponownie.",
+			"createSupplementError": "Nie udało się utworzyć suplementu.",
+			"saveError": "Nie udało się zapisać. Spróbuj ponownie.",
+			"currency": "zł"
 		},
 		"priceSheet": {
 			"title": "Ustaw ceny suplementów",

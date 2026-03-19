@@ -12,11 +12,10 @@ import {
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useTranslations } from "next-intl";
+import { BackButton } from "@/features/protocol-wizard/components/back-button";
+import { PriceSheet } from "@/features/protocol-wizard/components/price-sheet";
 import type { ParsedProtocol } from "@/features/protocol-wizard/schemas/parsed-protocol-schema";
 import type { ExistingSupplementSummary, TimeBlockSummary } from "@/features/protocol-wizard/types";
-import type { PriceListItem, ShopOption } from "@/features/shopping/api/queries/get-price-list";
-import { PriceSheet } from "@/features/shopping/components/price-sheet";
-import { BackButton } from "@/features/protocol-wizard/components/back-button";
 import { LabeledInput } from "@/shared/components/labeled-input";
 import {
 	AlertDialog,
@@ -29,6 +28,7 @@ import {
 	AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
 import { Button } from "@/shared/components/ui/button";
+import type { PriceListItem, ShopOption } from "@/shared/types";
 import { PreviewBlock } from "./preview-block";
 import { PreviewMode, useParsedPreview } from "./use-parsed-preview";
 
@@ -150,7 +150,7 @@ export function ParsedPreview({
 							}}
 							className="w-full rounded-xl bg-warning-bg border border-warning/20 p-md text-left active:scale-[0.99] transition-transform"
 						>
-							<p className="text-sm text-[#8B6914]">
+							<p className="text-sm text-warning-text">
 								{unverifiedCount === 1
 									? t("protocolWizard.requiresVerification", { count: unverifiedCount })
 									: t("protocolWizard.requiresVerificationMany", { count: unverifiedCount })}

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const cartItemSchema = z.object({
+const cartItemSchema = z.object({
 	productName: z.string(),
 	price: z.number(),
 	quantity: z.number().nullable().optional(),

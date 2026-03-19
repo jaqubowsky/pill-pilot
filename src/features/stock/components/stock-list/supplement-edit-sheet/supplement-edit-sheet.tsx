@@ -15,12 +15,8 @@ import {
 	AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
 import { Button } from "@/shared/components/ui/button";
+import type { ShopOption } from "@/shared/types";
 import { useSupplementEditSheet } from "./use-supplement-edit-sheet";
-
-type ShopOption = {
-	id: string;
-	name: string;
-};
 
 type SupplementEditSheetProps = {
 	supplement: StockListItem | null;

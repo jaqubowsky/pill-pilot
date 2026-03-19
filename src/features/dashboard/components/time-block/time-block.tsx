@@ -6,8 +6,8 @@ import type {
 } from "@/features/dashboard/api/queries/get-daily-status";
 import { CheckAllButton } from "@/features/dashboard/components/check-all-button";
 import { SupplementRow } from "@/features/dashboard/components/supplement-row";
-import { PROTOCOL_BORDER_COLORS } from "@/shared/lib/protocol-colors";
 import { Button } from "@/shared/components/ui/button";
+import { PROTOCOL_BORDER_COLORS } from "@/shared/lib/protocol-colors";
 import { cn } from "@/shared/lib/utils";
 import { TimeBlockHeader } from "./time-block-header";
 import { useTimeBlock } from "./use-time-block";

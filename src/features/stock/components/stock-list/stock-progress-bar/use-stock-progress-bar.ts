@@ -15,5 +15,12 @@ export function useStockProgressBar({
 	const maxStock = packageSize ?? (hasUsage ? dailyUsage * 30 : currentStock);
 	const percent = maxStock > 0 ? Math.min(100, Math.round((currentStock / maxStock) * 100)) : 0;
 
-	return { hasUsage, percent };
+	function getFillColor() {
+		if (!hasUsage) return "bg-brand-500";
+		if (daysInStock < 3) return "bg-danger";
+		if (daysInStock < 7) return "bg-warning";
+		return "bg-brand-500";
+	}
+
+	return { hasUsage, percent, fillColor: getFillColor() };
 }

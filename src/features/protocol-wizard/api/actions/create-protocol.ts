@@ -42,7 +42,12 @@ export const createProtocol = authActionClient
 		const supplementMap = await resolveSupplements(parsed.supplements, userId);
 		const userTimeBlocks = await timeBlockRepository.findByUserId(userId);
 		const validTimeBlockIds = new Set(userTimeBlocks.map((tb) => tb.id));
-		const schedules = buildScheduleDataList(parsed.supplements, supplementMap, protocolId, validTimeBlockIds);
+		const schedules = buildScheduleDataList(
+			parsed.supplements,
+			supplementMap,
+			protocolId,
+			validTimeBlockIds,
+		);
 
 		for (const schedule of schedules) {
 			await supplementScheduleRepository.create(schedule);

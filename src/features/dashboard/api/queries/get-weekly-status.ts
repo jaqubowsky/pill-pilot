@@ -1,4 +1,3 @@
-import { and, eq } from "drizzle-orm";
 import { groupLogsByDate, isScheduleActionable } from "@/features/dashboard/lib/schedule-filters";
 import { db } from "@/shared/db/client";
 import { protocols, supplementSchedules, supplements, timeBlocks } from "@/shared/db/schema";

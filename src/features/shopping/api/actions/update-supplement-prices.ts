@@ -23,22 +23,12 @@ export const updateSupplementPrices = authActionClient
 	.action(async ({ parsedInput, ctx }) => {
 		for (const update of parsedInput.updates) {
 			await supplementRepository.findByIdAndUserId(update.supplementId, ctx.userId);
-		}
 
-		for (const update of parsedInput.updates) {
-			const patch: Record<string, unknown> = {};
-			if (update.packagePrice !== undefined) {
-				patch.packagePrice = update.packagePrice.toString();
-			}
-			if (update.packageSize !== undefined) {
-				patch.packageSize = update.packageSize;
-			}
-			if ("shopId" in update) {
-				patch.shopId = update.shopId ?? null;
-			}
-			if (Object.keys(patch).length > 0) {
-				await supplementRepository.update(update.supplementId, patch);
-			}
+			await supplementRepository.update(update.supplementId, {
+				...(update.packagePrice !== undefined && { packagePrice: update.packagePrice.toString() }),
+				...(update.packageSize !== undefined && { packageSize: update.packageSize }),
+				...("shopId" in update && { shopId: update.shopId ?? null }),
+			});
 		}
 
 		revalidatePath("/shopping");

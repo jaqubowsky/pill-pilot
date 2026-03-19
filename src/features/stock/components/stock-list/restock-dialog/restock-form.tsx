@@ -84,7 +84,7 @@ export function RestockForm({ supplementId, stockUnit, onClose }: Props) {
 						className="flex-1 bg-surface-sunken border-edge rounded-lg px-md py-sm text-base placeholder:text-content-faint focus-visible:border-brand-400 focus-visible:ring-focus-ring"
 						placeholder={t("stock.restockPricePlaceholder")}
 					/>
-					<span className="text-sm text-content-muted shrink-0">zł</span>
+					<span className="text-sm text-content-muted shrink-0">{t("common.currency")}</span>
 				</div>
 			</div>
 

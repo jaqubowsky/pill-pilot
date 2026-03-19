@@ -147,8 +147,8 @@ export const parsedSupplementSchema = z.object({
 });
 
 export const parsedProtocolSchema = z.object({
-	protocolName: z.string(),
-	supplements: z.array(parsedSupplementSchema),
+	protocolName: z.string().max(200),
+	supplements: z.array(parsedSupplementSchema).max(100),
 });
 
 export type ParsedProtocol = z.infer<typeof parsedProtocolSchema>;

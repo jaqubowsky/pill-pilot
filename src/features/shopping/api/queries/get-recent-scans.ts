@@ -1,5 +1,5 @@
 import { desc, eq } from "drizzle-orm";
-import type { CartItem } from "@/features/shopping/schemas/cart-parse-schema";
+import { type CartItem, cartParseSchema } from "@/features/shopping/schemas/cart-parse-schema";
 import { db } from "@/shared/db/client";
 import type { CartScanStatus } from "@/shared/db/schema";
 import { cartScans } from "@/shared/db/schema";
@@ -30,7 +30,7 @@ export async function getRecentScans(userId: string): Promise<RecentScan[]> {
 		id: r.id,
 		status: r.status,
 		shopName: r.shopName,
-		items: (r.items as CartItem[]) ?? [],
+		items: cartParseSchema.shape.items.catch([]).parse(r.items),
 		createdAt: r.createdAt,
 	}));
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { StockCalculator } from "@/features/stock/components/stock-list/stock-calculator";
+import { StockCalculator } from "@/features/stock";
 import { InfoHint } from "@/features/supplements/components/info-hint";
 import { LabeledInput } from "@/shared/components/labeled-input";
 import { LabeledSelect } from "@/shared/components/labeled-select";
@@ -15,12 +15,8 @@ import {
 	SelectValue,
 } from "@/shared/components/ui/select";
 import { DOSAGE_UNITS, SUPPLEMENT_CATEGORIES } from "@/shared/db/schema";
+import type { ShopOption } from "@/shared/types";
 import { useSupplementFields } from "./use-supplement-fields";
-
-type ShopOption = {
-	id: string;
-	name: string;
-};
 
 type SupplementFieldsProps = {
 	supplementId?: string;

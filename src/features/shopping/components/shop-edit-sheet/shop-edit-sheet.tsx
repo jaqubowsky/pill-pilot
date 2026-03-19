@@ -1,25 +1,18 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import type { ShopOption } from "@/features/shopping/api/queries/get-price-list";
+import { Controller, FormProvider } from "react-hook-form";
+import type { ShopWithDelivery } from "@/features/shopping/api/queries/get-price-list";
 import { BottomSheet } from "@/shared/components/bottom-sheet";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "@/shared/components/ui/alert-dialog";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
+import { CurrencyField } from "./currency-field";
+import { DeleteShopDialog } from "./delete-shop-dialog";
 import { useShopEditSheet } from "./use-shop-edit-sheet";
 
 type ShopEditSheetProps = {
-	shop: ShopOption | null;
+	shop: ShopWithDelivery | null;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 };
@@ -28,10 +21,9 @@ export function ShopEditSheet({ shop, open, onOpenChange }: ShopEditSheetProps) 
 	const t = useTranslations();
 
 	const {
+		methods,
 		isNew,
 		isPending,
-		values,
-		setValues,
 		deleteConfirmOpen,
 		setDeleteConfirmOpen,
 		handleSubmit,
@@ -46,103 +38,82 @@ export function ShopEditSheet({ shop, open, onOpenChange }: ShopEditSheetProps) 
 				title={isNew ? t("shopping.addShop") : t("shopping.editShop")}
 				scrollable
 			>
-				<form onSubmit={handleSubmit} className="flex flex-col gap-md">
-					<div className="flex flex-col gap-xs">
-						<Label htmlFor="shop-name">{t("shopping.shopName")}</Label>
-						<Input
-							id="shop-name"
-							value={values.name}
-							onChange={(e) => setValues((prev) => ({ ...prev, name: e.target.value }))}
-							placeholder={t("shopping.shopNamePlaceholder")}
-							required
+				<FormProvider {...methods}>
+					<form onSubmit={handleSubmit} className="flex flex-col gap-md">
+						<Controller
+							name="name"
+							control={methods.control}
+							render={({ field }) => (
+								<div className="flex flex-col gap-xs">
+									<Label htmlFor="shop-name">{t("shopping.shopName")}</Label>
+									<Input
+										id="shop-name"
+										value={field.value}
+										onChange={field.onChange}
+										placeholder={t("shopping.shopNamePlaceholder")}
+										required
+									/>
+								</div>
+							)}
 						/>
-					</div>
 
-					<div className="flex flex-col gap-xs">
-						<Label htmlFor="delivery-cost">{t("shopping.deliveryCost")}</Label>
-						<div className="relative">
-							<Input
-								id="delivery-cost"
-								type="number"
-								inputMode="decimal"
-								min={0}
-								step={0.01}
-								value={values.deliveryCost}
-								onChange={(e) => setValues((prev) => ({ ...prev, deliveryCost: e.target.value }))}
-								placeholder="0.00"
-								className="pr-8"
-							/>
-							<span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-content-muted pointer-events-none">
-								zł
-							</span>
-						</div>
-					</div>
+						<Controller
+							name="deliveryCost"
+							control={methods.control}
+							render={({ field }) => (
+								<CurrencyField
+									id="delivery-cost"
+									label={t("shopping.deliveryCost")}
+									value={field.value}
+									onChange={field.onChange}
+								/>
+							)}
+						/>
 
-					<div className="flex flex-col gap-xs">
-						<Label htmlFor="free-threshold">{t("shopping.freeDeliveryThreshold")}</Label>
-						<div className="relative">
-							<Input
-								id="free-threshold"
-								type="number"
-								inputMode="decimal"
-								min={0}
-								step={0.01}
-								value={values.freeDeliveryThreshold}
-								onChange={(e) =>
-									setValues((prev) => ({
-										...prev,
-										freeDeliveryThreshold: e.target.value,
-									}))
-								}
-								placeholder="0.00"
-								className="pr-8"
-							/>
-							<span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-content-muted pointer-events-none">
-								zł
-							</span>
-						</div>
-					</div>
+						<Controller
+							name="freeDeliveryThreshold"
+							control={methods.control}
+							render={({ field }) => (
+								<CurrencyField
+									id="free-threshold"
+									label={t("shopping.freeDeliveryThreshold")}
+									value={field.value}
+									onChange={field.onChange}
+								/>
+							)}
+						/>
 
-					<div className="flex flex-col gap-sm mt-lg">
-						<Button
-							type="submit"
-							disabled={isPending || !values.name.trim()}
-							className="w-full bg-brand-500 text-content-inverse rounded-lg px-lg py-sm text-sm font-medium"
-						>
-							{t("common.saveChanges")}
-						</Button>
-
-						{!isNew && (
+						<div className="flex flex-col gap-sm mt-lg">
 							<Button
-								type="button"
-								variant="ghost"
-								disabled={isPending}
-								onClick={() => setDeleteConfirmOpen(true)}
-								className="w-full text-danger"
+								type="submit"
+								disabled={isPending || !methods.formState.isValid}
+								className="w-full bg-brand-500 text-content-inverse rounded-lg px-lg py-sm text-sm font-medium"
 							>
-								{t("shopping.deleteShop")}
+								{t("common.saveChanges")}
 							</Button>
-						)}
-					</div>
-				</form>
+
+							{!isNew && (
+								<Button
+									type="button"
+									variant="ghost"
+									disabled={isPending}
+									onClick={() => setDeleteConfirmOpen(true)}
+									className="w-full text-danger"
+								>
+									{t("shopping.deleteShop")}
+								</Button>
+							)}
+						</div>
+					</form>
+				</FormProvider>
 			</BottomSheet>
 
-			<AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>{t("shopping.deleteShopConfirmTitle")}</AlertDialogTitle>
-						<AlertDialogDescription>
-							{t("shopping.deleteShopConfirmDescription")}
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-						<AlertDialogAction onClick={handleDeleteConfirm} disabled={isPending}>
-							{t("common.delete")}
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+			<DeleteShopDialog
+				open={deleteConfirmOpen}
+				onOpenChange={setDeleteConfirmOpen}
+				onConfirm={handleDeleteConfirm}
+				disabled={isPending}
+			/>
 		</>
 	);
 }

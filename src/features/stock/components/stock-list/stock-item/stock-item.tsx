@@ -3,17 +3,13 @@
 import { useTranslations } from "next-intl";
 import type { StockListItem } from "@/features/stock/api/queries/get-stock-list";
 import { Button } from "@/shared/components/ui/button";
+import type { ShopOption } from "@/shared/types";
 import { AdjustDialog } from "../adjust-dialog";
 import { RestockDialog } from "../restock-dialog";
 import { StockProgressBar } from "../stock-progress-bar";
 import { SupplementEditSheet } from "../supplement-edit-sheet";
 import { StockQuantity } from "./stock-quantity";
 import { useStockItem } from "./use-stock-item";
-
-type ShopOption = {
-	id: string;
-	name: string;
-};
 
 type StockItemProps = {
 	item: StockListItem;
@@ -28,7 +24,7 @@ export function StockItem({ item, shops }: StockItemProps) {
 
 	return (
 		<>
-			<div className="bg-surface-raised border-edge-subtle rounded-xl shadow-sm">
+			<div className="bg-surface-raised border border-edge-subtle rounded-xl shadow-sm">
 				<div className="flex flex-col gap-xs p-md">
 					<p className="text-sm font-bold text-content truncate">{item.name}</p>
 					{item.brandName && (

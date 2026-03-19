@@ -1,39 +1,47 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction } from "next-safe-action/hooks";
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { createShop, deleteShop, updateShop } from "@/features/shopping/api/actions/manage-shop";
-import type { ShopOption } from "@/features/shopping/api/queries/get-price-list";
+import { createShop } from "@/features/shopping/api/actions/create-shop";
+import { deleteShop } from "@/features/shopping/api/actions/delete-shop";
+import { updateShop } from "@/features/shopping/api/actions/update-shop";
+import type { ShopWithDelivery } from "@/features/shopping/api/queries/get-price-list";
+import { type ShopFormValues, shopFormSchema } from "./shop-edit-sheet.schema";
 
 type UseShopEditSheetParams = {
-	shop: ShopOption | null;
+	shop: ShopWithDelivery | null;
 	onOpenChange: (open: boolean) => void;
 };
 
-type ShopFormValues = {
-	name: string;
-	deliveryCost: string;
-	freeDeliveryThreshold: string;
-};
+function parseOptionalPositiveNumber(value: string): number | null {
+	if (!value.trim()) return null;
+	const n = parseFloat(value);
+	return Number.isNaN(n) || n < 0 ? null : n;
+}
 
 export function useShopEditSheet({ shop, onOpenChange }: UseShopEditSheetParams) {
 	const isNew = shop === null;
 	const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
-	const [values, setValues] = useState<ShopFormValues>({
-		name: shop?.name ?? "",
-		deliveryCost: shop?.deliveryCost ?? "",
-		freeDeliveryThreshold: shop?.freeDeliveryThreshold ?? "",
+	const methods = useForm<ShopFormValues>({
+		resolver: zodResolver(shopFormSchema),
+		defaultValues: {
+			name: shop?.name ?? "",
+			deliveryCost: shop?.deliveryCost ?? "",
+			freeDeliveryThreshold: shop?.freeDeliveryThreshold ?? "",
+		},
 	});
 
 	useEffect(() => {
-		setValues({
+		methods.reset({
 			name: shop?.name ?? "",
 			deliveryCost: shop?.deliveryCost ?? "",
 			freeDeliveryThreshold: shop?.freeDeliveryThreshold ?? "",
 		});
-	}, [shop]);
+	}, [shop, methods]);
 
 	const { execute: executeCreate, isPending: isCreating } = useAction(createShop, {
 		onSuccess: () => onOpenChange(false),
@@ -52,16 +60,7 @@ export function useShopEditSheet({ shop, onOpenChange }: UseShopEditSheetParams)
 
 	const isPending = isCreating || isUpdating || isDeleting;
 
-	function parseOptionalPositiveNumber(value: string): number | null {
-		if (!value.trim()) return null;
-		const n = parseFloat(value);
-		return Number.isNaN(n) || n < 0 ? null : n;
-	}
-
-	function handleSubmit(e: React.FormEvent) {
-		e.preventDefault();
-		if (!values.name.trim()) return;
-
+	const handleSubmit = methods.handleSubmit((values) => {
 		const deliveryCost = parseOptionalPositiveNumber(values.deliveryCost);
 		const freeDeliveryThreshold = parseOptionalPositiveNumber(values.freeDeliveryThreshold);
 
@@ -79,7 +78,7 @@ export function useShopEditSheet({ shop, onOpenChange }: UseShopEditSheetParams)
 				freeDeliveryThreshold,
 			});
 		}
-	}
+	});
 
 	function handleDeleteConfirm() {
 		if (!shop) return;
@@ -87,10 +86,9 @@ export function useShopEditSheet({ shop, onOpenChange }: UseShopEditSheetParams)
 	}
 
 	return {
+		methods,
 		isNew,
 		isPending,
-		values,
-		setValues,
 		deleteConfirmOpen,
 		setDeleteConfirmOpen,
 		handleSubmit,

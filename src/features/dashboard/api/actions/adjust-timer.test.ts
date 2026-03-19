@@ -9,7 +9,9 @@ const { mockDailyLogRepo } = vi.hoisted(() => ({
 
 vi.mock("next/cache", async () => import("@/test/mock-safe-action"));
 vi.mock("@/shared/lib/safe-action", async () => import("@/test/mock-safe-action"));
-vi.mock("@/shared/repositories/daily-log-repository", () => ({ dailyLogRepository: mockDailyLogRepo }));
+vi.mock("@/shared/repositories/daily-log-repository", () => ({
+	dailyLogRepository: mockDailyLogRepo,
+}));
 
 import { adjustTimer } from "./adjust-timer";
 

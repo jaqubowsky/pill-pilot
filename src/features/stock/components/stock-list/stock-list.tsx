@@ -3,11 +3,11 @@
 import { Package } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { StockList } from "@/features/stock/api/queries/get-stock-list";
+import { SupplementEditSheet } from "@/features/supplements";
 import { Button } from "@/shared/components/ui/button";
 import { Separator } from "@/shared/components/ui/separator";
 import type { ShopOption } from "@/shared/types";
 import { StockItem } from "./stock-item";
-import { SupplementEditSheet } from "@/features/supplements";
 import { useStockList } from "./use-stock-list";
 
 type StockListProps = {

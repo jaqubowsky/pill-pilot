@@ -4,8 +4,8 @@ import { useQueryState } from "nuqs";
 import { adjustTimer } from "@/features/dashboard/api/actions/adjust-timer";
 import { skipCooldown } from "@/features/dashboard/api/actions/skip-cooldown";
 import { skipWaitTimer } from "@/features/dashboard/api/actions/skip-wait-timer";
-import { dashboardSearchParams } from "@/features/dashboard/search-params";
 import type { ActiveTimer } from "@/features/dashboard/lib/collect-timers";
+import { dashboardSearchParams } from "@/features/dashboard/search-params";
 
 type Params = {
 	timer: ActiveTimer;

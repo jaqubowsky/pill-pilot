@@ -20,9 +20,15 @@ const { mockDailyLogRepo, mockSupplementRepo, mockScheduleRepo } = vi.hoisted(()
 
 vi.mock("next/cache", async () => import("@/test/mock-safe-action"));
 vi.mock("@/shared/lib/safe-action", async () => import("@/test/mock-safe-action"));
-vi.mock("@/shared/repositories/daily-log-repository", () => ({ dailyLogRepository: mockDailyLogRepo }));
-vi.mock("@/shared/repositories/supplement-repository", () => ({ supplementRepository: mockSupplementRepo }));
-vi.mock("@/shared/repositories/supplement-schedule-repository", () => ({ supplementScheduleRepository: mockScheduleRepo }));
+vi.mock("@/shared/repositories/daily-log-repository", () => ({
+	dailyLogRepository: mockDailyLogRepo,
+}));
+vi.mock("@/shared/repositories/supplement-repository", () => ({
+	supplementRepository: mockSupplementRepo,
+}));
+vi.mock("@/shared/repositories/supplement-schedule-repository", () => ({
+	supplementScheduleRepository: mockScheduleRepo,
+}));
 vi.mock("@/features/dashboard/lib/cooldown", () => ({ isCooldownActive: vi.fn(() => false) }));
 
 import { isCooldownActive } from "@/features/dashboard/lib/cooldown";
@@ -95,7 +101,10 @@ describe("markTaken", () => {
 		});
 
 		it("allows fractional stock (0.5 remaining)", async () => {
-			mockSupplementRepo.findByIdAndUserId.mockResolvedValue({ ...supplement, currentStock: "0.5" });
+			mockSupplementRepo.findByIdAndUserId.mockResolvedValue({
+				...supplement,
+				currentStock: "0.5",
+			});
 			mockScheduleRepo.findOwned.mockResolvedValue({ ...schedule, dosageAmount: "0.25" });
 
 			const result = await markTaken({ scheduleId: "sched-1", date: "2025-03-01" });
@@ -107,9 +116,7 @@ describe("markTaken", () => {
 
 	describe("cooldown enforcement", () => {
 		it("throws COOLDOWN_ACTIVE when cooldown is active", async () => {
-			mockScheduleRepo.findSiblings.mockResolvedValue([
-				{ id: "sib-1", dosageIntervalMinutes: 60 },
-			]);
+			mockScheduleRepo.findSiblings.mockResolvedValue([{ id: "sib-1", dosageIntervalMinutes: 60 }]);
 			mockDailyLogRepo.findByDateAndScheduleIds.mockResolvedValue([
 				{ takenAt: new Date(), timerAdjustmentMinutes: null, cooldownSkippedAt: null },
 			]);
@@ -133,9 +140,7 @@ describe("markTaken", () => {
 		});
 
 		it("skips cooldown check when no sibling logs exist", async () => {
-			mockScheduleRepo.findSiblings.mockResolvedValue([
-				{ id: "sib-1", dosageIntervalMinutes: 60 },
-			]);
+			mockScheduleRepo.findSiblings.mockResolvedValue([{ id: "sib-1", dosageIntervalMinutes: 60 }]);
 			mockDailyLogRepo.findByDateAndScheduleIds.mockResolvedValue([]);
 
 			const result = await markTaken({ scheduleId: "sched-1", date: "2025-03-01" });
@@ -153,10 +158,10 @@ describe("markTaken", () => {
 
 			await markTaken({ scheduleId: "sched-1", date: "2025-03-01" });
 
-			expect(mockDailyLogRepo.findByDateAndScheduleIds).toHaveBeenCalledWith(
-				"2025-03-01",
-				["sib-1", "sib-2"],
-			);
+			expect(mockDailyLogRepo.findByDateAndScheduleIds).toHaveBeenCalledWith("2025-03-01", [
+				"sib-1",
+				"sib-2",
+			]);
 		});
 
 		it("reads dosageIntervalMinutes from first sibling only", async () => {
@@ -174,9 +179,7 @@ describe("markTaken", () => {
 		});
 
 		it("skips cooldown when dosageIntervalMinutes is 0 (falsy)", async () => {
-			mockScheduleRepo.findSiblings.mockResolvedValue([
-				{ id: "sib-1", dosageIntervalMinutes: 0 },
-			]);
+			mockScheduleRepo.findSiblings.mockResolvedValue([{ id: "sib-1", dosageIntervalMinutes: 0 }]);
 
 			await markTaken({ scheduleId: "sched-1", date: "2025-03-01" });
 
@@ -202,7 +205,11 @@ describe("markTaken", () => {
 
 			expect(result).toEqual({ logId: "log-1" });
 			expect(mockDailyLogRepo.create).toHaveBeenCalledWith(
-				expect.objectContaining({ scheduleId: "sched-1", date: "2025-03-01", takenAt: expect.any(Date) }),
+				expect.objectContaining({
+					scheduleId: "sched-1",
+					date: "2025-03-01",
+					takenAt: expect.any(Date),
+				}),
 			);
 			expect(mockSupplementRepo.decrementStock).toHaveBeenCalledWith("supp-1", "2");
 		});

@@ -15,9 +15,15 @@ const { mockDailyLogRepo, mockScheduleRepo, mockProtocolRepo } = vi.hoisted(() =
 
 vi.mock("next/cache", async () => import("@/test/mock-safe-action"));
 vi.mock("@/shared/lib/safe-action", async () => import("@/test/mock-safe-action"));
-vi.mock("@/shared/repositories/daily-log-repository", () => ({ dailyLogRepository: mockDailyLogRepo }));
-vi.mock("@/shared/repositories/supplement-schedule-repository", () => ({ supplementScheduleRepository: mockScheduleRepo }));
-vi.mock("@/shared/repositories/protocol-repository", () => ({ protocolRepository: mockProtocolRepo }));
+vi.mock("@/shared/repositories/daily-log-repository", () => ({
+	dailyLogRepository: mockDailyLogRepo,
+}));
+vi.mock("@/shared/repositories/supplement-schedule-repository", () => ({
+	supplementScheduleRepository: mockScheduleRepo,
+}));
+vi.mock("@/shared/repositories/protocol-repository", () => ({
+	protocolRepository: mockProtocolRepo,
+}));
 
 import { skipCooldown } from "./skip-cooldown";
 
@@ -87,9 +93,9 @@ describe("skipCooldown", () => {
 
 		await skipCooldown({ protocolId: "proto-1", supplementId: "supp-1", date: "2025-03-01" });
 
-		expect(mockDailyLogRepo.findByDateAndScheduleIds).toHaveBeenCalledWith(
-			"2025-03-01",
-			["sib-A", "sib-B"],
-		);
+		expect(mockDailyLogRepo.findByDateAndScheduleIds).toHaveBeenCalledWith("2025-03-01", [
+			"sib-A",
+			"sib-B",
+		]);
 	});
 });

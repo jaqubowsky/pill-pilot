@@ -39,29 +39,21 @@ describe("getCheckableEntries", () => {
 	});
 
 	it("excludes out-of-stock entries", () => {
-		expect(
-			getCheckableEntries([{ ...base, stockStatus: { currentStock: 0 } }]),
-		).toHaveLength(0);
+		expect(getCheckableEntries([{ ...base, stockStatus: { currentStock: 0 } }])).toHaveLength(0);
 	});
 
 	it("includes out-of-stock entries when finishPackage is true", () => {
 		expect(
-			getCheckableEntries([
-				{ ...base, stockStatus: { currentStock: 0 }, finishPackage: true },
-			]),
+			getCheckableEntries([{ ...base, stockStatus: { currentStock: 0 }, finishPackage: true }]),
 		).toHaveLength(1);
 	});
 
 	it("excludes entries with active cooldown", () => {
-		expect(
-			getCheckableEntries([{ ...base, cooldown: { remainingMs: 5000 } }]),
-		).toHaveLength(0);
+		expect(getCheckableEntries([{ ...base, cooldown: { remainingMs: 5000 } }])).toHaveLength(0);
 	});
 
 	it("includes entries with expired cooldown", () => {
-		expect(
-			getCheckableEntries([{ ...base, cooldown: { remainingMs: 0 } }]),
-		).toHaveLength(1);
+		expect(getCheckableEntries([{ ...base, cooldown: { remainingMs: 0 } }])).toHaveLength(1);
 	});
 });
 

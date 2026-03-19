@@ -12,10 +12,10 @@ import {
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useTranslations } from "next-intl";
+import type { ComponentType } from "react";
 import { BackButton } from "@/features/protocol-wizard/components/back-button";
 import type { ParsedProtocol } from "@/features/protocol-wizard/schemas/parsed-protocol-schema";
 import type { ExistingSupplementSummary, TimeBlockSummary } from "@/features/protocol-wizard/types";
-import type { ComponentType } from "react";
 import type { PriceListItem, ShopWithDelivery } from "@/shared/api/queries/get-price-list";
 import { LabeledInput } from "@/shared/components/labeled-input";
 import { Button } from "@/shared/components/ui/button";

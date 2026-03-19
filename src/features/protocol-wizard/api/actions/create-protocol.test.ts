@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockProtocolRepo, mockScheduleRepo, mockTimeBlockRepo, mockResolveSupplements, mockBuildScheduleDataList } = vi.hoisted(() => ({
+const {
+	mockProtocolRepo,
+	mockScheduleRepo,
+	mockTimeBlockRepo,
+	mockResolveSupplements,
+	mockBuildScheduleDataList,
+} = vi.hoisted(() => ({
 	mockProtocolRepo: {
 		findByIdAndUserId: vi.fn(),
 		update: vi.fn(),
@@ -23,9 +29,15 @@ vi.mock("next-safe-action", () => ({
 		throw new Error(`ValidationErrors: ${JSON.stringify(errors)}`);
 	},
 }));
-vi.mock("@/shared/repositories/protocol-repository", () => ({ protocolRepository: mockProtocolRepo }));
-vi.mock("@/shared/repositories/supplement-schedule-repository", () => ({ supplementScheduleRepository: mockScheduleRepo }));
-vi.mock("@/shared/repositories/time-block-repository", () => ({ timeBlockRepository: mockTimeBlockRepo }));
+vi.mock("@/shared/repositories/protocol-repository", () => ({
+	protocolRepository: mockProtocolRepo,
+}));
+vi.mock("@/shared/repositories/supplement-schedule-repository", () => ({
+	supplementScheduleRepository: mockScheduleRepo,
+}));
+vi.mock("@/shared/repositories/time-block-repository", () => ({
+	timeBlockRepository: mockTimeBlockRepo,
+}));
 vi.mock("@/features/protocol-wizard/lib/resolve-supplements", () => ({
 	resolveSupplements: mockResolveSupplements,
 	buildScheduleDataList: mockBuildScheduleDataList,

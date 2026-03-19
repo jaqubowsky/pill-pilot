@@ -16,9 +16,15 @@ const { mockDailyLogRepo, mockSupplementRepo, mockScheduleRepo } = vi.hoisted(()
 
 vi.mock("next/cache", async () => import("@/test/mock-safe-action"));
 vi.mock("@/shared/lib/safe-action", async () => import("@/test/mock-safe-action"));
-vi.mock("@/shared/repositories/daily-log-repository", () => ({ dailyLogRepository: mockDailyLogRepo }));
-vi.mock("@/shared/repositories/supplement-repository", () => ({ supplementRepository: mockSupplementRepo }));
-vi.mock("@/shared/repositories/supplement-schedule-repository", () => ({ supplementScheduleRepository: mockScheduleRepo }));
+vi.mock("@/shared/repositories/daily-log-repository", () => ({
+	dailyLogRepository: mockDailyLogRepo,
+}));
+vi.mock("@/shared/repositories/supplement-repository", () => ({
+	supplementRepository: mockSupplementRepo,
+}));
+vi.mock("@/shared/repositories/supplement-schedule-repository", () => ({
+	supplementScheduleRepository: mockScheduleRepo,
+}));
 
 import { markBlockTaken } from "./mark-block-taken";
 
@@ -42,7 +48,11 @@ describe("markBlockTaken", () => {
 
 	it("skips supplements with zero stock (silent skip)", async () => {
 		mockDailyLogRepo.findByDateAndScheduleIds.mockResolvedValue([]);
-		mockScheduleRepo.findOwned.mockResolvedValue({ id: "s1", supplementId: "supp-1", dosageAmount: "1" });
+		mockScheduleRepo.findOwned.mockResolvedValue({
+			id: "s1",
+			supplementId: "supp-1",
+			dosageAmount: "1",
+		});
 		mockSupplementRepo.findByIdAndUserId.mockResolvedValue({ id: "supp-1", currentStock: "0" });
 
 		const result = await markBlockTaken({ scheduleIds: ["s1"], date: "2025-03-01" });
@@ -54,7 +64,11 @@ describe("markBlockTaken", () => {
 
 	it("creates logs and decrements stock for unchecked items with stock", async () => {
 		mockDailyLogRepo.findByDateAndScheduleIds.mockResolvedValue([{ scheduleId: "s1" }]);
-		mockScheduleRepo.findOwned.mockResolvedValue({ id: "s2", supplementId: "supp-2", dosageAmount: "1" });
+		mockScheduleRepo.findOwned.mockResolvedValue({
+			id: "s2",
+			supplementId: "supp-2",
+			dosageAmount: "1",
+		});
 		mockSupplementRepo.findByIdAndUserId.mockResolvedValue({ id: "supp-2", currentStock: "10" });
 
 		const result = await markBlockTaken({ scheduleIds: ["s1", "s2"], date: "2025-03-01" });
@@ -68,7 +82,11 @@ describe("markBlockTaken", () => {
 
 	it("allows untracked supplements (null stock)", async () => {
 		mockDailyLogRepo.findByDateAndScheduleIds.mockResolvedValue([]);
-		mockScheduleRepo.findOwned.mockResolvedValue({ id: "s1", supplementId: "supp-1", dosageAmount: "1" });
+		mockScheduleRepo.findOwned.mockResolvedValue({
+			id: "s1",
+			supplementId: "supp-1",
+			dosageAmount: "1",
+		});
 		mockSupplementRepo.findByIdAndUserId.mockResolvedValue({ id: "supp-1", currentStock: null });
 
 		const result = await markBlockTaken({ scheduleIds: ["s1"], date: "2025-03-01" });
@@ -104,7 +122,11 @@ describe("markBlockTaken", () => {
 
 	it("verifies ownership for each unchecked schedule", async () => {
 		mockDailyLogRepo.findByDateAndScheduleIds.mockResolvedValue([]);
-		mockScheduleRepo.findOwned.mockResolvedValue({ id: "s1", supplementId: "supp-1", dosageAmount: "1" });
+		mockScheduleRepo.findOwned.mockResolvedValue({
+			id: "s1",
+			supplementId: "supp-1",
+			dosageAmount: "1",
+		});
 		mockSupplementRepo.findByIdAndUserId.mockResolvedValue({ id: "supp-1", currentStock: "10" });
 
 		await markBlockTaken({ scheduleIds: ["s1"], date: "2025-03-01" });
@@ -115,7 +137,11 @@ describe("markBlockTaken", () => {
 
 	it("does not enforce cooldown (design: batch check skips cooldown)", async () => {
 		mockDailyLogRepo.findByDateAndScheduleIds.mockResolvedValue([]);
-		mockScheduleRepo.findOwned.mockResolvedValue({ id: "s1", supplementId: "supp-1", dosageAmount: "1" });
+		mockScheduleRepo.findOwned.mockResolvedValue({
+			id: "s1",
+			supplementId: "supp-1",
+			dosageAmount: "1",
+		});
 		mockSupplementRepo.findByIdAndUserId.mockResolvedValue({ id: "supp-1", currentStock: "10" });
 
 		const result = await markBlockTaken({ scheduleIds: ["s1"], date: "2025-03-01" });

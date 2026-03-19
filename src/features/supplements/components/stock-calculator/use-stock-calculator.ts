@@ -3,8 +3,8 @@
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
-import { calculateRemainingStock } from "../../api/actions/calculate-remaining-stock";
 import { toDateString } from "@/shared/lib/date";
+import { calculateRemainingStock } from "../../api/actions/calculate-remaining-stock";
 
 type UseStockCalculatorParams = {
 	supplementId: string;

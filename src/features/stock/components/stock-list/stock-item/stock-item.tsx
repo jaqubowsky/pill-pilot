@@ -2,12 +2,12 @@
 
 import { useTranslations } from "next-intl";
 import type { StockListItem } from "@/features/stock/api/queries/get-stock-list";
+import { SupplementEditSheet } from "@/features/supplements";
 import { Button } from "@/shared/components/ui/button";
 import type { ShopOption } from "@/shared/types";
 import { AdjustDialog } from "../adjust-dialog";
 import { RestockDialog } from "../restock-dialog";
 import { StockProgressBar } from "../stock-progress-bar";
-import { SupplementEditSheet } from "@/features/supplements";
 import { StockQuantity } from "./stock-quantity";
 import { useStockItem } from "./use-stock-item";
 

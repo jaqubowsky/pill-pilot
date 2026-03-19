@@ -1,11 +1,11 @@
 "use server";
 
 import { z } from "zod";
-import { getActiveSchedulesForSupplement } from "../queries/get-active-schedules-for-supplement";
 import { toDateString } from "@/shared/lib/date";
 import { authActionClient } from "@/shared/lib/safe-action";
 import { calculateConsumedUnits } from "@/shared/lib/stock-forecast";
 import { supplementRepository } from "@/shared/repositories/supplement-repository";
+import { getActiveSchedulesForSupplement } from "../queries/get-active-schedules-for-supplement";
 
 const schema = z.object({
 	supplementId: z.string().min(1),

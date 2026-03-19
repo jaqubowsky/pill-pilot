@@ -1,6 +1,6 @@
 import { useTranslations } from "next-intl";
-import { formatRemainingTime } from "@/features/dashboard/lib/format-remaining-time";
 import type { ActiveTimer } from "@/features/dashboard/lib/collect-timers";
+import { formatRemainingTime } from "@/features/dashboard/lib/format-remaining-time";
 
 type TimerSupplementRowProps = {
 	timer: ActiveTimer;

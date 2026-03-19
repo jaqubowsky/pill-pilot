@@ -1,7 +1,6 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { PriceList } from "../price-list";
 import type { PriceListItem, ShopWithDelivery } from "@/shared/api/queries/get-price-list";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -11,6 +10,7 @@ import {
 	SheetHeader,
 	SheetTitle,
 } from "@/shared/components/ui/sheet";
+import { PriceList } from "../price-list";
 
 type PriceSheetProps = {
 	open: boolean;

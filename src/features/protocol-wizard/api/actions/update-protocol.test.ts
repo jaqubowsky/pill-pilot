@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockProtocolRepo, mockScheduleRepo, mockTimeBlockRepo, mockResolveSupplements, mockBuildScheduleDataList } = vi.hoisted(() => ({
+const {
+	mockProtocolRepo,
+	mockScheduleRepo,
+	mockTimeBlockRepo,
+	mockResolveSupplements,
+	mockBuildScheduleDataList,
+} = vi.hoisted(() => ({
 	mockProtocolRepo: {
 		findByIdAndUserId: vi.fn(),
 		update: vi.fn(),
@@ -20,9 +26,15 @@ const { mockProtocolRepo, mockScheduleRepo, mockTimeBlockRepo, mockResolveSupple
 
 vi.mock("next/cache", async () => import("@/test/mock-safe-action"));
 vi.mock("@/shared/lib/safe-action", async () => import("@/test/mock-safe-action"));
-vi.mock("@/shared/repositories/protocol-repository", () => ({ protocolRepository: mockProtocolRepo }));
-vi.mock("@/shared/repositories/supplement-schedule-repository", () => ({ supplementScheduleRepository: mockScheduleRepo }));
-vi.mock("@/shared/repositories/time-block-repository", () => ({ timeBlockRepository: mockTimeBlockRepo }));
+vi.mock("@/shared/repositories/protocol-repository", () => ({
+	protocolRepository: mockProtocolRepo,
+}));
+vi.mock("@/shared/repositories/supplement-schedule-repository", () => ({
+	supplementScheduleRepository: mockScheduleRepo,
+}));
+vi.mock("@/shared/repositories/time-block-repository", () => ({
+	timeBlockRepository: mockTimeBlockRepo,
+}));
 vi.mock("@/features/protocol-wizard/lib/resolve-supplements", () => ({
 	resolveSupplements: mockResolveSupplements,
 	buildScheduleDataList: mockBuildScheduleDataList,
@@ -40,9 +52,7 @@ const parsedData = {
 			isCritical: false,
 			brandName: null,
 			existingSupplementId: "supp-1",
-			schedules: [
-				{ timeBlockId: "tb-1", dosageAmount: 1, dosageUnit: "capsule" },
-			],
+			schedules: [{ timeBlockId: "tb-1", dosageAmount: 1, dosageUnit: "capsule" }],
 		},
 	],
 };
@@ -85,10 +95,13 @@ describe("updateProtocol", () => {
 			startDate: "2025-03-01",
 		});
 
-		expect(mockScheduleRepo.update).toHaveBeenCalledWith("existing-1", expect.objectContaining({
-			supplementId: "supp-1",
-			timeBlockId: "tb-1",
-		}));
+		expect(mockScheduleRepo.update).toHaveBeenCalledWith(
+			"existing-1",
+			expect.objectContaining({
+				supplementId: "supp-1",
+				timeBlockId: "tb-1",
+			}),
+		);
 		expect(mockScheduleRepo.create).not.toHaveBeenCalled();
 		expect(mockScheduleRepo.deleteById).not.toHaveBeenCalled();
 	});
@@ -115,9 +128,7 @@ describe("updateProtocol", () => {
 			{ id: "existing-1", supplementId: "supp-1", timeBlockId: "tb-1" },
 			{ id: "existing-2", supplementId: "supp-old", timeBlockId: "tb-2" },
 		]);
-		mockBuildScheduleDataList.mockReturnValue([
-			{ supplementId: "supp-1", timeBlockId: "tb-1" },
-		]);
+		mockBuildScheduleDataList.mockReturnValue([{ supplementId: "supp-1", timeBlockId: "tb-1" }]);
 
 		await updateProtocol({
 			protocolId: "proto-1",
@@ -169,7 +180,9 @@ describe("updateProtocol", () => {
 		});
 
 		expect(mockScheduleRepo.update).toHaveBeenCalledWith("keep", expect.any(Object));
-		expect(mockScheduleRepo.create).toHaveBeenCalledWith(expect.objectContaining({ supplementId: "supp-3" }));
+		expect(mockScheduleRepo.create).toHaveBeenCalledWith(
+			expect.objectContaining({ supplementId: "supp-3" }),
+		);
 		expect(mockScheduleRepo.deleteById).toHaveBeenCalledWith("remove");
 	});
 

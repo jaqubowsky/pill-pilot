@@ -37,11 +37,13 @@ export async function generateMetadata(): Promise<Metadata> {
 			siteName: "PillPilot",
 			title: t("title"),
 			description: t("shortDescription"),
+			images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "PillPilot" }],
 		},
 		twitter: {
-			card: "summary",
+			card: "summary_large_image",
 			title: t("title"),
 			description: t("shortDescription"),
+			images: ["/og-image.png"],
 		},
 		metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
 	};

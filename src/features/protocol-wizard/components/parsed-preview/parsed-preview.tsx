@@ -16,6 +16,7 @@ import { BackButton } from "@/features/protocol-wizard/components/back-button";
 import { PriceSheet } from "@/features/protocol-wizard/components/price-sheet";
 import type { ParsedProtocol } from "@/features/protocol-wizard/schemas/parsed-protocol-schema";
 import type { ExistingSupplementSummary, TimeBlockSummary } from "@/features/protocol-wizard/types";
+import type { PriceListItem, ShopWithDelivery } from "@/shared/api/queries/get-price-list";
 import { LabeledInput } from "@/shared/components/labeled-input";
 import {
 	AlertDialog,
@@ -28,7 +29,6 @@ import {
 	AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
 import { Button } from "@/shared/components/ui/button";
-import type { PriceListItem, ShopOption } from "@/shared/types";
 import { PreviewBlock } from "./preview-block";
 import { PreviewMode, useParsedPreview } from "./use-parsed-preview";
 
@@ -40,7 +40,7 @@ type ParsedPreviewProps = {
 	mode?: PreviewMode;
 	initialStartDate?: string;
 	priceListItems?: PriceListItem[];
-	priceListShopOptions?: ShopOption[];
+	priceListShopOptions?: ShopWithDelivery[];
 };
 
 const MODIFIERS = [restrictToVerticalAxis];

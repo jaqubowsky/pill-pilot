@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/shared/components/ui/button";
 import type { ShopOption } from "@/shared/types";
 import { PriceRow } from "./price-row";
-import type { PriceListGroup } from "./use-price-list";
+import type { PriceListGroup } from "./use-price-rows";
 
 type PriceGroupProps = {
 	group: PriceListGroup;

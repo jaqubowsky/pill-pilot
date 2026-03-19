@@ -5,15 +5,14 @@ import { useTranslations } from "next-intl";
 import type { RecentScan } from "@/features/shopping/api/queries/get-recent-scans";
 import { CartPriceSheet } from "@/features/shopping/components/cart-price-sheet";
 import { ShopEditSheet } from "@/features/shopping/components/shop-edit-sheet";
-import { SupplementEditSheet } from "@/features/stock";
-import type { ShopOption } from "@/shared/types";
-import type { PriceListItem } from "../../api/queries/get-price-list";
+import { SupplementEditSheet } from "@/features/stock/components/stock-list/supplement-edit-sheet";
+import type { PriceListItem, ShopWithDelivery } from "@/shared/api/queries/get-price-list";
 import { PriceGroup } from "./price-group";
 import { usePriceList } from "./use-price-list";
 
 type Props = {
 	items: PriceListItem[];
-	shopOptions: ShopOption[];
+	shopOptions: ShopWithDelivery[];
 	filterIds?: string[];
 	recentScans?: RecentScan[];
 };

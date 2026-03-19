@@ -30,12 +30,12 @@ export function useSupplementFields() {
 		setValue("packagePrice", value ? Number(value) : undefined);
 	}
 
-	function handleCategoryChange(value: SupplementFormValues["category"]) {
-		setValue("category", value);
+	function handleCategoryChange(value: string | null) {
+		if (value) setValue("category", value as SupplementFormValues["category"]);
 	}
 
-	function handleStockUnitChange(value: SupplementFormValues["stockUnit"]) {
-		setValue("stockUnit", value);
+	function handleStockUnitChange(value: string | null) {
+		if (value) setValue("stockUnit", value as SupplementFormValues["stockUnit"]);
 	}
 
 	function handleShopChange(value: string | null) {

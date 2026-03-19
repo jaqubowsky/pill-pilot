@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { createShop } from "@/features/shopping/api/actions/create-shop";
 import { deleteShop } from "@/features/shopping/api/actions/delete-shop";
 import { updateShop } from "@/features/shopping/api/actions/update-shop";
-import type { ShopWithDelivery } from "@/features/shopping/api/queries/get-price-list";
+import type { ShopWithDelivery } from "@/shared/api/queries/get-price-list";
 import { type ShopFormValues, shopFormSchema } from "./shop-edit-sheet.schema";
 
 type UseShopEditSheetParams = {

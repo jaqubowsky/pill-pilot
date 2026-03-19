@@ -1,7 +1,8 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { PriceList, type PriceListItem } from "@/features/shopping";
+import { PriceList } from "@/features/shopping/components/price-list";
+import type { PriceListItem, ShopWithDelivery } from "@/shared/api/queries/get-price-list";
 import { Button } from "@/shared/components/ui/button";
 import {
 	Sheet,
@@ -10,13 +11,12 @@ import {
 	SheetHeader,
 	SheetTitle,
 } from "@/shared/components/ui/sheet";
-import type { ShopOption } from "@/shared/types";
 
 type PriceSheetProps = {
 	open: boolean;
 	supplementIds: string[];
 	items: PriceListItem[];
-	shopOptions: ShopOption[];
+	shopOptions: ShopWithDelivery[];
 	onClose: () => void;
 };
 

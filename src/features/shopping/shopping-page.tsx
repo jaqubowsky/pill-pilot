@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
+import { getPriceList } from "@/shared/api/queries/get-price-list";
 import { Separator } from "@/shared/components/ui/separator";
-import { getPriceList } from "./api/queries/get-price-list";
 import { getRecentScans } from "./api/queries/get-recent-scans";
 import { getShoppingList } from "./api/queries/get-shopping-list";
 import { PriceList } from "./components/price-list";

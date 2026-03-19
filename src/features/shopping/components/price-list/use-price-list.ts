@@ -2,13 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import type { ShopOption } from "@/shared/types";
-import type { PriceListItem } from "../../api/queries/get-price-list";
+import type { PriceListItem, ShopWithDelivery } from "@/shared/api/queries/get-price-list";
 import { usePriceRows } from "./use-price-rows";
 
 type Params = {
 	items: PriceListItem[];
-	shopOptions: ShopOption[];
+	shopOptions: ShopWithDelivery[];
 	filterIds?: string[];
 	hasProcessing?: boolean;
 };
@@ -26,7 +25,7 @@ export function usePriceList({ items, shopOptions, filterIds, hasProcessing }: P
 		{ items, shopOptions, filterIds },
 	);
 
-	const [shopEditTarget, setShopEditTarget] = useState<ShopOption | null | "new">(null);
+	const [shopEditTarget, setShopEditTarget] = useState<ShopWithDelivery | null | "new">(null);
 	const [editItem, setEditItem] = useState<PriceListItem | null>(null);
 
 	function openAddShop() {

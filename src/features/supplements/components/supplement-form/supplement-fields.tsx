@@ -1,8 +1,8 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { StockCalculator } from "@/features/stock";
 import { InfoHint } from "@/features/supplements/components/info-hint";
+import { StockCalculator } from "@/features/supplements/components/stock-calculator";
 import { LabeledInput } from "@/shared/components/labeled-input";
 import { LabeledSelect } from "@/shared/components/labeled-select";
 import { Input } from "@/shared/components/ui/input";

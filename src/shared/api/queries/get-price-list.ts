@@ -1,13 +1,14 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/shared/db/client";
+import type { DosageUnit, SupplementCategory } from "@/shared/db/schema";
 import { shops, supplements } from "@/shared/db/schema";
 
 export type PriceListItem = {
 	id: string;
 	name: string;
 	brandName: string | null;
-	category: string;
-	stockUnit: string;
+	category: SupplementCategory;
+	stockUnit: DosageUnit;
 	currentStock: string | null;
 	packagePrice: string | null;
 	packageSize: number | null;

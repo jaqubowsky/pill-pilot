@@ -1,5 +1,6 @@
 import type { z } from "zod";
 import type { parsedProtocolSchema } from "@/features/protocol-wizard/schemas/parsed-protocol-schema";
+import type { DosageUnit } from "@/shared/db/schema";
 import { ActionError, ActionErrorCode } from "@/shared/lib/safe-action";
 import { supplementRepository } from "@/shared/repositories/supplement-repository";
 import { resolveScheduleFields } from "./resolve-schedule-fields";
@@ -42,7 +43,7 @@ export type ScheduleData = {
 	supplementId: string;
 	timeBlockId: string;
 	dosageAmount: string;
-	dosageUnit: string;
+	dosageUnit: DosageUnit;
 	sortOrder: number;
 	notes: string | null;
 	isCritical: boolean;

@@ -3,8 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { updateSupplementPrices } from "@/features/shopping/api/actions/update-supplement-prices";
-import type { ShopOption } from "@/shared/types";
-import type { PriceListItem } from "../../api/queries/get-price-list";
+import type { PriceListItem, ShopWithDelivery } from "@/shared/api/queries/get-price-list";
 
 export type PriceListRow = PriceListItem & {
 	localPrice: string;
@@ -19,7 +18,7 @@ export type PriceListGroup = {
 
 type Params = {
 	items: PriceListItem[];
-	shopOptions: ShopOption[];
+	shopOptions: ShopWithDelivery[];
 	filterIds?: string[];
 };
 

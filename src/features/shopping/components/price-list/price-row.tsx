@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import type { ShopOption } from "@/shared/types";
-import type { PriceListRow } from "./use-price-list";
+import type { PriceListRow } from "./use-price-rows";
 
 const NO_SHOP_VALUE = "__none__";
 

@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Controller, FormProvider } from "react-hook-form";
-import type { ShopWithDelivery } from "@/features/shopping/api/queries/get-price-list";
+import type { ShopWithDelivery } from "@/shared/api/queries/get-price-list";
 import { BottomSheet } from "@/shared/components/bottom-sheet";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";

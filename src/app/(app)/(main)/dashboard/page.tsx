@@ -4,6 +4,7 @@ import type { SearchParams } from "nuqs/server";
 import { DashboardPage } from "@/features/dashboard";
 import { loadDashboardSearchParams } from "@/features/dashboard/search-params";
 import { auth } from "@/shared/lib/auth";
+import { toDateString } from "@/shared/lib/date";
 
 type Props = {
 	searchParams: Promise<SearchParams>;
@@ -19,6 +20,10 @@ export default async function DashboardRoute({ searchParams }: Props) {
 	}
 
 	const { date } = await loadDashboardSearchParams(searchParams);
+
+	if (!date) {
+		redirect(`/dashboard?date=${toDateString(new Date())}`);
+	}
 
 	return <DashboardPage userId={session.user.id} date={date} />;
 }

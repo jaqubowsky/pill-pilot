@@ -4,6 +4,7 @@ import type { SearchParams } from "nuqs/server";
 import { WeeklyDashboardPage } from "@/features/dashboard";
 import { loadWeeklySearchParams } from "@/features/dashboard/search-params";
 import { auth } from "@/shared/lib/auth";
+import { getMondayOfWeek, toDateString } from "@/shared/lib/date";
 
 type Props = {
 	searchParams: Promise<SearchParams>;
@@ -19,6 +20,12 @@ export default async function WeeklyDashboardRoute({ searchParams }: Props) {
 	}
 
 	const { start } = await loadWeeklySearchParams(searchParams);
+
+	if (!start) {
+		redirect(
+			`/dashboard/weekly?start=${toDateString(getMondayOfWeek(new Date()))}`,
+		);
+	}
 
 	return <WeeklyDashboardPage userId={session.user.id} startDate={start} />;
 }

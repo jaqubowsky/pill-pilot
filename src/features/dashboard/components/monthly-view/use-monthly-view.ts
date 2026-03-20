@@ -17,6 +17,7 @@ export function useMonthlyView() {
 	const [yearMonth, setYearMonth] = useQueryState("month", {
 		...monthlySearchParams.month,
 		shallow: false,
+		clearOnDefault: false,
 	});
 
 	const isCurrentMonth = useMemo(() => toYearMonth(new Date()) === yearMonth, [yearMonth]);
@@ -34,8 +35,7 @@ export function useMonthlyView() {
 
 	const navigateToDay = useCallback(
 		(date: string) => {
-			const today = toDateString(new Date());
-			router.push(date === today ? "/dashboard" : `/dashboard?date=${date}`);
+			router.push(`/dashboard?date=${date}`);
 		},
 		[router],
 	);

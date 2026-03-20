@@ -8,7 +8,10 @@ import { markUntaken } from "@/features/dashboard/api/actions/mark-untaken";
 import { dashboardSearchParams } from "@/features/dashboard/search-params";
 
 export function useCheckSupplement(initialChecked: boolean) {
-	const [date] = useQueryState("date", dashboardSearchParams.date);
+	const [date] = useQueryState("date", {
+		...dashboardSearchParams.date,
+		clearOnDefault: false,
+	});
 
 	const onError = ({ error }: { error: { serverError?: string } }) => {
 		if (error.serverError) toast.error(error.serverError);

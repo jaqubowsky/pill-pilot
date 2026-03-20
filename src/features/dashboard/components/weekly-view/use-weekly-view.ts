@@ -11,6 +11,7 @@ export function useWeeklyView() {
 	const [start, setStart] = useQueryState("start", {
 		...weeklySearchParams.start,
 		shallow: false,
+		clearOnDefault: false,
 	});
 
 	const parsedStart = useMemo(() => parseDate(start), [start]);
@@ -24,8 +25,7 @@ export function useWeeklyView() {
 
 	const navigateToDay = useCallback(
 		(date: string) => {
-			const today = toDateString(new Date());
-			router.push(date === today ? "/dashboard" : `/dashboard?date=${date}`);
+			router.push(`/dashboard?date=${date}`);
 		},
 		[router],
 	);

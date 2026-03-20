@@ -11,7 +11,10 @@ type UseCheckAllParams = {
 };
 
 export function useCheckAll({ uncheckedIds }: UseCheckAllParams) {
-	const [date] = useQueryState("date", dashboardSearchParams.date);
+	const [date] = useQueryState("date", {
+		...dashboardSearchParams.date,
+		clearOnDefault: false,
+	});
 
 	const [confirmOpen, setConfirmOpen] = useState(false);
 	const [isPending, startTransition] = useTransition();

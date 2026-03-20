@@ -1,16 +1,15 @@
 import { createLoader, parseAsString } from "nuqs/server";
-import { getMondayOfWeek, toDateString, toYearMonth } from "@/shared/lib/date";
 
 export const dashboardSearchParams = {
-	date: parseAsString.withDefault(toDateString(new Date())),
+	date: parseAsString.withDefault(""),
 };
 
 export const weeklySearchParams = {
-	start: parseAsString.withDefault(toDateString(getMondayOfWeek(new Date()))),
+	start: parseAsString.withDefault(""),
 };
 
 export const monthlySearchParams = {
-	month: parseAsString.withDefault(toYearMonth(new Date())),
+	month: parseAsString.withDefault(""),
 };
 
 export const loadDashboardSearchParams = createLoader(dashboardSearchParams);

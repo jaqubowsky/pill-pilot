@@ -213,7 +213,9 @@
 			"importSubmit": "Importuj protokół",
 			"importSuccess": "Protokół zaimportowany pomyślnie!",
 			"errorTitle": "Link wygasł lub jest nieprawidłowy",
-			"errorDescription": "Protokół który próbujesz otworzyć nie istnieje lub został unieważniony przez właściciela."
+			"errorDescription": "Protokół który próbujesz otworzyć nie istnieje lub został unieważniony przez właściciela.",
+			"landingTitle": "Ktoś udostępnił Ci protokół",
+			"landingDescription": "Zaloguj się, aby go zaimportować i dodać do swojego konta."
 		}
 	},
 	"protocolWizard": {

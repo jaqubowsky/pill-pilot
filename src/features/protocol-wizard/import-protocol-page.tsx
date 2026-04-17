@@ -1,21 +1,16 @@
 import { notFound } from "next/navigation";
+import { getSharedProtocol } from "./api/queries/get-shared-protocol";
 import { getSupplementSummaries } from "./api/queries/get-supplement-summaries";
 import { getTimeBlockSummaries } from "./api/queries/get-time-block-summaries";
-import { getSharedProtocol } from "./api/queries/get-shared-protocol";
-import type { SharedScheduleData } from "./api/queries/get-shared-protocol";
 import { matchShareSupplements } from "./api/services/build-share-ai-content";
-import { toIdentifiedSupplements } from "./lib/supplement-serialization";
-import type { ParsedSupplement } from "./schemas/parsed-protocol-schema";
-import type { TimeBlockSummary } from "./types";
 import { ImportProtocolForm } from "./components/import-protocol-form";
 import type { ProtocolFormData } from "./components/protocol-form-base";
-
-type TimeBlockToCreate = {
-	tempId: string;
-	name: string;
-	icon: string;
-	startTime: string;
-};
+import {
+	buildSharedParsedSupplements,
+	resolveSharedTimeBlocks,
+} from "./lib/resolve-shared-protocol";
+import { toIdentifiedSupplements } from "./lib/supplement-serialization";
+import type { TimeBlockSummary } from "./types";
 
 type Props = {
 	userId: string;
@@ -34,61 +29,17 @@ export async function ImportProtocolPage({ userId, token }: Props) {
 	const sharedNames = sharedProtocol.supplements.map((s) => s.name);
 	const matchedIds = await matchShareSupplements(sharedNames, existingSupplements);
 
-	const timeBlocksToCreate: TimeBlockToCreate[] = [];
+	const allSchedules = sharedProtocol.supplements.flatMap((s) => s.schedules);
+	const { timeBlockIdMap, timeBlocksToCreate } = resolveSharedTimeBlocks(
+		allSchedules,
+		recipientTimeBlocks,
+	);
 
-	function resolveTimeBlockId(schedule: SharedScheduleData): string {
-		const match = recipientTimeBlocks.find(
-			(tb) =>
-				tb.name.toLowerCase() === schedule.timeBlockName.toLowerCase() &&
-				tb.startTime === schedule.timeBlockStartTime,
-		);
-		if (match) return match.id;
-
-		const existing = timeBlocksToCreate.find(
-			(tb) => tb.name === schedule.timeBlockName && tb.startTime === schedule.timeBlockStartTime,
-		);
-		if (existing) return existing.tempId;
-
-		const tempId = crypto.randomUUID();
-		timeBlocksToCreate.push({
-			tempId,
-			name: schedule.timeBlockName,
-			icon: schedule.timeBlockIcon,
-			startTime: schedule.timeBlockStartTime,
-		});
-		return tempId;
-	}
-
-	const parsedSupplements: ParsedSupplement[] = sharedProtocol.supplements.map((s, i) => ({
-		name: s.name,
-		existingSupplementId: matchedIds[i] ?? null,
-		brandName: null,
-		category: s.category,
-		isCritical: false,
-		confidence: 1,
-		notes: null,
-		cycleDaysOn: null,
-		cycleDaysOff: null,
-		startDayOffset: 0,
-		durationDays: null,
-		dosageIntervalMinutes: s.schedules[0]?.dosageIntervalMinutes ?? null,
-		waitAfterTakingMinutes: null,
-		uncertaintyReason: null,
-		schedules: s.schedules.map((sch) => ({
-			timeBlockId: resolveTimeBlockId(sch),
-			dosageAmount: sch.dosageAmount,
-			dosageUnit: sch.dosageUnit,
-			notes: sch.notes,
-			isCritical: sch.isCritical,
-			cycleDaysOn: sch.cycleDaysOn,
-			cycleDaysOff: sch.cycleDaysOff,
-			startDayOffset: sch.startDayOffset,
-			durationDays: sch.durationDays,
-			waitAfterTakingMinutes: sch.waitAfterTakingMinutes,
-			finishPackage: sch.finishPackage,
-			sortOrder: sch.sortOrder,
-		})),
-	}));
+	const parsedSupplements = buildSharedParsedSupplements(
+		sharedProtocol.supplements,
+		matchedIds,
+		timeBlockIdMap,
+	);
 
 	const allTimeBlocks: TimeBlockSummary[] = [
 		...recipientTimeBlocks,

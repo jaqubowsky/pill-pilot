@@ -13,12 +13,9 @@ export function useLogin({ callbackUrl }: { callbackUrl?: string } = {}) {
 		if (isLoading) return;
 		setIsLoading(true);
 		try {
-			const absoluteCallbackUrl = callbackUrl
-				? `${process.env.NEXT_PUBLIC_APP_URL}${callbackUrl}`
-				: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`;
 			await authClient.signIn.social({
 				provider: "google",
-				callbackURL: absoluteCallbackUrl,
+				callbackURL: callbackUrl ?? "/dashboard",
 			});
 		} catch {
 			setIsLoading(false);

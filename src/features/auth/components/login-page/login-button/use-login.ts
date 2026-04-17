@@ -13,9 +13,12 @@ export function useLogin({ callbackUrl }: { callbackUrl?: string } = {}) {
 		if (isLoading) return;
 		setIsLoading(true);
 		try {
+			if (callbackUrl) {
+				localStorage.setItem("post_auth_redirect", callbackUrl);
+			}
 			await authClient.signIn.social({
 				provider: "google",
-				callbackURL: callbackUrl ?? "/dashboard",
+				callbackURL: "/dashboard",
 			});
 		} catch {
 			setIsLoading(false);

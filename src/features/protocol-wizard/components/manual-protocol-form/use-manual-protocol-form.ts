@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import type { TimeBlockSummary } from "@/features/protocol-wizard/types";
 import { createDraftProtocol } from "../../api/actions/create-draft-protocol";
 import { toSerializedProtocol } from "../../lib/supplement-serialization";
-import { useProtocolFormBase } from "../protocol-form-base/use-protocol-form-base";
+import { useProtocolFormBase } from "../protocol-form-base";
 
 export function useManualProtocolForm({ timeBlocks }: { timeBlocks: TimeBlockSummary[] }) {
 	const t = useTranslations();

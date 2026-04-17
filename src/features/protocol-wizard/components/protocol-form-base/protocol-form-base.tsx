@@ -5,12 +5,27 @@ import { useTranslations } from "next-intl";
 import type { ExistingSupplementSummary, TimeBlockSummary } from "@/features/protocol-wizard/types";
 import { LabeledInput } from "@/shared/components/labeled-input";
 import { Button } from "@/shared/components/ui/button";
+import type { SheetState } from "../../hooks/use-sheet-state";
+import type { IdentifiedSupplement } from "../../lib/supplement-serialization";
+import type { EditedSupplement } from "../protocol-base/parsed-preview.schema";
 import { ConnectedSupplementSheet } from "../protocol-base/connected-supplement-sheet";
 import { ExistingSupplementPicker } from "../protocol-base/existing-supplement-picker";
 import { SupplementRow } from "./supplement-row";
-import type { useProtocolFormBase } from "./use-protocol-form-base";
+import type { useProtocolName } from "./use-protocol-name";
 
-type ProtocolFormBaseProps = ReturnType<typeof useProtocolFormBase> & {
+type ProtocolFormBaseProps = {
+	protocolName: ReturnType<typeof useProtocolName>;
+	supplements: IdentifiedSupplement[];
+	sheetState: SheetState;
+	pickerOpen: boolean;
+	setPickerOpen: (open: boolean) => void;
+	openPicker: () => void;
+	openAddSheet: () => void;
+	openAddFromExisting: (supplement: ExistingSupplementSummary) => void;
+	openEditSheet: (supplement: IdentifiedSupplement) => void;
+	closeSheet: () => void;
+	handleSheetSave: (edited: EditedSupplement) => void;
+	deleteSupplement: (id: string) => void;
 	existingSupplements: ExistingSupplementSummary[];
 	timeBlocks: TimeBlockSummary[];
 	submitLabel: string;
@@ -76,7 +91,7 @@ export function ProtocolFormBase({
 				<Button
 					type="button"
 					variant="outline"
-					onClick={() => openAddSheet()}
+					onClick={openAddSheet}
 					className="w-full flex items-center justify-center gap-sm rounded-xl border-edge border-dashed bg-surface-raised p-md h-12"
 				>
 					<Plus className="size-4 text-brand-500" />

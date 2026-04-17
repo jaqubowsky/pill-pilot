@@ -3,7 +3,7 @@ import type { SharedProtocolData, SharedScheduleData } from "../api/queries/get-
 import { buildSharedParsedSupplements, resolveSharedTimeBlocks } from "./resolve-shared-protocol";
 
 const mockRecipientTimeBlocks = [
-	{ id: "tb-morning", name: "Rano", startTime: "08:00" },
+	{ id: "tb-morning", name: "Rano", startTime: "07:30" },
 	{ id: "tb-evening", name: "Wieczór", startTime: "20:00" },
 ];
 
@@ -29,14 +29,15 @@ function makeSchedule(overrides: Partial<SharedScheduleData> = {}): SharedSchedu
 }
 
 describe("resolveSharedTimeBlocks", () => {
-	it("maps schedule to existing recipient time block by name+startTime", () => {
+	it("maps schedule to existing recipient time block by name (ignores startTime)", () => {
+		// Shared has "Rano" at 08:00, recipient has "Rano" at 07:30 — should reuse recipient's
 		const { timeBlockIdMap, timeBlocksToCreate } = resolveSharedTimeBlocks(
 			[makeSchedule({ timeBlockName: "Rano", timeBlockStartTime: "08:00" })],
 			mockRecipientTimeBlocks,
 		);
 
 		expect(timeBlocksToCreate).toHaveLength(0);
-		expect(timeBlockIdMap.get("rano|08:00")).toBe("tb-morning");
+		expect(timeBlockIdMap.get("rano")).toBe("tb-morning");
 	});
 
 	it("is case-insensitive when matching time block names", () => {
@@ -45,7 +46,20 @@ describe("resolveSharedTimeBlocks", () => {
 			mockRecipientTimeBlocks,
 		);
 
-		expect(timeBlockIdMap.get("rano|08:00")).toBe("tb-morning");
+		expect(timeBlockIdMap.get("rano")).toBe("tb-morning");
+	});
+
+	it("does not duplicate when recipient has same name with different startTime", () => {
+		// This was the original bug — recipient had "Śniadanie" at different time
+		const recipient = [{ id: "tb-sniad", name: "Śniadanie", startTime: "09:00" }];
+
+		const { timeBlocksToCreate, timeBlockIdMap } = resolveSharedTimeBlocks(
+			[makeSchedule({ timeBlockName: "Śniadanie", timeBlockStartTime: "08:00" })],
+			recipient,
+		);
+
+		expect(timeBlocksToCreate).toHaveLength(0);
+		expect(timeBlockIdMap.get("śniadanie")).toBe("tb-sniad");
 	});
 
 	it("creates a temp time block when no match found", () => {
@@ -64,10 +78,10 @@ describe("resolveSharedTimeBlocks", () => {
 		expect(timeBlocksToCreate[0].name).toBe("Południe");
 		expect(timeBlocksToCreate[0].icon).toBe("🌞");
 		expect(timeBlocksToCreate[0].startTime).toBe("12:00");
-		expect(timeBlockIdMap.get("południe|12:00")).toBe(timeBlocksToCreate[0].tempId);
+		expect(timeBlockIdMap.get("południe")).toBe(timeBlocksToCreate[0].tempId);
 	});
 
-	it("deduplicates identical time blocks across multiple schedules", () => {
+	it("deduplicates identical time block names across multiple schedules", () => {
 		const { timeBlocksToCreate } = resolveSharedTimeBlocks(
 			[
 				makeSchedule({ timeBlockName: "Nowy", timeBlockStartTime: "14:00" }),
@@ -91,7 +105,7 @@ describe("resolveSharedTimeBlocks", () => {
 });
 
 describe("buildSharedParsedSupplements", () => {
-	const timeBlockIdMap = new Map([["rano|08:00", "tb-morning"]]);
+	const timeBlockIdMap = new Map([["rano", "tb-morning"]]);
 
 	const sharedSupplements: SharedProtocolData["supplements"] = [
 		{
@@ -114,7 +128,7 @@ describe("buildSharedParsedSupplements", () => {
 		expect(result[0].existingSupplementId).toBeNull();
 	});
 
-	it("resolves timeBlockId via timeBlockIdMap", () => {
+	it("resolves timeBlockId via timeBlockIdMap using name only", () => {
 		const result = buildSharedParsedSupplements(sharedSupplements, [null], timeBlockIdMap);
 
 		expect(result[0].schedules[0].timeBlockId).toBe("tb-morning");

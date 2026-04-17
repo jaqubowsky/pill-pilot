@@ -46,7 +46,7 @@ export async function importSharedProtocolDraft({
 		);
 		for (let i = 0; i < timeBlocksToCreate.length; i++) {
 			const tb = timeBlocksToCreate[i];
-			timeBlockIdMap.set(`${tb.name.toLowerCase()}|${tb.startTime}`, created[i].id);
+			timeBlockIdMap.set(tb.name.toLowerCase(), created[i].id);
 		}
 	}
 

@@ -14,8 +14,8 @@ export type ResolvedSharedTimeBlocks = {
 	timeBlocksToCreate: TimeBlockToCreate[];
 };
 
-function timeBlockKey(name: string, startTime: string): string {
-	return `${name.toLowerCase()}|${startTime}`;
+function timeBlockKey(name: string): string {
+	return name.toLowerCase();
 }
 
 export function resolveSharedTimeBlocks(
@@ -26,12 +26,12 @@ export function resolveSharedTimeBlocks(
 	const timeBlockIdMap = new Map<string, string>();
 
 	for (const schedule of allSchedules) {
-		const key = timeBlockKey(schedule.timeBlockName, schedule.timeBlockStartTime);
+		const key = timeBlockKey(schedule.timeBlockName);
 		if (timeBlockIdMap.has(key)) continue;
 
-		const match = recipientTimeBlocks.find(
-			(tb) => timeBlockKey(tb.name, tb.startTime) === key,
-		);
+		// Match by name only — if the user already has a time block with the same name,
+		// use theirs (with their time). Only create a new one if the name doesn't exist at all.
+		const match = recipientTimeBlocks.find((tb) => timeBlockKey(tb.name) === key);
 
 		if (match) {
 			timeBlockIdMap.set(key, match.id);
@@ -43,7 +43,7 @@ export function resolveSharedTimeBlocks(
 				icon: schedule.timeBlockIcon,
 				startTime: schedule.timeBlockStartTime,
 			});
-			timeBlockIdMap.set(key, tempId);
+				timeBlockIdMap.set(key, tempId);
 		}
 	}
 
@@ -71,7 +71,7 @@ export function buildSharedParsedSupplements(
 		waitAfterTakingMinutes: null,
 		uncertaintyReason: null,
 		schedules: s.schedules.map((sch) => ({
-			timeBlockId: timeBlockIdMap.get(timeBlockKey(sch.timeBlockName, sch.timeBlockStartTime)) ?? "",
+			timeBlockId: timeBlockIdMap.get(timeBlockKey(sch.timeBlockName)) ?? "",
 			dosageAmount: sch.dosageAmount,
 			dosageUnit: sch.dosageUnit,
 			notes: sch.notes,

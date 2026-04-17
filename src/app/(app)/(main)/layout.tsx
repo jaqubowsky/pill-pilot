@@ -2,6 +2,7 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { ViewTransition } from "react";
 import { auth } from "@/shared/lib/auth";
+import { consumePendingRedirect } from "@/shared/lib/pending-redirect";
 import { BottomNav } from "./bottom-nav";
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
@@ -13,12 +14,8 @@ export default async function MainLayout({ children }: { children: React.ReactNo
 		redirect("/login");
 	}
 
-	const cookieStore = await cookies();
-	const pendingRedirect = cookieStore.get("post_auth_redirect")?.value;
-	if (pendingRedirect) {
-		cookieStore.delete("post_auth_redirect");
-		redirect(pendingRedirect);
-	}
+	const pendingRedirect = consumePendingRedirect(await cookies());
+	if (pendingRedirect) redirect(pendingRedirect);
 
 	return (
 		<>

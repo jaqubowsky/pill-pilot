@@ -46,6 +46,8 @@ export function ProtocolCard({ protocol, borderColor }: ProtocolCardProps) {
 					isReactivating={isReactivating}
 				/>
 				<ProtocolCardActions
+					protocolId={protocol.id}
+					shareToken={protocol.shareToken}
 					status={protocol.status}
 					onContinueDraft={handleContinueDraft}
 					onRetry={handleRetry}

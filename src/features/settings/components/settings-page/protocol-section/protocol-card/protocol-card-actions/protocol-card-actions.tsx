@@ -6,6 +6,8 @@ import { FailedActions } from "./failed-actions";
 import { ProcessingActions } from "./processing-actions";
 
 type ProtocolCardActionsProps = {
+	protocolId: string;
+	shareToken: string | null;
 	status: ProtocolWithSchedules["status"];
 	onContinueDraft: () => void;
 	onRetry: () => void;
@@ -14,6 +16,8 @@ type ProtocolCardActionsProps = {
 };
 
 export function ProtocolCardActions({
+	protocolId,
+	shareToken,
 	status,
 	onContinueDraft,
 	onRetry,
@@ -28,7 +32,13 @@ export function ProtocolCardActions({
 		case "draft":
 			return <DraftActions onContinueDraft={onContinueDraft} onRequestDelete={onRequestDelete} />;
 		case "active":
-			return <ActiveActions onRequestArchive={onRequestArchive} />;
+			return (
+				<ActiveActions
+					protocolId={protocolId}
+					shareToken={shareToken}
+					onRequestArchive={onRequestArchive}
+				/>
+			);
 		case "archived":
 			return <ArchivedActions onRequestDelete={onRequestDelete} />;
 		default: {

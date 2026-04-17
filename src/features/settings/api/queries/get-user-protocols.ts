@@ -13,6 +13,7 @@ export type ProtocolWithSchedules = {
 	id: string;
 	name: string;
 	status: ProtocolStatus;
+	shareToken: string | null;
 	schedules: {
 		id: string;
 		dosageAmount: string;
@@ -102,6 +103,7 @@ export async function getUserProtocols(userId: string): Promise<ProtocolWithSche
 		id: protocol.id,
 		name: protocol.name,
 		status: protocol.status,
+		shareToken: protocol.shareToken ?? null,
 		schedules: schedulesByProtocol.get(protocol.id) ?? [],
 	}));
 }

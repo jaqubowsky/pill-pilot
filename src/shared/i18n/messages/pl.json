@@ -26,6 +26,7 @@
 		"skip": "Pomiń",
 		"search": "Szukaj",
 		"loading": "Ładowanie...",
+		"saving": "Zapisywanie...",
 		"saveChanges": "Zapisz zmiany",
 		"approve": "Zatwierdź",
 		"archive": "Archiwizuj",
@@ -38,7 +39,8 @@
 		"restock": "Uzupełnij",
 		"adjust": "Korekta",
 		"setUp": "Skonfiguruj",
-		"currency": "zł"
+		"currency": "zł",
+		"backToDashboard": "Wróć do dashboardu"
 	},
 	"auth": {
 		"continueWithGoogle": "Kontynuuj przez Google",
@@ -201,6 +203,17 @@
 			"pushTimeBlock": "Czas na suplementy: {timeBlockName}",
 			"pushNextDose": "Następna dawka: {supplements}",
 			"pushWaitOver": "Czas oczekiwania minął: {supplements}"
+		},
+		"share": {
+			"generate": "Udostępnij",
+			"revoke": "Unieważnij link",
+			"linkCopied": "Link skopiowany!",
+			"importTitle": "Importuj protokół",
+			"importDescription": "Przejrzyj i dostosuj protokół przed zapisaniem go do swojego konta.",
+			"importSubmit": "Importuj protokół",
+			"importSuccess": "Protokół zaimportowany pomyślnie!",
+			"errorTitle": "Link wygasł lub jest nieprawidłowy",
+			"errorDescription": "Protokół który próbujesz otworzyć nie istnieje lub został unieważniony przez właściciela."
 		}
 	},
 	"protocolWizard": {

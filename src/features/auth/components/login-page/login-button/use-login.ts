@@ -15,7 +15,7 @@ export function useLogin({ callbackUrl }: { callbackUrl?: string } = {}) {
 		try {
 			await authClient.signIn.social({
 				provider: "google",
-				callbackURL: "/dashboard",
+				callbackURL: callbackUrl ?? "/dashboard",
 			});
 		} catch {
 			setIsLoading(false);

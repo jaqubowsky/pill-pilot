@@ -11,6 +11,7 @@ interface IProtocolRepository {
 	findActiveByUserId(userId: string): Promise<Protocol[]>;
 	findById(id: string): Promise<Protocol | undefined>;
 	findByIdAndUserId(id: string, userId: string): Promise<Protocol>;
+	findByShareToken(token: string): Promise<Protocol | null>;
 	create(data: NewProtocol): Promise<Protocol>;
 	update(id: string, data: Partial<NewProtocol>): Promise<Protocol>;
 	updateStatus(id: string, status: ProtocolStatus): Promise<Protocol>;
@@ -34,6 +35,14 @@ class ProtocolRepository implements IProtocolRepository {
 	async findById(id: string): Promise<Protocol | undefined> {
 		const rows = await db.select().from(protocols).where(eq(protocols.id, id));
 		return rows[0];
+	}
+
+	async findByShareToken(token: string): Promise<Protocol | null> {
+		const rows = await db
+			.select()
+			.from(protocols)
+			.where(eq(protocols.shareToken, token));
+		return rows[0] ?? null;
 	}
 
 	async findByIdAndUserId(id: string, userId: string): Promise<Protocol> {

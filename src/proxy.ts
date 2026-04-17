@@ -25,7 +25,9 @@ export async function proxy(request: NextRequest) {
 
 	if (pathname.startsWith("/share/")) {
 		if (!session) {
-			const response = NextResponse.redirect(new URL("/login", request.url));
+			// Let the page render the login landing page.
+			// Set the cookie as fallback in case Better Auth loses the callbackURL.
+			const response = NextResponse.next();
 			response.cookies.set(PENDING_REDIRECT_COOKIE, pathname, COOKIE_OPTIONS);
 			return response;
 		}

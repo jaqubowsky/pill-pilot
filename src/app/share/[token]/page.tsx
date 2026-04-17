@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
+import { ShareLandingPage } from "@/features/auth/components/share-landing-page";
 import { importSharedProtocolDraft } from "@/features/protocol-wizard/api/services/import-protocol-service";
 import { auth } from "@/shared/lib/auth";
 
@@ -9,7 +10,10 @@ export default async function ShareRoute({ params }: Props) {
 	const { token } = await params;
 
 	const session = await auth.api.getSession({ headers: await headers() });
-	if (!session) redirect("/login");
+
+	if (!session) {
+		return <ShareLandingPage token={token} />;
+	}
 
 	const protocolId = await importSharedProtocolDraft({ token, userId: session.user.id });
 	if (!protocolId) notFound();

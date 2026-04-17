@@ -9,7 +9,7 @@ export default async function ShareRoute({ params }: Props) {
 	const { token } = await params;
 
 	const session = await auth.api.getSession({ headers: await headers() });
-	if (!session) redirect("/login");
+	if (!session) redirect(`/login?callbackUrl=/share/${token}`);
 
 	return <ImportProtocolPage userId={session.user.id} token={token} />;
 }

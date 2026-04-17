@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { authClient } from "@/shared/lib/auth-client";
 
-export function useLogin() {
+export function useLogin({ callbackUrl }: { callbackUrl?: string } = {}) {
 	const t = useTranslations();
 	const [isLoading, setIsLoading] = useState(false);
 
@@ -15,7 +15,7 @@ export function useLogin() {
 		try {
 			await authClient.signIn.social({
 				provider: "google",
-				callbackURL: "/dashboard",
+				callbackURL: callbackUrl ?? "/dashboard",
 			});
 		} catch {
 			setIsLoading(false);

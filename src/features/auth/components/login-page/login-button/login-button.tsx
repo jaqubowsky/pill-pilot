@@ -5,10 +5,14 @@ import { Button } from "@/shared/components/ui/button";
 import { GoogleIcon } from "./google-icon";
 import { useLogin } from "./use-login";
 
-export const LoginButton = () => {
+type LoginButtonProps = {
+	callbackUrl?: string;
+};
+
+export const LoginButton = ({ callbackUrl }: LoginButtonProps) => {
 	const t = useTranslations();
 
-	const { handleGoogleLogin, isLoading } = useLogin();
+	const { handleGoogleLogin, isLoading } = useLogin({ callbackUrl });
 
 	return (
 		<Button

@@ -3,9 +3,9 @@
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-export function useProtocolName() {
+export function useProtocolName(initialName = "") {
 	const t = useTranslations();
-	const [name, setName] = useState("");
+	const [name, setName] = useState(initialName);
 	const [error, setError] = useState<string | null>(null);
 
 	function validate(): boolean {

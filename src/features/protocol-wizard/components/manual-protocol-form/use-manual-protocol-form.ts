@@ -7,14 +7,12 @@ import { toast } from "sonner";
 import type { TimeBlockSummary } from "@/features/protocol-wizard/types";
 import { createDraftProtocol } from "../../api/actions/create-draft-protocol";
 import { toSerializedProtocol } from "../../lib/supplement-serialization";
-import { useProtocolName } from "./use-protocol-name";
-import { useSupplementSheet } from "./use-supplement-sheet";
+import { useProtocolFormBase } from "../protocol-form-base/use-protocol-form-base";
 
 export function useManualProtocolForm({ timeBlocks }: { timeBlocks: TimeBlockSummary[] }) {
 	const t = useTranslations();
 	const router = useRouter();
-	const protocolName = useProtocolName();
-	const sheet = useSupplementSheet({ timeBlocks });
+	const formBase = useProtocolFormBase({ timeBlocks });
 
 	const { execute: executeSave, isPending } = useAction(createDraftProtocol, {
 		onSuccess: ({ data }) => {
@@ -29,23 +27,18 @@ export function useManualProtocolForm({ timeBlocks }: { timeBlocks: TimeBlockSum
 	});
 
 	function handleSubmit() {
-		if (!protocolName.validate()) return;
+		if (!formBase.protocolName.validate()) return;
 
-		if (sheet.supplements.length === 0) {
+		if (formBase.supplements.length === 0) {
 			toast.error(t("protocolWizard.manual.addAtLeastOneSupplement"));
 			return;
 		}
 
 		executeSave({
-			name: protocolName.name,
-			parsedData: toSerializedProtocol(protocolName.name, sheet.supplements),
+			name: formBase.protocolName.name,
+			parsedData: toSerializedProtocol(formBase.protocolName.name, formBase.supplements),
 		});
 	}
 
-	return {
-		protocolName,
-		isPending,
-		handleSubmit,
-		...sheet,
-	};
+	return { ...formBase, isPending, handleSubmit };
 }

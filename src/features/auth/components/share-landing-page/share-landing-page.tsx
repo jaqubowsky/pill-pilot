@@ -1,11 +1,9 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { toast } from "sonner";
-import { authClient } from "@/shared/lib/auth-client";
 import { Button } from "@/shared/components/ui/button";
 import { GoogleIcon } from "../login-page/login-button/google-icon";
+import { useShareLandingPage } from "./use-share-landing-page";
 
 type ShareLandingPageProps = {
 	token: string;
@@ -13,21 +11,7 @@ type ShareLandingPageProps = {
 
 export function ShareLandingPage({ token }: ShareLandingPageProps) {
 	const t = useTranslations();
-	const [isLoading, setIsLoading] = useState(false);
-
-	async function handleLogin() {
-		if (isLoading) return;
-		setIsLoading(true);
-		try {
-			await authClient.signIn.social({
-				provider: "google",
-				callbackURL: `/share/${token}`,
-			});
-		} catch {
-			setIsLoading(false);
-			toast.error(t("auth.loginError"));
-		}
-	}
+	const { handleLogin, isLoading } = useShareLandingPage({ token });
 
 	return (
 		<div className="flex min-h-screen flex-col items-center justify-center bg-surface px-md max-w-lg mx-auto gap-lg text-center">

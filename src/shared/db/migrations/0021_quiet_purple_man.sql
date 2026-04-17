@@ -1,0 +1,1 @@
+ALTER TABLE protocols ADD COLUMN "share_token" text UNIQUE;

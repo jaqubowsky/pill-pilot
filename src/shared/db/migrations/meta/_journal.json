@@ -1,153 +1,160 @@
 {
-	"version": "7",
-	"dialect": "postgresql",
-	"entries": [
-		{
-			"idx": 0,
-			"version": "7",
-			"when": 1773440855768,
-			"tag": "0000_loud_rhino",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "7",
-			"when": 1773485387210,
-			"tag": "0001_clammy_black_tarantula",
-			"breakpoints": true
-		},
-		{
-			"idx": 2,
-			"version": "7",
-			"when": 1773490057391,
-			"tag": "0002_cuddly_logan",
-			"breakpoints": true
-		},
-		{
-			"idx": 3,
-			"version": "7",
-			"when": 1773511142805,
-			"tag": "0003_clever_stark_industries",
-			"breakpoints": true
-		},
-		{
-			"idx": 4,
-			"version": "7",
-			"when": 1773512216466,
-			"tag": "0004_known_wallow",
-			"breakpoints": true
-		},
-		{
-			"idx": 5,
-			"version": "7",
-			"when": 1773513925575,
-			"tag": "0005_past_tomas",
-			"breakpoints": true
-		},
-		{
-			"idx": 6,
-			"version": "7",
-			"when": 1773564094784,
-			"tag": "0006_conscious_cassandra_nova",
-			"breakpoints": true
-		},
-		{
-			"idx": 7,
-			"version": "7",
-			"when": 1773567243031,
-			"tag": "0007_huge_scarecrow",
-			"breakpoints": true
-		},
-		{
-			"idx": 8,
-			"version": "7",
-			"when": 1773569509501,
-			"tag": "0008_tough_psylocke",
-			"breakpoints": true
-		},
-		{
-			"idx": 9,
-			"version": "7",
-			"when": 1773634800000,
-			"tag": "0009_start_day_offset",
-			"breakpoints": true
-		},
-		{
-			"idx": 10,
-			"version": "7",
-			"when": 1773638400000,
-			"tag": "0010_duration_days",
-			"breakpoints": true
-		},
-		{
-			"idx": 11,
-			"version": "7",
-			"when": 1773724800000,
-			"tag": "0011_week1_schema",
-			"breakpoints": true
-		},
-		{
-			"idx": 12,
-			"version": "7",
-			"when": 1773811200000,
-			"tag": "0012_notification_last_sent",
-			"breakpoints": true
-		},
-		{
-			"idx": 13,
-			"version": "7",
-			"when": 1773897600000,
-			"tag": "0013_timed_supplements",
-			"breakpoints": true
-		},
-		{
-			"idx": 14,
-			"version": "7",
-			"when": 1773984000000,
-			"tag": "0014_cooldown_skipped",
-			"breakpoints": true
-		},
-		{
-			"idx": 15,
-			"version": "7",
-			"when": 1774070400000,
-			"tag": "0015_flatten_protocol_supplements",
-			"breakpoints": true
-		},
-		{
-			"idx": 16,
-			"version": "7",
-			"when": 1774156800000,
-			"tag": "0016_shops_table",
-			"breakpoints": true
-		},
-		{
-			"idx": 17,
-			"version": "7",
-			"when": 1774243200000,
-			"tag": "0017_cart_scans",
-			"breakpoints": true
-		},
-		{
-			"idx": 18,
-			"version": "7",
-			"when": 1774329600000,
-			"tag": "0018_cart_scan_status",
-			"breakpoints": true
-		},
-		{
-			"idx": 19,
-			"version": "7",
-			"when": 1774416000000,
-			"tag": "0019_finish_package",
-			"breakpoints": true
-		},
-		{
-			"idx": 20,
-			"version": "7",
-			"when": 1774502400000,
-			"tag": "0020_drop_unused_columns",
-			"breakpoints": true
-		}
-	]
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1773440855768,
+      "tag": "0000_loud_rhino",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1773485387210,
+      "tag": "0001_clammy_black_tarantula",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773490057391,
+      "tag": "0002_cuddly_logan",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1773511142805,
+      "tag": "0003_clever_stark_industries",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1773512216466,
+      "tag": "0004_known_wallow",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1773513925575,
+      "tag": "0005_past_tomas",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1773564094784,
+      "tag": "0006_conscious_cassandra_nova",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1773567243031,
+      "tag": "0007_huge_scarecrow",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1773569509501,
+      "tag": "0008_tough_psylocke",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1773634800000,
+      "tag": "0009_start_day_offset",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1773638400000,
+      "tag": "0010_duration_days",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1773724800000,
+      "tag": "0011_week1_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1773811200000,
+      "tag": "0012_notification_last_sent",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1773897600000,
+      "tag": "0013_timed_supplements",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1773984000000,
+      "tag": "0014_cooldown_skipped",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1774070400000,
+      "tag": "0015_flatten_protocol_supplements",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1774156800000,
+      "tag": "0016_shops_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1774243200000,
+      "tag": "0017_cart_scans",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1774329600000,
+      "tag": "0018_cart_scan_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1774416000000,
+      "tag": "0019_finish_package",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1774502400000,
+      "tag": "0020_drop_unused_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1776418060980,
+      "tag": "0021_quiet_purple_man",
+      "breakpoints": true
+    }
+  ]
 }

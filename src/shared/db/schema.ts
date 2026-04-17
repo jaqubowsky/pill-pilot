@@ -167,6 +167,7 @@ export const protocols = pgTable("protocols", {
 	parsedData: text("parsed_data"),
 	status: protocolStatusEnum("status").notNull().default("draft"),
 	startDate: date("start_date"),
+	shareToken: text("share_token").unique(),
 	createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

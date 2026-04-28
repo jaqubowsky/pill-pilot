@@ -48,8 +48,12 @@ export async function runParsePipeline(
 	textContent?: string,
 	compressedImage?: CompressedImage,
 ): Promise<void> {
+	const tag = `[protocol/parse][${protocolId}]`;
+	console.log(`${tag} start — file="${file.name}" size=${file.size} type="${file.type}" textLen=${textContent?.length ?? "n/a"} hasImage=${!!compressedImage}`);
+
 	try {
 		const extractionContent = buildExtractionContent(file, buffer, textContent, compressedImage);
+		console.log(`${tag} extraction start`);
 
 		const { output: raw } = await generateText({
 			model: anthropic("claude-haiku-4-5"),
@@ -58,7 +62,10 @@ export async function runParsePipeline(
 			messages: [{ role: "user", content: extractionContent }],
 		});
 
+		console.log(`${tag} extraction done — items=${raw?.items?.length ?? 0}`);
+
 		if (!raw?.items?.length) {
+			console.warn(`${tag} extraction returned no items → marking failed`);
 			await protocolRepository.updateStatus(protocolId, "failed");
 			revalidatePath("/settings");
 			return;
@@ -73,6 +80,8 @@ export async function runParsePipeline(
 			compressedImage,
 		);
 
+		console.log(`${tag} enrichment start`);
+
 		const { output } = await generateText({
 			model: anthropic("claude-sonnet-4-5"),
 			output: Output.object({ schema: parsedProtocolSchema }),
@@ -80,7 +89,10 @@ export async function runParsePipeline(
 			messages: [{ role: "user", content: enrichmentContent }],
 		});
 
+		console.log(`${tag} enrichment done — supplements=${output?.supplements?.length ?? 0}`);
+
 		if (!output?.supplements?.length) {
+			console.warn(`${tag} enrichment returned no supplements → marking failed`);
 			await protocolRepository.updateStatus(protocolId, "failed");
 			revalidatePath("/settings");
 			return;
@@ -91,8 +103,10 @@ export async function runParsePipeline(
 			name: output.protocolName,
 			status: "draft",
 		});
+		console.log(`${tag} saved as draft — name="${output.protocolName}"`);
 		revalidatePath("/settings");
-	} catch {
+	} catch (err) {
+		console.error(`${tag} pipeline failed:`, err);
 		await protocolRepository.updateStatus(protocolId, "failed");
 		revalidatePath("/settings");
 	}

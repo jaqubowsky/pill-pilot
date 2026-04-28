@@ -13,9 +13,13 @@ function getCellColor(cell: ExcelJS.Cell): string | null {
 }
 
 export async function extractTextFromExcel(buffer: Buffer): Promise<string> {
+	console.log(`[excel-extraction] start, buffer size=${buffer.length}`);
 	const ExcelJS = await import("exceljs");
+	console.log("[excel-extraction] ExcelJS imported");
 	const workbook = new ExcelJS.default.Workbook();
+	console.log("[excel-extraction] loading workbook...");
 	await workbook.xlsx.load(buffer as unknown as ExcelJS.Buffer);
+	console.log(`[excel-extraction] workbook loaded, sheets=${workbook.worksheets.length}`);
 	const lines: string[] = [];
 
 	for (const worksheet of workbook.worksheets) {
@@ -57,5 +61,7 @@ export async function extractTextFromExcel(buffer: Buffer): Promise<string> {
 		});
 	}
 
-	return lines.join("\n");
+	const result = lines.join("\n");
+	console.log(`[excel-extraction] done, output length=${result.length}`);
+	return result;
 }

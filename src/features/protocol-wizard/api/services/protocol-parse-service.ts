@@ -1,4 +1,4 @@
-import { generateText, Output } from "ai";
+import { generateText, Output, tool } from "ai";
 import mammoth from "mammoth";
 import { revalidatePath } from "next/cache";
 import { extractTextFromExcel } from "@/features/protocol-wizard/lib/excel-extraction";
@@ -6,7 +6,11 @@ import { isDocx, isExcel, isImage, isText } from "@/features/protocol-wizard/lib
 import { anthropic } from "@/shared/lib/ai";
 import { type CompressedImage, compressImageWithMediaType } from "@/shared/lib/image-compression";
 import { protocolRepository } from "@/shared/repositories/protocol-repository";
-import { parsedProtocolSchema, rawExtractionSchema } from "../../schemas/parsed-protocol-schema";
+import {
+	type ParsedProtocol,
+	parsedProtocolSchema,
+	rawExtractionSchema,
+} from "../../schemas/parsed-protocol-schema";
 import { buildEnrichmentContent, buildExtractionContent } from "./build-ai-content";
 import { buildEnrichmentPrompt, buildExtractionPrompt } from "./build-ai-prompts";
 
@@ -82,12 +86,22 @@ export async function runParsePipeline(
 
 		console.log(`${tag} enrichment start`);
 
-		const { output } = await generateText({
+		const { toolCalls } = await generateText({
 			model: anthropic("claude-sonnet-4-5"),
-			output: Output.object({ schema: parsedProtocolSchema }),
+			tools: {
+				outputProtocol: tool({
+					description: "Output the fully enriched protocol data",
+					inputSchema: parsedProtocolSchema,
+				}),
+			},
+			toolChoice: { type: "tool", toolName: "outputProtocol" },
 			system: buildEnrichmentPrompt(userContext, userInstructions),
 			messages: [{ role: "user", content: enrichmentContent }],
 		});
+
+		const output = toolCalls.find((tc) => tc.toolName === "outputProtocol")?.input as
+			| ParsedProtocol
+			| undefined;
 
 		console.log(`${tag} enrichment done — supplements=${output?.supplements?.length ?? 0}`);
 

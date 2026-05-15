@@ -17,12 +17,7 @@ export function ShareButton({ protocolId, initialShareToken }: ShareButtonProps)
 
 	if (!shareToken) {
 		return (
-			<Button
-				variant="outline"
-				className="w-full"
-				onClick={handleGenerate}
-				disabled={isGenerating}
-			>
+			<Button variant="outline" className="w-full" onClick={handleGenerate} disabled={isGenerating}>
 				<Share2 className="size-4 mr-sm" />
 				{t("settings.share.generate")}
 			</Button>

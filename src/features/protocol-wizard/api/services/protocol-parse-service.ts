@@ -53,7 +53,9 @@ export async function runParsePipeline(
 	compressedImage?: CompressedImage,
 ): Promise<void> {
 	const tag = `[protocol/parse][${protocolId}]`;
-	console.log(`${tag} start — file="${file.name}" size=${file.size} type="${file.type}" textLen=${textContent?.length ?? "n/a"} hasImage=${!!compressedImage}`);
+	console.log(
+		`${tag} start — file="${file.name}" size=${file.size} type="${file.type}" textLen=${textContent?.length ?? "n/a"} hasImage=${!!compressedImage}`,
+	);
 
 	try {
 		const extractionContent = buildExtractionContent(file, buffer, textContent, compressedImage);

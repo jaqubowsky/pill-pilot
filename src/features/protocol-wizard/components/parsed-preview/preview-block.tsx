@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import type { ExistingSupplementSummary, TimeBlockSummary } from "@/features/protocol-wizard/types";
 import { Button } from "@/shared/components/ui/button";
 import { useSheetState } from "../../hooks/use-sheet-state";
+import { isAddSupplementAction } from "../../lib/resolve-sheet-save";
 import { findPackageSize, findScheduleIndex } from "../../lib/supplement-defaults";
 import type { IdentifiedSupplement } from "../../lib/supplement-serialization";
 import { ConnectedSupplementSheet } from "../protocol-base/connected-supplement-sheet";
@@ -54,10 +55,10 @@ export function PreviewBlock({
 	function handleSheetSave(edited: EditedSupplement) {
 		if (sheetState === null) return;
 
-		if (sheetState.supplement === null) {
-			onAddSupplement(edited);
-		} else {
+		if (sheetState.supplement !== null && !isAddSupplementAction(sheetState)) {
 			onUpdateSupplement(sheetState.supplement._id, edited);
+		} else {
+			onAddSupplement(edited);
 		}
 	}
 

@@ -16,9 +16,7 @@ export function ShareLandingPage({ token }: ShareLandingPageProps) {
 	return (
 		<div className="flex min-h-screen flex-col items-center justify-center bg-surface px-md max-w-lg mx-auto gap-lg text-center">
 			<div className="flex flex-col gap-sm">
-				<h1 className="font-display text-2xl text-content">
-					{t("settings.share.landingTitle")}
-				</h1>
+				<h1 className="font-display text-2xl text-content">{t("settings.share.landingTitle")}</h1>
 				<p className="text-base text-content-muted">{t("settings.share.landingDescription")}</p>
 			</div>
 

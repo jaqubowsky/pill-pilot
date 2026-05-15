@@ -59,7 +59,9 @@ export async function POST(request: NextRequest) {
 	const userInstructionsRaw = formData.get("userInstructions") as string | null;
 	const activeProtocolsJson = formData.get("activeProtocols") as string | null;
 
-	console.log(`[protocol/parse] file=${file?.name ?? "null"} size=${file?.size ?? "null"} type="${file?.type ?? "null"}"`);
+	console.log(
+		`[protocol/parse] file=${file?.name ?? "null"} size=${file?.size ?? "null"} type="${file?.type ?? "null"}"`,
+	);
 
 	if (!file) {
 		console.warn("[protocol/parse] No file in request");
@@ -97,7 +99,9 @@ export async function POST(request: NextRequest) {
 			activeProtocols = z.array(activeProtocolSchema).max(20).parse(rawActiveProtocols);
 		}
 
-		console.log(`[protocol/parse] Context OK — supplements=${supplements.length} timeBlocks=${timeBlocks.length} activeProtocols=${activeProtocols.length}`);
+		console.log(
+			`[protocol/parse] Context OK — supplements=${supplements.length} timeBlocks=${timeBlocks.length} activeProtocols=${activeProtocols.length}`,
+		);
 	} catch (err) {
 		console.error("[protocol/parse] Context validation failed:", err);
 		return Response.json({ error: "invalid_context" }, { status: 400 });
@@ -111,7 +115,9 @@ export async function POST(request: NextRequest) {
 	try {
 		console.log("[protocol/parse] Extracting text content...");
 		textContent = await extractTextContent(file, buffer);
-		console.log(`[protocol/parse] Text extraction OK — length=${textContent?.length ?? "undefined (image/pdf)"}`);
+		console.log(
+			`[protocol/parse] Text extraction OK — length=${textContent?.length ?? "undefined (image/pdf)"}`,
+		);
 	} catch (err) {
 		console.error("[protocol/parse] Text extraction failed:", err);
 		return Response.json({ error: "unreadable_file" }, { status: 422 });
@@ -136,7 +142,9 @@ export async function POST(request: NextRequest) {
 		parsedData: null,
 		status: "processing",
 	});
-	console.log(`[protocol/parse] Protocol created id=${protocol.id}, scheduling pipeline via after()`);
+	console.log(
+		`[protocol/parse] Protocol created id=${protocol.id}, scheduling pipeline via after()`,
+	);
 
 	after(async () => {
 		await runParsePipeline(

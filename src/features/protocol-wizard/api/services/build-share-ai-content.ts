@@ -1,4 +1,4 @@
-import { Output, generateText } from "ai";
+import { generateText, Output } from "ai";
 import { z } from "zod";
 import type { ExistingSupplementSummary } from "@/features/protocol-wizard/types";
 import { anthropic } from "@/shared/lib/ai";

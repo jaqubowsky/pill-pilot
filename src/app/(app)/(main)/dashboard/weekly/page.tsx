@@ -22,9 +22,7 @@ export default async function WeeklyDashboardRoute({ searchParams }: Props) {
 	const { start } = await loadWeeklySearchParams(searchParams);
 
 	if (!start) {
-		redirect(
-			`/dashboard/weekly?start=${toDateString(getMondayOfWeek(new Date()))}`,
-		);
+		redirect(`/dashboard/weekly?start=${toDateString(getMondayOfWeek(new Date()))}`);
 	}
 
 	return <WeeklyDashboardPage userId={session.user.id} startDate={start} />;

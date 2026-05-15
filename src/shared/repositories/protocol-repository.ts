@@ -38,10 +38,7 @@ class ProtocolRepository implements IProtocolRepository {
 	}
 
 	async findByShareToken(token: string): Promise<Protocol | null> {
-		const rows = await db
-			.select()
-			.from(protocols)
-			.where(eq(protocols.shareToken, token));
+		const rows = await db.select().from(protocols).where(eq(protocols.shareToken, token));
 		return rows[0] ?? null;
 	}
 

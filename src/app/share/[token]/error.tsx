@@ -9,9 +9,7 @@ export default function ShareError() {
 
 	return (
 		<div className="flex flex-col items-center justify-center min-h-[60vh] px-md gap-lg text-center">
-			<h1 className="font-display text-2xl text-content">
-				{t("settings.share.errorTitle")}
-			</h1>
+			<h1 className="font-display text-2xl text-content">{t("settings.share.errorTitle")}</h1>
 			<p className="text-base text-content-muted">{t("settings.share.errorDescription")}</p>
 			<Link href="/dashboard" className={buttonVariants()}>
 				{t("common.backToDashboard")}

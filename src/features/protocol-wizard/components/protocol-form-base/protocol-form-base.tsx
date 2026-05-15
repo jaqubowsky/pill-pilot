@@ -7,9 +7,9 @@ import { LabeledInput } from "@/shared/components/labeled-input";
 import { Button } from "@/shared/components/ui/button";
 import type { SheetState } from "../../hooks/use-sheet-state";
 import type { IdentifiedSupplement } from "../../lib/supplement-serialization";
-import type { EditedSupplement } from "../protocol-base/parsed-preview.schema";
 import { ConnectedSupplementSheet } from "../protocol-base/connected-supplement-sheet";
 import { ExistingSupplementPicker } from "../protocol-base/existing-supplement-picker";
+import type { EditedSupplement } from "../protocol-base/parsed-preview.schema";
 import { SupplementRow } from "./supplement-row";
 import type { useProtocolName } from "./use-protocol-name";
 

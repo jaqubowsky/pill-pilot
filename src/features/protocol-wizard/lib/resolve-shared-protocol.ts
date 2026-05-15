@@ -43,7 +43,7 @@ export function resolveSharedTimeBlocks(
 				icon: schedule.timeBlockIcon,
 				startTime: schedule.timeBlockStartTime,
 			});
-				timeBlockIdMap.set(key, tempId);
+			timeBlockIdMap.set(key, tempId);
 		}
 	}
 

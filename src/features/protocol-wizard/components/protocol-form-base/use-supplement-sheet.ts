@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { TimeBlockSummary } from "@/features/protocol-wizard/types";
 import { useSheetState } from "../../hooks/use-sheet-state";
+import { isAddSupplementAction } from "../../lib/resolve-sheet-save";
 import type { IdentifiedSupplement } from "../../lib/supplement-serialization";
 import type { EditedSupplement } from "../protocol-base/parsed-preview.schema";
 
@@ -21,16 +22,14 @@ export function useSupplementSheet({
 	function handleSheetSave(edited: EditedSupplement) {
 		if (sheet.sheetState === null) return;
 
-		if (sheet.sheetState.supplement === null) {
-			setSupplements((prev) => [...prev, { ...edited, _id: crypto.randomUUID() }]);
+		const state = sheet.sheetState;
+
+		if (state.supplement !== null && !isAddSupplementAction(state)) {
+			const id = state.supplement._id;
+			setSupplements((prev) => prev.map((s) => (s._id === id ? { ...edited, _id: id } : s)));
 		} else {
-			const id = sheet.sheetState.supplement._id;
-			const exists = supplements.some((s) => s._id === id);
-			if (exists) {
-				setSupplements((prev) => prev.map((s) => (s._id === id ? { ...edited, _id: id } : s)));
-			} else {
-				setSupplements((prev) => [...prev, { ...edited, _id: id }]);
-			}
+			const id = state.supplement?._id ?? crypto.randomUUID();
+			setSupplements((prev) => [...prev, { ...edited, _id: id }]);
 		}
 	}
 

@@ -2,8 +2,9 @@
 
 import { Download } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Button } from "@/shared/components/ui/button";
+import { Button, buttonVariants } from "@/shared/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover";
+import { cn } from "@/shared/lib/utils";
 import { useExportProtocolButton } from "./use-export-protocol-button";
 
 export function ExportProtocolButton({ protocolId }: { protocolId: string }) {
@@ -17,15 +18,19 @@ export function ExportProtocolButton({ protocolId }: { protocolId: string }) {
 				{t("export.label")}
 			</PopoverTrigger>
 			<PopoverContent className="flex w-56 flex-col gap-2">
-				<a href={pdfHref} download className="w-full">
-					<Button variant="ghost" className="w-full justify-start">
-						{t("export.pdf")}
-					</Button>
+				<a
+					href={pdfHref}
+					download
+					className={cn(buttonVariants({ variant: "ghost" }), "w-full justify-start")}
+				>
+					{t("export.pdf")}
 				</a>
-				<a href={excelHref} download className="w-full">
-					<Button variant="ghost" className="w-full justify-start">
-						{t("export.excel")}
-					</Button>
+				<a
+					href={excelHref}
+					download
+					className={cn(buttonVariants({ variant: "ghost" }), "w-full justify-start")}
+				>
+					{t("export.excel")}
 				</a>
 			</PopoverContent>
 		</Popover>

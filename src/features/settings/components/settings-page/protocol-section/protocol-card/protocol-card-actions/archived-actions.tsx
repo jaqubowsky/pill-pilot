@@ -1,3 +1,5 @@
+"use client";
+
 import { ExportProtocolButton } from "../export-protocol-button";
 import { CardActionSection } from "./card-action-section";
 import { DeleteButton } from "./delete-button";

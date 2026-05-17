@@ -1,6 +1,6 @@
 export function toExportFilename(name: string, ext: "pdf" | "xlsx", dateString: string): string {
 	const slug = name
-		.replace(/[łŁ]/g, (c) => (c === "ł" ? "l" : "L"))
+		.replace(/[łŁ]/g, "l")
 		.normalize("NFD")
 		.replace(/[̀-ͯ]/g, "")
 		.toLowerCase()

@@ -33,7 +33,8 @@ export async function GET(
 	let data: Awaited<ReturnType<typeof getProtocolForExport>>;
 	try {
 		data = await getProtocolForExport(id, session.user.id);
-	} catch {
+	} catch (e) {
+		console.error("Protocol export error:", e instanceof Error ? e.message : e);
 		return Response.json({ error: "not_found" }, { status: 404 });
 	}
 

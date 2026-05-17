@@ -48,5 +48,5 @@ export async function buildProtocolXlsx(model: ProtocolExportModel): Promise<Buf
 	}
 
 	const out = await wb.xlsx.writeBuffer();
-	return Buffer.from(out as Uint8Array);
+	return out as unknown as Buffer;
 }

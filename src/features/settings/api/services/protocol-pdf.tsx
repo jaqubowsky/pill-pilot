@@ -59,8 +59,9 @@ export async function buildProtocolPdf(model: ProtocolExportModel): Promise<Buff
 				{[...groups.entries()].map(([key, rows]) => (
 					<View key={key}>
 						<Text style={s.blockHeader}>{key}</Text>
-						{rows.map((r) => (
-							<View key={`${key}-${r.supplementName}-${r.sortOrder}`} style={s.row}>
+						{rows.map((r, i) => (
+							// biome-ignore lint/suspicious/noArrayIndexKey: index is a suffix tiebreaker, not the sole key
+							<View key={`${key}-${r.supplementName}-${r.sortOrder}-${i}`} style={s.row}>
 								<Text style={[s.cellName, ...(r.isCritical ? [s.critical] : [])]}>
 									{r.supplementName}
 									{r.brandName ? ` (${r.brandName})` : ""}

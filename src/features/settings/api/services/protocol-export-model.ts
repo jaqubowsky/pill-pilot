@@ -40,8 +40,17 @@ export type ProtocolExportRow = {
 export type ProtocolExportModel = {
 	name: string;
 	startDate: string | null;
+	status: ProtocolStatus;
 	generatedAt: string;
 	rows: ProtocolExportRow[];
+};
+
+export const STATUS_LABELS: Record<ProtocolStatus, string> = {
+	draft: "Szkic",
+	active: "Aktywny",
+	archived: "Zarchiwizowany",
+	processing: "Przetwarzanie",
+	failed: "Błąd",
 };
 
 export function mapToExportRows(
@@ -73,7 +82,7 @@ export function mapToExportRows(
 			return a.sortOrder - b.sortOrder;
 		});
 
-	return { name: data.name, startDate: data.startDate, generatedAt, rows };
+	return { name: data.name, startDate: data.startDate, status: data.status, generatedAt, rows };
 }
 
 export function toExportFilename(name: string, ext: "pdf" | "xlsx", dateString: string): string {

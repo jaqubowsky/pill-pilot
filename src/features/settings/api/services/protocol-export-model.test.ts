@@ -93,6 +93,7 @@ describe("mapToExportRows", () => {
 		expect(model.name).toBe("Mój Protokół");
 		expect(model.startDate).toBe("2026-05-01");
 		expect(model.generatedAt).toBe("2026-05-17");
+		expect(model.status).toBe("draft");
 		expect(model.rows[0]).toMatchObject({
 			notes: "po jedzeniu",
 			cycleDaysOn: 5,

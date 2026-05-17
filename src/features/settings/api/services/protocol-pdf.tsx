@@ -1,6 +1,6 @@
 import path from "node:path";
 import { Document, Font, Page, renderToBuffer, StyleSheet, Text, View } from "@react-pdf/renderer";
-import type { ProtocolExportModel } from "./protocol-export-model";
+import { type ProtocolExportModel, STATUS_LABELS } from "./protocol-export-model";
 
 Font.register({
 	family: "Roboto",
@@ -54,6 +54,7 @@ export async function buildProtocolPdf(model: ProtocolExportModel): Promise<Buff
 			<Page size="A4" style={s.page}>
 				<Text style={s.title}>{model.name}</Text>
 				<Text style={s.meta}>Data startu: {model.startDate ?? "—"}</Text>
+				<Text style={s.meta}>Status: {STATUS_LABELS[model.status] ?? model.status}</Text>
 				<Text style={s.meta}>Wygenerowano: {model.generatedAt}</Text>
 
 				{[...groups.entries()].map(([key, rows]) => (
@@ -70,7 +71,9 @@ export async function buildProtocolPdf(model: ProtocolExportModel): Promise<Buff
 									{r.dosageAmount} {r.dosageUnit}
 								</Text>
 								<Text style={s.cellCycle}>{cycleText(r.cycleDaysOn, r.cycleDaysOff)}</Text>
-								<Text style={s.cellDur}>{r.durationDays ? `${r.durationDays} dni` : "—"}</Text>
+								<Text style={s.cellDur}>
+									{r.durationDays != null ? `${r.durationDays} dni` : "—"}
+								</Text>
 								<Text style={s.cellNotes}>{r.notes ?? ""}</Text>
 							</View>
 						))}

@@ -1,5 +1,5 @@
 import ExcelJS from "exceljs";
-import type { ProtocolExportModel } from "./protocol-export-model";
+import { type ProtocolExportModel, STATUS_LABELS } from "./protocol-export-model";
 
 const COLUMNS = [
 	"Blok",
@@ -23,6 +23,7 @@ export async function buildProtocolXlsx(model: ProtocolExportModel): Promise<Buf
 
 	ws.addRow([`Protokół: ${model.name}`]);
 	ws.addRow([`Data startu: ${model.startDate ?? "—"}`]);
+	ws.addRow([`Status: ${STATUS_LABELS[model.status] ?? model.status}`]);
 	ws.addRow([`Wygenerowano: ${model.generatedAt}`]);
 	ws.addRow([]);
 

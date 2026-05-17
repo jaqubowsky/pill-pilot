@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { mapToExportRows, toExportFilename, type ProtocolForExportData } from "./protocol-export-model";
+import {
+	mapToExportRows,
+	type ProtocolForExportData,
+	toExportFilename,
+} from "./protocol-export-model";
 
 describe("toExportFilename", () => {
 	it("slugifies name, strips Polish diacritics, appends date and extension", () => {

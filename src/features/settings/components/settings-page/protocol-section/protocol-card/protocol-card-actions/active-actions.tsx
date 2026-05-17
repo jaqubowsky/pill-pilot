@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { ShareButton } from "@/features/protocol-wizard/components/share-button";
 import { Button } from "@/shared/components/ui/button";
+import { ExportProtocolButton } from "../export-protocol-button";
 import { CardActionSection } from "./card-action-section";
 
 type ActiveActionsProps = {
@@ -16,6 +17,7 @@ export function ActiveActions({ protocolId, shareToken, onRequestArchive }: Acti
 
 	return (
 		<CardActionSection>
+			<ExportProtocolButton protocolId={protocolId} />
 			<ShareButton protocolId={protocolId} initialShareToken={shareToken} />
 			<Button variant="destructive" className="w-full" onClick={onRequestArchive}>
 				{t("common.archive")}

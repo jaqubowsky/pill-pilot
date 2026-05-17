@@ -30,7 +30,13 @@ export function ProtocolCardActions({
 		case "failed":
 			return <FailedActions onRetry={onRetry} onRequestDelete={onRequestDelete} />;
 		case "draft":
-			return <DraftActions onContinueDraft={onContinueDraft} onRequestDelete={onRequestDelete} />;
+			return (
+				<DraftActions
+					protocolId={protocolId}
+					onContinueDraft={onContinueDraft}
+					onRequestDelete={onRequestDelete}
+				/>
+			);
 		case "active":
 			return (
 				<ActiveActions
@@ -40,7 +46,7 @@ export function ProtocolCardActions({
 				/>
 			);
 		case "archived":
-			return <ArchivedActions onRequestDelete={onRequestDelete} />;
+			return <ArchivedActions protocolId={protocolId} onRequestDelete={onRequestDelete} />;
 		default: {
 			const _exhaustive: never = status;
 			return _exhaustive;

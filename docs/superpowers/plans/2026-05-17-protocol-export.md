@@ -23,8 +23,7 @@
 | `src/features/settings/api/services/protocol-pdf.tsx` | Pure `buildProtocolPdf(model)` + Font.register |
 | `src/features/settings/api/services/protocol-pdf.test.ts` | PDF smoke tests |
 | `src/features/settings/api/queries/get-protocol-for-export.ts` | DB query: raw `ProtocolForExportData` (joins, ownership) |
-| `src/app/api/protocol/[id]/export/route.ts` | Route Handler: auth, status gate, format gate, stream file |
-| `src/app/api/protocol/[id]/export/route.test.ts` | Route logic tests (mocked deps) |
+| `src/app/api/protocol/[id]/export/route.ts` | Route Handler: auth, status gate, format gate, stream file (no unit test — repo convention: only pure business fns are tested) |
 | `src/features/settings/components/settings-page/protocol-section/protocol-card/export-protocol-button/` | UI: component + hook + barrel |
 | `public/fonts/Roboto-Regular.ttf`, `public/fonts/Roboto-Bold.ttf` | Vendored fonts with Polish glyph coverage |
 | `next.config.ts` | Add `serverExternalPackages` for pdf/excel libs |
@@ -772,11 +771,12 @@ git commit -m "feat: getProtocolForExport query"
 
 ---
 
-## Task 7: Route Handler `GET /api/protocol/[id]/export` (TDD with mocks)
+## Task 7: Route Handler `GET /api/protocol/[id]/export`
+
+> **CORRECTION (applied during execution):** Per user direction and existing repo convention, route handlers are NOT unit-tested — only pure business functions are (e.g. `cycling.test.ts`; no existing route/query has a test). Implement `route.ts` exactly as in Step 3 below; **skip Steps 1, 2, 4's test run, and do not create `route.test.ts`**. Verification = `pnpm exec tsc --noEmit` (zero errors), `pnpm lint` clean, full `pnpm test` still green, plus the manual edge checks in Task 9. The test-code blocks below are retained only for historical context.
 
 **Files:**
 - Create: `src/app/api/protocol/[id]/export/route.ts`
-- Test: `src/app/api/protocol/[id]/export/route.test.ts`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1099,4 +1099,4 @@ git commit -m "fix: protocol export verification follow-ups"
 
 - **Spec coverage:** PDF + Excel ✓ (Tasks 4–5); structure-only / no DailyLog ✓ (model has no adherence fields); card action placement ✓ (Task 8); statuses draft/active/archived, processing/failed → 400 ✓ (Task 7 `EXPORTABLE`); `@react-pdf/renderer` + `exceljs` ✓ (Task 1); Route Handler not Server Action ✓ (Task 7); error matrix (401/404/400/empty-ok) ✓ (Task 7 tests + empty-protocol tests in 3/4/5); TDD pure-first ordering ✓ (Tasks 2→3→4→5 before query/route); out-of-scope items excluded ✓.
 - **Type consistency:** `ProtocolForExportData` defined in Task 3, produced by Task 6 query (column selection matches field-for-field), consumed by Task 7. `ProtocolExportModel`/`mapToExportRows`/`toExportFilename` consistent across Tasks 2/3/4/5/7.
-- **Known judgement call:** query/route lack pure unit tests for the DB layer — deliberate, matches repo convention (no existing query has tests); compensated by mocked route tests + manual smoke.
+- **Known judgement call:** query AND route handler have no unit tests — deliberate, matches repo convention (only pure business functions are tested; no existing query/route has a test). Pure logic (mapper, filename, xlsx, pdf) is fully unit-tested; route/query correctness is covered by `tsc --noEmit` + manual smoke (Task 9).

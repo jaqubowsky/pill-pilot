@@ -216,6 +216,11 @@
 			"errorDescription": "Protokół który próbujesz otworzyć nie istnieje lub został unieważniony przez właściciela.",
 			"landingTitle": "Ktoś udostępnił Ci protokół",
 			"landingDescription": "Zaloguj się, aby go zaimportować i dodać do swojego konta."
+		},
+		"export": {
+			"label": "Eksportuj",
+			"pdf": "PDF (do druku / dla osoby)",
+			"excel": "Excel (dla LLM / weryfikacji)"
 		}
 	},
 	"protocolWizard": {

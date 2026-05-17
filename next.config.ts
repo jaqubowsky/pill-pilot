@@ -8,6 +8,7 @@ const isDev = process.env.NODE_ENV === "development";
 const nextConfig: NextConfig = {
 	reactStrictMode: true,
 	output: "standalone",
+	serverExternalPackages: ["@react-pdf/renderer", "exceljs"],
 	experimental: {
 		viewTransition: true,
 	},

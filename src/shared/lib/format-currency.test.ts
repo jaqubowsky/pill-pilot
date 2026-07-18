@@ -59,4 +59,8 @@ describe("formatAmount", () => {
 	it("handles large amounts", () => {
 		expect(formatAmount(1234.56)).toBe("1234,56");
 	});
+
+	it("handles negative amounts", () => {
+		expect(formatAmount(-5.5)).toBe("-5,50");
+	});
 });

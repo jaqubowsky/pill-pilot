@@ -41,4 +41,8 @@ describe("formatRemainingTime", () => {
 	it("rounds up partial seconds", () => {
 		expect(formatRemainingTime(500)).toBe("1s");
 	});
+
+	it("drops trailing seconds when hours are present", () => {
+		expect(formatRemainingTime(3_600_000 + 30_000)).toBe("1h");
+	});
 });
